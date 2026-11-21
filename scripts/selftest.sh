@@ -81,6 +81,7 @@ expect "squad plans a wave"                  "$S squad | grep -q 'RUN NOW'"
 expect "squad emits JSON for the workflow"   "$S squad --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert \"wave\" in d and \"map\" in d'"
 expect "a brief carries authorisation, rate share and return" "$S brief class-hunter 127.0.0.1 --lane injection --share 2 | grep -q 'requests per second from you'"
 expect "no brief for an out-of-scope host"   "! $S brief class-hunter evil.org --lane authz"
+if command -v node >/dev/null 2>&1; then expect "saved workflows behave under stub agents" "node scripts/tests/test_workflows.js"; fi
 expect "research mode emits twelve lenses"   "[ \"\$($S squad --mode research 127.0.0.1 --json | python3 -c 'import json,sys; print(len(json.load(sys.stdin)[\"lenses\"]))')\" = 12 ]"
 echo "[library]"
 expect "kb search finds reports"  "$S kb search ssrf webhook | grep -q '^#'"
