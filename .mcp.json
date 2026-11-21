@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "hexbrain": {
+      "type": "http",
+      "url": "https://hexbrainai.com/api/mcp",
+      "headers": { "Authorization": "Bearer ${HEXBRAIN_API_KEY:-unset}" }
+    }
+  }
+}
