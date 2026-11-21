@@ -569,10 +569,10 @@ metadata, feeds) → XXE-009 (SAML) → XXE-004 (error-based, when outbound conn
   `/dev/random`). It takes the parser down, which is the test. Excluded on almost every programme (`dos`) and not
   to be sent here. The index holds a few paid ones (#754117); they are the exception.
 - **DNS-only or DTD-fetch-only callbacks** reported as XXE. Triagers call it "external service interaction" and
-  close it informative unless a file or an internal response is shown (#1150799).
+  close it informative unless a file or an internal response is shown.
 - **"The API also accepts XML"** with no entity resolution. Informative.
-- **`xmlrpc.php` is enabled** on WordPress: pingback and brute-force amplification reports are closed N/A or
-  duplicate (#2299069; `rate-limit`, `dos`).
+- **`xmlrpc.php` is enabled** on WordPress: pingback and brute-force amplification reports of the #2299069 kind
+  are closed N/A or duplicate (`rate-limit`, `dos`).
 - **SVG stored and served unchanged.** No server-side parser was involved. If script runs it belongs to the XSS
   and UPL chapters.
 - **XXE in a third-party viewer, converter or identity provider** that the file or assertion was handed to
