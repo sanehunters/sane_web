@@ -1,0 +1,14 @@
+# Engagements hold private programme data and evidence. They never enter this repository.
+engagements/*
+!engagements/README.md
+!engagements/_example/
+# caches and local state
+kb/cache/
+__pycache__/
+*.pyc
+.env
+env.sh
+*.har
+*.pcap
+.claude/settings.local.json
+.sane/

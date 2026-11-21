@@ -1,0 +1,6586 @@
+{
+ "total": 15219,
+ "classes": {
+  "takeover": {
+   "name": "Subdomain takeover & dangling DNS",
+   "reports": 178,
+   "also": 32,
+   "paid": 27,
+   "median_bounty": 300.0,
+   "p90_bounty": 750.0,
+   "max_bounty": 3000.0,
+   "paid_rate": 0.152
+  },
+  "smuggling": {
+   "name": "HTTP request smuggling & desync",
+   "reports": 78,
+   "also": 2,
+   "paid": 27,
+   "median_bounty": 1800.0,
+   "p90_bounty": 7500.0,
+   "max_bounty": 20000.0,
+   "paid_rate": 0.346
+  },
+  "cache": {
+   "name": "Web cache poisoning & cache deception",
+   "reports": 48,
+   "also": 18,
+   "paid": 11,
+   "median_bounty": 550.0,
+   "p90_bounty": 3800.0,
+   "max_bounty": 9700.0,
+   "paid_rate": 0.229
+  },
+  "oauth": {
+   "name": "OAuth, OIDC, SAML & SSO",
+   "reports": 87,
+   "also": 77,
+   "paid": 18,
+   "median_bounty": 1000.0,
+   "p90_bounty": 8500.0,
+   "max_bounty": 10500.0,
+   "paid_rate": 0.207
+  },
+  "jwt": {
+   "name": "JWT & signed-token flaws",
+   "reports": 13,
+   "also": 11,
+   "paid": 6,
+   "median_bounty": 1800.0,
+   "p90_bounty": 10000.0,
+   "max_bounty": 10000.0,
+   "paid_rate": 0.462
+  },
+  "graphql": {
+   "name": "GraphQL",
+   "reports": 57,
+   "also": 22,
+   "paid": 19,
+   "median_bounty": 2500.0,
+   "p90_bounty": 12000.0,
+   "max_bounty": 25000.0,
+   "paid_rate": 0.333
+  },
+  "websocket": {
+   "name": "WebSocket",
+   "reports": 17,
+   "also": 13,
+   "paid": 3,
+   "median_bounty": 800.0,
+   "p90_bounty": 1800.0,
+   "max_bounty": 1800.0,
+   "paid_rate": 0.176
+  },
+  "llm": {
+   "name": "LLM & AI features",
+   "reports": 15,
+   "also": 9,
+   "paid": 0,
+   "median_bounty": 0,
+   "p90_bounty": 0,
+   "max_bounty": 0,
+   "paid_rate": 0.0
+  },
+  "ssrf": {
+   "name": "Server-side request forgery",
+   "reports": 365,
+   "also": 23,
+   "paid": 112,
+   "median_bounty": 714.5,
+   "p90_bounty": 4263.0,
+   "max_bounty": 25000.0,
+   "paid_rate": 0.307
+  },
+  "xxe": {
+   "name": "XML external entities & XML injection",
+   "reports": 59,
+   "also": 15,
+   "paid": 10,
+   "median_bounty": 1250.0,
+   "p90_bounty": 6000.0,
+   "max_bounty": 6000.0,
+   "paid_rate": 0.169
+  },
+  "ssti": {
+   "name": "Server-side template injection",
+   "reports": 21,
+   "also": 12,
+   "paid": 6,
+   "median_bounty": 2300.0,
+   "p90_bounty": 10000.0,
+   "max_bounty": 10000.0,
+   "paid_rate": 0.286
+  },
+  "deser": {
+   "name": "Insecure deserialization",
+   "reports": 101,
+   "also": 34,
+   "paid": 29,
+   "median_bounty": 1000.0,
+   "p90_bounty": 4500.0,
+   "max_bounty": 10000.0,
+   "paid_rate": 0.287
+  },
+  "sqli": {
+   "name": "SQL injection",
+   "reports": 338,
+   "also": 8,
+   "paid": 85,
+   "median_bounty": 1350.0,
+   "p90_bounty": 4500.0,
+   "max_bounty": 25000.0,
+   "paid_rate": 0.251
+  },
+  "nosqli": {
+   "name": "NoSQL, LDAP & other query injection",
+   "reports": 16,
+   "also": 8,
+   "paid": 4,
+   "median_bounty": 2750.0,
+   "p90_bounty": 4500.0,
+   "max_bounty": 4500.0,
+   "paid_rate": 0.25
+  },
+  "rce": {
+   "name": "Command & code injection (RCE)",
+   "reports": 606,
+   "also": 278,
+   "paid": 111,
+   "median_bounty": 1500.0,
+   "p90_bounty": 12000.0,
+   "max_bounty": 33510.0,
+   "paid_rate": 0.183
+  },
+  "traversal": {
+   "name": "Path traversal, LFI & RFI",
+   "reports": 356,
+   "also": 44,
+   "paid": 64,
+   "median_bounty": 1000.0,
+   "p90_bounty": 6000.0,
+   "max_bounty": 29000.0,
+   "paid_rate": 0.18
+  },
+  "upload": {
+   "name": "File upload",
+   "reports": 43,
+   "also": 51,
+   "paid": 10,
+   "median_bounty": 500.0,
+   "p90_bounty": 5000.0,
+   "max_bounty": 5000.0,
+   "paid_rate": 0.233
+  },
+  "xss": {
+   "name": "Cross-site scripting",
+   "reports": 2640,
+   "also": 86,
+   "paid": 569,
+   "median_bounty": 500.0,
+   "p90_bounty": 2500.0,
+   "max_bounty": 16000.0,
+   "paid_rate": 0.216
+  },
+  "csrf": {
+   "name": "Cross-site request forgery",
+   "reports": 556,
+   "also": 40,
+   "paid": 99,
+   "median_bounty": 300.0,
+   "p90_bounty": 2450.0,
+   "max_bounty": 10000.0,
+   "paid_rate": 0.178
+  },
+  "cors": {
+   "name": "CORS misconfiguration",
+   "reports": 61,
+   "also": 11,
+   "paid": 5,
+   "median_bounty": 500.0,
+   "p90_bounty": 550.0,
+   "max_bounty": 550.0,
+   "paid_rate": 0.082
+  },
+  "redirect": {
+   "name": "Open redirect",
+   "reports": 362,
+   "also": 35,
+   "paid": 70,
+   "median_bounty": 300.0,
+   "p90_bounty": 1000.0,
+   "max_bounty": 3000.0,
+   "paid_rate": 0.193
+  },
+  "crlf": {
+   "name": "CRLF & header injection",
+   "reports": 148,
+   "also": 39,
+   "paid": 24,
+   "median_bounty": 450.0,
+   "p90_bounty": 2600.0,
+   "max_bounty": 5000.0,
+   "paid_rate": 0.162
+  },
+  "host-header": {
+   "name": "Host header attacks",
+   "reports": 11,
+   "also": 42,
+   "paid": 2,
+   "median_bounty": 175.0,
+   "p90_bounty": 200.0,
+   "max_bounty": 200.0,
+   "paid_rate": 0.182
+  },
+  "proto-pollution": {
+   "name": "Prototype pollution",
+   "reports": 53,
+   "also": 6,
+   "paid": 0,
+   "median_bounty": 0,
+   "p90_bounty": 0,
+   "max_bounty": 0,
+   "paid_rate": 0.0
+  },
+  "clickjacking": {
+   "name": "Clickjacking & UI redressing",
+   "reports": 170,
+   "also": 17,
+   "paid": 11,
+   "median_bounty": 500.0,
+   "p90_bounty": 1120.0,
+   "max_bounty": 3500.0,
+   "paid_rate": 0.065
+  },
+  "race": {
+   "name": "Race conditions",
+   "reports": 89,
+   "also": 15,
+   "paid": 17,
+   "median_bounty": 500.0,
+   "p90_bounty": 5000.0,
+   "max_bounty": 15250.0,
+   "paid_rate": 0.191
+  },
+  "access-control": {
+   "name": "Broken access control: IDOR, BOLA, BFLA, privilege escalation",
+   "reports": 1459,
+   "also": 525,
+   "paid": 374,
+   "median_bounty": 500.0,
+   "p90_bounty": 3100.0,
+   "max_bounty": 22300.0,
+   "paid_rate": 0.256
+  },
+  "authn": {
+   "name": "Authentication, sessions, password reset & 2FA",
+   "reports": 1339,
+   "also": 587,
+   "paid": 218,
+   "median_bounty": 500.0,
+   "p90_bounty": 3000.0,
+   "max_bounty": 35000.0,
+   "paid_rate": 0.163
+  },
+  "logic": {
+   "name": "Business logic, payments & abuse of functionality",
+   "reports": 456,
+   "also": 369,
+   "paid": 83,
+   "median_bounty": 500.0,
+   "p90_bounty": 2500.0,
+   "max_bounty": 12000.0,
+   "paid_rate": 0.182
+  },
+  "api": {
+   "name": "API flaws: mass assignment, excessive data exposure, versioning",
+   "reports": 71,
+   "also": 98,
+   "paid": 16,
+   "median_bounty": 550.0,
+   "p90_bounty": 4000.0,
+   "max_bounty": 4000.0,
+   "paid_rate": 0.225
+  },
+  "client-side": {
+   "name": "Client-side: postMessage, DOM, CSP, JS supply chain",
+   "reports": 16,
+   "also": 46,
+   "paid": 2,
+   "median_bounty": 1000.0,
+   "p90_bounty": 1000.0,
+   "max_bounty": 1000.0,
+   "paid_rate": 0.125
+  },
+  "cloud": {
+   "name": "Cloud, storage buckets & CI/CD exposure",
+   "reports": 139,
+   "also": 130,
+   "paid": 34,
+   "median_bounty": 750.0,
+   "p90_bounty": 4617.0,
+   "max_bounty": 15000.0,
+   "paid_rate": 0.245
+  },
+  "disclosure": {
+   "name": "Information disclosure, secrets & exposed files",
+   "reports": 1780,
+   "also": 1076,
+   "paid": 351,
+   "median_bounty": 500.0,
+   "p90_bounty": 2500.0,
+   "max_bounty": 50000.0,
+   "paid_rate": 0.197
+  },
+  "cve": {
+   "name": "Known CVEs, default installs & technology-specific bugs",
+   "reports": 240,
+   "also": 704,
+   "paid": 64,
+   "median_bounty": 1000.0,
+   "p90_bounty": 2600.0,
+   "max_bounty": 12500.0,
+   "paid_rate": 0.267
+  },
+  "network": {
+   "name": "Network services on IP & CIDR assets",
+   "reports": 116,
+   "also": 157,
+   "paid": 16,
+   "median_bounty": 425.0,
+   "p90_bounty": 4000.0,
+   "max_bounty": 6909.0,
+   "paid_rate": 0.138
+  },
+  "recon": {
+   "name": "Recon & hidden surface (method chapter)",
+   "reports": 0,
+   "also": 0,
+   "paid": 0,
+   "median_bounty": 0,
+   "p90_bounty": 0,
+   "max_bounty": 0,
+   "paid_rate": 0
+  },
+  "dos": {
+   "name": "Denial of service (usually out of scope)",
+   "reports": 452,
+   "also": 306,
+   "paid": 129,
+   "median_bounty": 500.0,
+   "p90_bounty": 5000.0,
+   "max_bounty": 18000.0,
+   "paid_rate": 0.285
+  },
+  "crypto-tls": {
+   "name": "Cryptography, TLS & certificates",
+   "reports": 401,
+   "also": 140,
+   "paid": 64,
+   "median_bounty": 580.0,
+   "p90_bounty": 2400.0,
+   "max_bounty": 4500.0,
+   "paid_rate": 0.16
+  },
+  "memory-safety": {
+   "name": "Memory corruption (native code, OSS programs)",
+   "reports": 963,
+   "also": 62,
+   "paid": 325,
+   "median_bounty": 800.0,
+   "p90_bounty": 5000.0,
+   "max_bounty": 12500.0,
+   "paid_rate": 0.337
+  },
+  "mobile": {
+   "name": "Mobile-app specific (see sane_android)",
+   "reports": 52,
+   "also": 127,
+   "paid": 20,
+   "median_bounty": 530.0,
+   "p90_bounty": 2940.0,
+   "max_bounty": 3000.0,
+   "paid_rate": 0.385
+  },
+  "email-phishing": {
+   "name": "Email spoofing, phishing & content spoofing (mostly graveyard)",
+   "reports": 146,
+   "also": 144,
+   "paid": 13,
+   "median_bounty": 150.0,
+   "p90_bounty": 1000.0,
+   "max_bounty": 1500.0,
+   "paid_rate": 0.089
+  },
+  "other": {
+   "name": "Unclassified",
+   "reports": 1101,
+   "also": 0,
+   "paid": 193,
+   "median_bounty": 1000.0,
+   "p90_bounty": 2500.0,
+   "max_bounty": 35000.0,
+   "paid_rate": 0.175
+  }
+ },
+ "programs": {
+  "Mail.ru": {
+   "reports": 896,
+   "paid": 325,
+   "total": 391247.0,
+   "classes": {
+    "other": 41,
+    "sqli": 48,
+    "disclosure": 125,
+    "rce": 24,
+    "access-control": 69,
+    "xxe": 8,
+    "smuggling": 1,
+    "xss": 295,
+    "upload": 1,
+    "ssrf": 38,
+    "logic": 14,
+    "traversal": 17,
+    "authn": 61,
+    "ssti": 1,
+    "memory-safety": 7,
+    "crypto-tls": 5,
+    "cve": 7,
+    "csrf": 43,
+    "dos": 4,
+    "mobile": 7,
+    "takeover": 13,
+    "clickjacking": 13,
+    "email-phishing": 7,
+    "crlf": 19,
+    "oauth": 2,
+    "network": 2,
+    "race": 3,
+    "api": 2,
+    "redirect": 16,
+    "cors": 1,
+    "proto-pollution": 1,
+    "client-side": 1
+   }
+  },
+  "U.S. Dept Of Defense": {
+   "reports": 884,
+   "paid": 9,
+   "total": 10000.0,
+   "classes": {
+    "ssrf": 22,
+    "cve": 11,
+    "rce": 54,
+    "access-control": 78,
+    "disclosure": 155,
+    "csrf": 25,
+    "traversal": 58,
+    "xss": 253,
+    "cors": 9,
+    "cloud": 11,
+    "xxe": 9,
+    "sqli": 76,
+    "authn": 48,
+    "takeover": 8,
+    "deser": 10,
+    "logic": 2,
+    "redirect": 5,
+    "smuggling": 2,
+    "cache": 1,
+    "other": 9,
+    "ssti": 1,
+    "host-header": 1,
+    "upload": 10,
+    "crlf": 3,
+    "crypto-tls": 9,
+    "dos": 3,
+    "network": 2,
+    "memory-safety": 4,
+    "nosqli": 3,
+    "api": 1,
+    "email-phishing": 1
+   }
+  },
+  "Internet Bug Bounty": {
+   "reports": 794,
+   "paid": 383,
+   "total": 559678.0,
+   "classes": {
+    "rce": 30,
+    "smuggling": 12,
+    "ssrf": 8,
+    "dos": 44,
+    "traversal": 12,
+    "disclosure": 33,
+    "cve": 72,
+    "deser": 27,
+    "sqli": 4,
+    "memory-safety": 404,
+    "csrf": 2,
+    "other": 33,
+    "crlf": 9,
+    "crypto-tls": 34,
+    "access-control": 17,
+    "redirect": 4,
+    "xss": 17,
+    "authn": 10,
+    "race": 3,
+    "logic": 1,
+    "network": 7,
+    "oauth": 3,
+    "takeover": 1,
+    "clickjacking": 1,
+    "cache": 1,
+    "cloud": 1,
+    "websocket": 2,
+    "xxe": 1,
+    "upload": 1
+   }
+  },
+  "curl": {
+   "reports": 682,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "memory-safety": 162,
+    "other": 48,
+    "dos": 31,
+    "cve": 44,
+    "traversal": 23,
+    "crypto-tls": 72,
+    "disclosure": 66,
+    "authn": 59,
+    "network": 25,
+    "rce": 18,
+    "race": 12,
+    "crlf": 33,
+    "access-control": 21,
+    "llm": 5,
+    "ssrf": 10,
+    "websocket": 3,
+    "logic": 30,
+    "smuggling": 11,
+    "cloud": 1,
+    "api": 1,
+    "cache": 1,
+    "oauth": 3,
+    "email-phishing": 1,
+    "xss": 2
+   }
+  },
+  "Nextcloud": {
+   "reports": 613,
+   "paid": 132,
+   "total": 41553.0,
+   "classes": {
+    "authn": 90,
+    "oauth": 5,
+    "other": 43,
+    "rce": 19,
+    "traversal": 10,
+    "access-control": 106,
+    "disclosure": 106,
+    "crypto-tls": 22,
+    "xss": 58,
+    "csrf": 7,
+    "jwt": 1,
+    "cve": 9,
+    "ssrf": 22,
+    "redirect": 6,
+    "logic": 33,
+    "dos": 21,
+    "sqli": 5,
+    "upload": 2,
+    "cloud": 1,
+    "crlf": 4,
+    "deser": 2,
+    "memory-safety": 7,
+    "email-phishing": 6,
+    "xxe": 1,
+    "clickjacking": 9,
+    "client-side": 2,
+    "mobile": 8,
+    "cache": 1,
+    "api": 2,
+    "network": 4,
+    "websocket": 1
+   }
+  },
+  "HackerOne": {
+   "reports": 607,
+   "paid": 155,
+   "total": 318600.01,
+   "classes": {
+    "authn": 55,
+    "ssrf": 7,
+    "graphql": 25,
+    "access-control": 72,
+    "disclosure": 142,
+    "cve": 3,
+    "xss": 36,
+    "crlf": 3,
+    "jwt": 1,
+    "cache": 3,
+    "dos": 24,
+    "other": 81,
+    "csrf": 20,
+    "logic": 36,
+    "api": 7,
+    "race": 12,
+    "takeover": 6,
+    "network": 1,
+    "redirect": 21,
+    "email-phishing": 10,
+    "traversal": 4,
+    "memory-safety": 4,
+    "sqli": 3,
+    "llm": 2,
+    "proto-pollution": 3,
+    "cloud": 4,
+    "oauth": 4,
+    "rce": 7,
+    "crypto-tls": 9,
+    "upload": 1,
+    "clickjacking": 1
+   }
+  },
+  "Shopify": {
+   "reports": 467,
+   "paid": 179,
+   "total": 281352.2,
+   "classes": {
+    "disclosure": 50,
+    "race": 4,
+    "xss": 132,
+    "access-control": 95,
+    "cache": 4,
+    "authn": 40,
+    "graphql": 12,
+    "csrf": 18,
+    "other": 25,
+    "ssrf": 11,
+    "crlf": 2,
+    "cve": 2,
+    "cloud": 6,
+    "mobile": 1,
+    "takeover": 8,
+    "rce": 5,
+    "redirect": 19,
+    "logic": 14,
+    "oauth": 3,
+    "ssti": 1,
+    "traversal": 2,
+    "websocket": 1,
+    "email-phishing": 2,
+    "jwt": 1,
+    "clickjacking": 1,
+    "memory-safety": 1,
+    "host-header": 1,
+    "crypto-tls": 3,
+    "api": 1,
+    "dos": 2
+   }
+  },
+  "Node.js third-party modules": {
+   "reports": 307,
+   "paid": 1,
+   "total": 250.0,
+   "classes": {
+    "dos": 17,
+    "xss": 49,
+    "ssrf": 5,
+    "proto-pollution": 45,
+    "csrf": 2,
+    "disclosure": 11,
+    "rce": 63,
+    "traversal": 68,
+    "sqli": 9,
+    "other": 2,
+    "authn": 3,
+    "nosqli": 3,
+    "access-control": 2,
+    "client-side": 2,
+    "redirect": 2,
+    "ssti": 2,
+    "smuggling": 1,
+    "network": 2,
+    "deser": 2,
+    "crypto-tls": 2,
+    "memory-safety": 13,
+    "email-phishing": 2
+   }
+  },
+  "GitLab": {
+   "reports": 257,
+   "paid": 92,
+   "total": 594110.0,
+   "classes": {
+    "authn": 8,
+    "traversal": 6,
+    "rce": 21,
+    "access-control": 58,
+    "xss": 59,
+    "disclosure": 26,
+    "logic": 7,
+    "ssrf": 19,
+    "oauth": 2,
+    "jwt": 1,
+    "clickjacking": 3,
+    "dos": 12,
+    "csrf": 6,
+    "memory-safety": 1,
+    "graphql": 6,
+    "sqli": 1,
+    "crypto-tls": 1,
+    "other": 8,
+    "cloud": 2,
+    "redirect": 5,
+    "cache": 1,
+    "takeover": 1,
+    "cve": 1,
+    "race": 1,
+    "email-phishing": 1
+   }
+  },
+  "X / xAI": {
+   "reports": 248,
+   "paid": 81,
+   "total": 84989.0,
+   "classes": {
+    "rce": 5,
+    "access-control": 19,
+    "mobile": 3,
+    "oauth": 7,
+    "redirect": 13,
+    "csrf": 16,
+    "disclosure": 33,
+    "clickjacking": 6,
+    "crypto-tls": 12,
+    "dos": 9,
+    "xss": 49,
+    "logic": 11,
+    "authn": 25,
+    "smuggling": 2,
+    "other": 14,
+    "takeover": 6,
+    "cloud": 3,
+    "cors": 3,
+    "crlf": 4,
+    "graphql": 1,
+    "xxe": 1,
+    "email-phishing": 3,
+    "api": 1,
+    "cve": 1,
+    "ssrf": 1
+   }
+  },
+  "Uber": {
+   "reports": 239,
+   "paid": 80,
+   "total": 249449.99,
+   "classes": {
+    "disclosure": 49,
+    "rce": 5,
+    "ssti": 1,
+    "xss": 54,
+    "authn": 35,
+    "oauth": 3,
+    "network": 3,
+    "access-control": 11,
+    "other": 12,
+    "sqli": 8,
+    "csrf": 9,
+    "ssrf": 3,
+    "logic": 12,
+    "cloud": 5,
+    "api": 3,
+    "crypto-tls": 4,
+    "cve": 2,
+    "redirect": 5,
+    "dos": 5,
+    "memory-safety": 1,
+    "takeover": 5,
+    "traversal": 1,
+    "crlf": 2,
+    "clickjacking": 1
+   }
+  },
+  "GitHub Security Lab": {
+   "reports": 217,
+   "paid": 141,
+   "total": 267800.0,
+   "classes": {
+    "other": 100,
+    "crypto-tls": 12,
+    "nosqli": 8,
+    "deser": 6,
+    "sqli": 5,
+    "disclosure": 7,
+    "websocket": 1,
+    "rce": 7,
+    "xss": 4,
+    "authn": 3,
+    "ssti": 7,
+    "dos": 2,
+    "crlf": 6,
+    "cve": 7,
+    "mobile": 2,
+    "memory-safety": 4,
+    "logic": 1,
+    "xxe": 3,
+    "csrf": 1,
+    "traversal": 3,
+    "jwt": 4,
+    "cloud": 1,
+    "ssrf": 16,
+    "cors": 3,
+    "oauth": 1,
+    "redirect": 2,
+    "network": 1
+   }
+  },
+  "New Relic": {
+   "reports": 209,
+   "paid": 50,
+   "total": 55039.06,
+   "classes": {
+    "smuggling": 1,
+    "authn": 26,
+    "xss": 37,
+    "access-control": 41,
+    "deser": 1,
+    "crlf": 2,
+    "disclosure": 17,
+    "dos": 1,
+    "logic": 8,
+    "api": 3,
+    "graphql": 3,
+    "cloud": 2,
+    "mobile": 1,
+    "redirect": 17,
+    "ssrf": 6,
+    "other": 10,
+    "traversal": 2,
+    "oauth": 1,
+    "crypto-tls": 2,
+    "cve": 2,
+    "csrf": 11,
+    "rce": 4,
+    "network": 1,
+    "cors": 2,
+    "memory-safety": 2,
+    "cache": 1,
+    "clickjacking": 3,
+    "takeover": 2
+   }
+  },
+  "VK.com": {
+   "reports": 172,
+   "paid": 115,
+   "total": 49200.01,
+   "classes": {
+    "disclosure": 37,
+    "mobile": 5,
+    "access-control": 10,
+    "xss": 39,
+    "traversal": 2,
+    "authn": 10,
+    "other": 21,
+    "xxe": 1,
+    "csrf": 20,
+    "redirect": 4,
+    "logic": 4,
+    "ssrf": 2,
+    "rce": 5,
+    "memory-safety": 1,
+    "crlf": 2,
+    "crypto-tls": 2,
+    "cve": 1,
+    "clickjacking": 2,
+    "race": 1,
+    "dos": 1,
+    "sqli": 2
+   }
+  },
+  "Automattic": {
+   "reports": 166,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "cache": 2,
+    "xss": 58,
+    "access-control": 13,
+    "sqli": 6,
+    "authn": 19,
+    "dos": 3,
+    "race": 1,
+    "deser": 3,
+    "rce": 7,
+    "disclosure": 10,
+    "ssrf": 2,
+    "redirect": 5,
+    "api": 1,
+    "oauth": 1,
+    "takeover": 1,
+    "csrf": 10,
+    "clickjacking": 5,
+    "logic": 3,
+    "crypto-tls": 4,
+    "other": 9,
+    "traversal": 1,
+    "cve": 1,
+    "upload": 1
+   }
+  },
+  "shopify-scripts": {
+   "reports": 161,
+   "paid": 88,
+   "total": 251300.0,
+   "classes": {
+    "rce": 3,
+    "dos": 50,
+    "memory-safety": 103,
+    "other": 3,
+    "disclosure": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Weblate": {
+   "reports": 157,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 5,
+    "disclosure": 14,
+    "ssrf": 1,
+    "authn": 35,
+    "rce": 6,
+    "dos": 5,
+    "csrf": 12,
+    "api": 1,
+    "traversal": 2,
+    "race": 2,
+    "xss": 10,
+    "xxe": 1,
+    "other": 34,
+    "email-phishing": 3,
+    "logic": 10,
+    "memory-safety": 3,
+    "crypto-tls": 6,
+    "redirect": 4,
+    "clickjacking": 2,
+    "network": 1
+   }
+  },
+  "Legal Robot": {
+   "reports": 155,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 2,
+    "memory-safety": 3,
+    "takeover": 1,
+    "access-control": 5,
+    "cloud": 5,
+    "authn": 39,
+    "email-phishing": 7,
+    "other": 45,
+    "logic": 9,
+    "clickjacking": 9,
+    "crlf": 2,
+    "disclosure": 7,
+    "dos": 1,
+    "cors": 1,
+    "websocket": 3,
+    "crypto-tls": 7,
+    "csrf": 4,
+    "redirect": 1,
+    "sqli": 1,
+    "network": 1,
+    "api": 1,
+    "cve": 1
+   }
+  },
+  "Node.js": {
+   "reports": 154,
+   "paid": 10,
+   "total": 2650.0,
+   "classes": {
+    "smuggling": 17,
+    "cve": 7,
+    "dos": 20,
+    "memory-safety": 18,
+    "crypto-tls": 19,
+    "disclosure": 4,
+    "traversal": 8,
+    "other": 4,
+    "ssrf": 1,
+    "crlf": 3,
+    "access-control": 26,
+    "network": 2,
+    "race": 4,
+    "authn": 5,
+    "rce": 8,
+    "proto-pollution": 4,
+    "logic": 3,
+    "xss": 1
+   }
+  },
+  "Gratipay": {
+   "reports": 136,
+   "paid": 13,
+   "total": 146.0,
+   "classes": {
+    "xss": 9,
+    "crlf": 1,
+    "other": 37,
+    "email-phishing": 9,
+    "dos": 5,
+    "csrf": 10,
+    "disclosure": 16,
+    "memory-safety": 3,
+    "logic": 4,
+    "cve": 2,
+    "oauth": 1,
+    "sqli": 3,
+    "redirect": 2,
+    "authn": 13,
+    "rce": 3,
+    "clickjacking": 4,
+    "crypto-tls": 11,
+    "host-header": 1,
+    "access-control": 1,
+    "smuggling": 1
+   }
+  },
+  "Slack": {
+   "reports": 133,
+   "paid": 53,
+   "total": 49875.0,
+   "classes": {
+    "ssrf": 7,
+    "disclosure": 14,
+    "xss": 34,
+    "cloud": 2,
+    "traversal": 3,
+    "dos": 3,
+    "upload": 2,
+    "access-control": 8,
+    "authn": 11,
+    "email-phishing": 3,
+    "logic": 7,
+    "rce": 8,
+    "csrf": 8,
+    "redirect": 7,
+    "crypto-tls": 3,
+    "other": 4,
+    "smuggling": 1,
+    "client-side": 2,
+    "mobile": 1,
+    "race": 1,
+    "api": 1,
+    "takeover": 1,
+    "oauth": 2
+   }
+  },
+  "Eternal": {
+   "reports": 128,
+   "paid": 44,
+   "total": 37600.0,
+   "classes": {
+    "sqli": 12,
+    "access-control": 17,
+    "authn": 12,
+    "logic": 11,
+    "xss": 32,
+    "disclosure": 7,
+    "cors": 2,
+    "takeover": 3,
+    "crypto-tls": 3,
+    "other": 6,
+    "csrf": 7,
+    "smuggling": 1,
+    "mobile": 2,
+    "cloud": 2,
+    "race": 1,
+    "ssrf": 1,
+    "oauth": 1,
+    "network": 1,
+    "redirect": 2,
+    "memory-safety": 1,
+    "clickjacking": 3,
+    "upload": 1
+   }
+  },
+  "Acronis": {
+   "reports": 128,
+   "paid": 49,
+   "total": 11650.0,
+   "classes": {
+    "deser": 1,
+    "ssrf": 5,
+    "xss": 35,
+    "traversal": 4,
+    "crypto-tls": 3,
+    "access-control": 32,
+    "sqli": 5,
+    "dos": 3,
+    "rce": 3,
+    "other": 3,
+    "authn": 11,
+    "disclosure": 6,
+    "takeover": 3,
+    "csrf": 1,
+    "cache": 1,
+    "cors": 1,
+    "clickjacking": 3,
+    "smuggling": 2,
+    "redirect": 1,
+    "race": 1,
+    "email-phishing": 1,
+    "ssti": 1,
+    "cloud": 1,
+    "cve": 1
+   }
+  },
+  "Starbucks": {
+   "reports": 128,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 6,
+    "authn": 11,
+    "rce": 5,
+    "xxe": 2,
+    "takeover": 10,
+    "access-control": 16,
+    "traversal": 3,
+    "disclosure": 15,
+    "xss": 27,
+    "graphql": 1,
+    "csrf": 11,
+    "redirect": 6,
+    "deser": 2,
+    "upload": 1,
+    "logic": 2,
+    "crlf": 3,
+    "ssrf": 1,
+    "api": 1,
+    "other": 1,
+    "network": 1,
+    "crypto-tls": 2,
+    "dos": 1
+   }
+  },
+  "MTN Group": {
+   "reports": 128,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 7,
+    "authn": 23,
+    "access-control": 14,
+    "xss": 26,
+    "rce": 11,
+    "disclosure": 28,
+    "traversal": 4,
+    "ssrf": 2,
+    "deser": 1,
+    "csrf": 1,
+    "dos": 2,
+    "cors": 1,
+    "redirect": 1,
+    "cve": 3,
+    "logic": 1,
+    "other": 3
+   }
+  },
+  "Open-Xchange": {
+   "reports": 121,
+   "paid": 105,
+   "total": 53618.0,
+   "classes": {
+    "memory-safety": 23,
+    "other": 2,
+    "xxe": 1,
+    "ssrf": 15,
+    "traversal": 2,
+    "xss": 34,
+    "redirect": 2,
+    "crypto-tls": 6,
+    "access-control": 15,
+    "csrf": 1,
+    "dos": 8,
+    "authn": 2,
+    "clickjacking": 2,
+    "disclosure": 5,
+    "logic": 2,
+    "rce": 1
+   }
+  },
+  "TikTok": {
+   "reports": 117,
+   "paid": 36,
+   "total": 57731.0,
+   "classes": {
+    "authn": 8,
+    "xss": 36,
+    "ssrf": 2,
+    "csrf": 12,
+    "access-control": 29,
+    "disclosure": 12,
+    "clickjacking": 2,
+    "cors": 2,
+    "takeover": 1,
+    "mobile": 1,
+    "rce": 1,
+    "upload": 1,
+    "crlf": 1,
+    "logic": 1,
+    "redirect": 3,
+    "other": 2,
+    "cache": 1,
+    "email-phishing": 1,
+    "dos": 1
+   }
+  },
+  "Brave Software": {
+   "reports": 117,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 15,
+    "redirect": 5,
+    "xss": 10,
+    "memory-safety": 3,
+    "clickjacking": 2,
+    "authn": 4,
+    "llm": 1,
+    "other": 25,
+    "crypto-tls": 3,
+    "rce": 13,
+    "mobile": 1,
+    "logic": 6,
+    "cloud": 2,
+    "email-phishing": 8,
+    "takeover": 2,
+    "access-control": 1,
+    "smuggling": 1,
+    "network": 2,
+    "dos": 9,
+    "crlf": 2,
+    "upload": 1,
+    "cors": 1
+   }
+  },
+  "h1-ctf": {
+   "reports": 110,
+   "paid": 2,
+   "total": 600.0,
+   "classes": {
+    "other": 36,
+    "sqli": 8,
+    "disclosure": 12,
+    "ssrf": 13,
+    "access-control": 17,
+    "dos": 4,
+    "rce": 1,
+    "logic": 5,
+    "xxe": 2,
+    "memory-safety": 3,
+    "authn": 9
+   }
+  },
+  "LocalTapiola": {
+   "reports": 107,
+   "paid": 45,
+   "total": 38325.0,
+   "classes": {
+    "dos": 7,
+    "xss": 25,
+    "authn": 7,
+    "sqli": 12,
+    "redirect": 4,
+    "other": 9,
+    "disclosure": 16,
+    "crlf": 1,
+    "network": 2,
+    "csrf": 5,
+    "rce": 3,
+    "memory-safety": 1,
+    "cors": 2,
+    "cve": 2,
+    "upload": 1,
+    "crypto-tls": 4,
+    "api": 1,
+    "logic": 2,
+    "access-control": 2,
+    "cloud": 1
+   }
+  },
+  "Rockstar Games": {
+   "reports": 106,
+   "paid": 28,
+   "total": 20000.0,
+   "classes": {
+    "xss": 33,
+    "ssrf": 2,
+    "xxe": 1,
+    "network": 2,
+    "access-control": 6,
+    "authn": 5,
+    "oauth": 8,
+    "cors": 1,
+    "redirect": 6,
+    "disclosure": 12,
+    "other": 6,
+    "rce": 2,
+    "csrf": 16,
+    "deser": 1,
+    "cache": 1,
+    "race": 1,
+    "sqli": 1,
+    "dos": 1,
+    "ssti": 1
+   }
+  },
+  "Ubiquiti Inc.": {
+   "reports": 98,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 17,
+    "access-control": 12,
+    "cloud": 1,
+    "cors": 1,
+    "takeover": 3,
+    "authn": 7,
+    "csrf": 7,
+    "ssti": 1,
+    "sqli": 1,
+    "traversal": 6,
+    "disclosure": 5,
+    "xss": 20,
+    "other": 3,
+    "cve": 1,
+    "crlf": 3,
+    "dos": 3,
+    "network": 1,
+    "redirect": 1,
+    "crypto-tls": 1,
+    "logic": 1,
+    "memory-safety": 3
+   }
+  },
+  "WordPress": {
+   "reports": 96,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 36,
+    "traversal": 6,
+    "csrf": 8,
+    "rce": 4,
+    "clickjacking": 7,
+    "cve": 3,
+    "access-control": 9,
+    "disclosure": 8,
+    "xxe": 1,
+    "logic": 4,
+    "redirect": 3,
+    "authn": 1,
+    "ssrf": 1,
+    "sqli": 1,
+    "network": 1,
+    "takeover": 1,
+    "other": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Rocket.Chat": {
+   "reports": 96,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 7,
+    "xss": 17,
+    "access-control": 17,
+    "ssrf": 4,
+    "traversal": 2,
+    "rce": 8,
+    "oauth": 3,
+    "takeover": 1,
+    "authn": 7,
+    "redirect": 2,
+    "disclosure": 12,
+    "clickjacking": 3,
+    "client-side": 1,
+    "nosqli": 2,
+    "upload": 1,
+    "network": 2,
+    "email-phishing": 1,
+    "logic": 1,
+    "other": 2,
+    "dos": 1,
+    "api": 1,
+    "memory-safety": 1
+   }
+  },
+  "Pornhub": {
+   "reports": 94,
+   "paid": 58,
+   "total": 94220.0,
+   "classes": {
+    "rce": 6,
+    "deser": 1,
+    "disclosure": 8,
+    "dos": 2,
+    "access-control": 11,
+    "cloud": 2,
+    "sqli": 4,
+    "xss": 42,
+    "network": 1,
+    "upload": 1,
+    "ssrf": 5,
+    "oauth": 1,
+    "authn": 4,
+    "race": 1,
+    "crypto-tls": 1,
+    "xxe": 1,
+    "other": 2,
+    "csrf": 1
+   }
+  },
+  "ownCloud": {
+   "reports": 94,
+   "paid": 10,
+   "total": 4350.0,
+   "classes": {
+    "authn": 9,
+    "mobile": 2,
+    "other": 8,
+    "sqli": 1,
+    "crypto-tls": 7,
+    "xss": 21,
+    "redirect": 2,
+    "traversal": 1,
+    "rce": 7,
+    "csrf": 6,
+    "cve": 6,
+    "deser": 1,
+    "crlf": 3,
+    "api": 2,
+    "cloud": 2,
+    "disclosure": 11,
+    "memory-safety": 1,
+    "access-control": 1,
+    "logic": 2,
+    "email-phishing": 1
+   }
+  },
+  "8x8": {
+   "reports": 91,
+   "paid": 11,
+   "total": 9788.0,
+   "classes": {
+    "deser": 2,
+    "jwt": 2,
+    "xss": 14,
+    "logic": 1,
+    "rce": 6,
+    "api": 2,
+    "access-control": 9,
+    "ssrf": 3,
+    "crlf": 2,
+    "traversal": 3,
+    "redirect": 5,
+    "disclosure": 17,
+    "authn": 9,
+    "takeover": 8,
+    "cloud": 1,
+    "oauth": 1,
+    "other": 1,
+    "email-phishing": 1,
+    "cve": 2,
+    "sqli": 2
+   }
+  },
+  "QIWI": {
+   "reports": 89,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 7,
+    "ssrf": 3,
+    "deser": 1,
+    "authn": 10,
+    "xss": 20,
+    "logic": 4,
+    "xxe": 3,
+    "memory-safety": 1,
+    "email-phishing": 2,
+    "cve": 1,
+    "csrf": 3,
+    "other": 8,
+    "disclosure": 12,
+    "smuggling": 1,
+    "traversal": 2,
+    "access-control": 2,
+    "crlf": 2,
+    "oauth": 1,
+    "takeover": 1,
+    "cloud": 1,
+    "redirect": 2,
+    "clickjacking": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Concrete CMS": {
+   "reports": 87,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 4,
+    "host-header": 1,
+    "sqli": 3,
+    "deser": 2,
+    "xss": 50,
+    "access-control": 2,
+    "ssrf": 4,
+    "traversal": 3,
+    "csrf": 4,
+    "authn": 2,
+    "other": 2,
+    "network": 1,
+    "disclosure": 4,
+    "redirect": 1,
+    "cve": 1,
+    "logic": 1,
+    "crypto-tls": 1,
+    "crlf": 1
+   }
+  },
+  "Valve": {
+   "reports": 82,
+   "paid": 41,
+   "total": 154300.0,
+   "classes": {
+    "sqli": 2,
+    "access-control": 10,
+    "xss": 8,
+    "memory-safety": 28,
+    "logic": 2,
+    "authn": 5,
+    "rce": 9,
+    "email-phishing": 2,
+    "traversal": 4,
+    "disclosure": 7,
+    "api": 2,
+    "redirect": 1,
+    "ssrf": 1,
+    "csrf": 1
+   }
+  },
+  "Monero": {
+   "reports": 82,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "dos": 22,
+    "authn": 4,
+    "disclosure": 8,
+    "logic": 12,
+    "memory-safety": 9,
+    "rce": 4,
+    "crypto-tls": 4,
+    "xss": 1,
+    "crlf": 1,
+    "network": 1,
+    "other": 9,
+    "mobile": 1,
+    "access-control": 3,
+    "clickjacking": 1,
+    "csrf": 1,
+    "cve": 1
+   }
+  },
+  "Yahoo!": {
+   "reports": 82,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 5,
+    "access-control": 2,
+    "xxe": 2,
+    "other": 5,
+    "crypto-tls": 3,
+    "redirect": 7,
+    "xss": 22,
+    "ssrf": 3,
+    "disclosure": 8,
+    "clickjacking": 7,
+    "traversal": 1,
+    "sqli": 4,
+    "csrf": 6,
+    "authn": 5,
+    "memory-safety": 1,
+    "logic": 1
+   }
+  },
+  "Coinbase": {
+   "reports": 80,
+   "paid": 22,
+   "total": 18100.0,
+   "classes": {
+    "logic": 7,
+    "authn": 14,
+    "crypto-tls": 4,
+    "csrf": 8,
+    "other": 15,
+    "disclosure": 14,
+    "xss": 3,
+    "access-control": 1,
+    "oauth": 4,
+    "clickjacking": 3,
+    "client-side": 1,
+    "race": 1,
+    "redirect": 2,
+    "memory-safety": 1,
+    "mobile": 1,
+    "email-phishing": 1
+   }
+  },
+  "Kubernetes": {
+   "reports": 77,
+   "paid": 25,
+   "total": 32650.0,
+   "classes": {
+    "access-control": 6,
+    "ssrf": 4,
+    "cloud": 14,
+    "rce": 2,
+    "dos": 5,
+    "disclosure": 15,
+    "deser": 3,
+    "crypto-tls": 2,
+    "memory-safety": 3,
+    "takeover": 3,
+    "csrf": 1,
+    "cve": 1,
+    "authn": 6,
+    "xss": 2,
+    "network": 3,
+    "other": 1,
+    "race": 2,
+    "clickjacking": 1,
+    "email-phishing": 2,
+    "traversal": 1
+   }
+  },
+  "Paragon Initiative Enterprises": {
+   "reports": 75,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 2,
+    "xxe": 1,
+    "takeover": 1,
+    "other": 12,
+    "network": 2,
+    "crypto-tls": 4,
+    "xss": 6,
+    "logic": 3,
+    "email-phishing": 8,
+    "disclosure": 13,
+    "csrf": 6,
+    "access-control": 3,
+    "authn": 7,
+    "traversal": 1,
+    "redirect": 1,
+    "memory-safety": 3,
+    "cloud": 1,
+    "sqli": 1
+   }
+  },
+  "Yelp": {
+   "reports": 74,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 1,
+    "xss": 3,
+    "access-control": 12,
+    "authn": 14,
+    "disclosure": 13,
+    "csrf": 4,
+    "cors": 2,
+    "clickjacking": 10,
+    "cve": 1,
+    "crlf": 1,
+    "email-phishing": 3,
+    "logic": 2,
+    "crypto-tls": 3,
+    "ssrf": 1,
+    "other": 2,
+    "redirect": 2
+   }
+  },
+  "Ruby on Rails": {
+   "reports": 73,
+   "paid": 8,
+   "total": 9000.0,
+   "classes": {
+    "rce": 7,
+    "traversal": 6,
+    "other": 6,
+    "redirect": 2,
+    "xss": 23,
+    "authn": 2,
+    "dos": 11,
+    "disclosure": 5,
+    "takeover": 1,
+    "cloud": 1,
+    "csrf": 3,
+    "cve": 1,
+    "access-control": 1,
+    "crypto-tls": 1,
+    "deser": 1,
+    "sqli": 2
+   }
+  },
+  "Phabricator": {
+   "reports": 73,
+   "paid": 29,
+   "total": 13400.0,
+   "classes": {
+    "access-control": 10,
+    "authn": 14,
+    "crypto-tls": 2,
+    "disclosure": 8,
+    "xss": 6,
+    "ssrf": 3,
+    "redirect": 3,
+    "csrf": 6,
+    "other": 10,
+    "logic": 3,
+    "rce": 2,
+    "traversal": 2,
+    "api": 1,
+    "dos": 2,
+    "email-phishing": 1
+   }
+  },
+  "Ruby": {
+   "reports": 73,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 11,
+    "traversal": 3,
+    "smuggling": 1,
+    "other": 11,
+    "dos": 9,
+    "memory-safety": 12,
+    "cve": 1,
+    "access-control": 2,
+    "disclosure": 2,
+    "xss": 4,
+    "cloud": 4,
+    "crypto-tls": 3,
+    "crlf": 4,
+    "network": 2,
+    "redirect": 2,
+    "deser": 1,
+    "email-phishing": 1
+   }
+  },
+  "Reddit": {
+   "reports": 72,
+   "paid": 15,
+   "total": 50700.0,
+   "classes": {
+    "disclosure": 6,
+    "ssrf": 1,
+    "xss": 11,
+    "access-control": 14,
+    "logic": 1,
+    "memory-safety": 1,
+    "oauth": 2,
+    "upload": 1,
+    "cloud": 2,
+    "csrf": 1,
+    "crypto-tls": 2,
+    "race": 1,
+    "redirect": 4,
+    "authn": 12,
+    "dos": 4,
+    "other": 3,
+    "api": 2,
+    "traversal": 1,
+    "email-phishing": 2,
+    "clickjacking": 1
+   }
+  },
+  "Stripo Inc": {
+   "reports": 72,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 1,
+    "disclosure": 5,
+    "access-control": 7,
+    "ssrf": 11,
+    "xss": 7,
+    "other": 2,
+    "crypto-tls": 2,
+    "authn": 12,
+    "logic": 3,
+    "redirect": 1,
+    "takeover": 2,
+    "host-header": 1,
+    "smuggling": 2,
+    "csrf": 4,
+    "network": 2,
+    "websocket": 1,
+    "sqli": 1,
+    "dos": 1,
+    "upload": 1,
+    "race": 1,
+    "clickjacking": 2,
+    "memory-safety": 1,
+    "cloud": 1,
+    "cors": 1
+   }
+  },
+  "Sifchain": {
+   "reports": 71,
+   "paid": 2,
+   "total": 250.0,
+   "classes": {
+    "other": 9,
+    "authn": 5,
+    "takeover": 2,
+    "cors": 5,
+    "clickjacking": 7,
+    "disclosure": 19,
+    "traversal": 1,
+    "xss": 3,
+    "logic": 7,
+    "client-side": 1,
+    "email-phishing": 3,
+    "csrf": 1,
+    "rce": 1,
+    "jwt": 1,
+    "cloud": 1,
+    "crypto-tls": 2,
+    "cve": 3
+   }
+  },
+  "Vimeo": {
+   "reports": 71,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 1,
+    "logic": 1,
+    "xss": 18,
+    "authn": 8,
+    "other": 6,
+    "disclosure": 5,
+    "access-control": 15,
+    "csrf": 7,
+    "cloud": 1,
+    "crlf": 1,
+    "oauth": 1,
+    "email-phishing": 1,
+    "crypto-tls": 2,
+    "takeover": 1,
+    "redirect": 1,
+    "network": 1,
+    "api": 1
+   }
+  },
+  "Khan Academy": {
+   "reports": 71,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "csrf": 7,
+    "redirect": 4,
+    "disclosure": 8,
+    "authn": 10,
+    "xss": 18,
+    "logic": 3,
+    "cloud": 1,
+    "takeover": 2,
+    "access-control": 3,
+    "sqli": 1,
+    "graphql": 1,
+    "rce": 4,
+    "other": 4,
+    "crypto-tls": 2,
+    "clickjacking": 3
+   }
+  },
+  "Mozilla": {
+   "reports": 68,
+   "paid": 21,
+   "total": 44650.0,
+   "classes": {
+    "graphql": 1,
+    "traversal": 2,
+    "rce": 2,
+    "xss": 3,
+    "api": 3,
+    "authn": 6,
+    "access-control": 8,
+    "email-phishing": 1,
+    "other": 2,
+    "takeover": 17,
+    "csrf": 2,
+    "disclosure": 8,
+    "crlf": 1,
+    "sqli": 1,
+    "cloud": 3,
+    "network": 2,
+    "cache": 2,
+    "ssrf": 1,
+    "race": 2,
+    "dos": 1
+   }
+  },
+  "Localize": {
+   "reports": 68,
+   "paid": 1,
+   "total": 50.0,
+   "classes": {
+    "xss": 11,
+    "logic": 1,
+    "redirect": 1,
+    "dos": 2,
+    "authn": 5,
+    "disclosure": 22,
+    "csrf": 10,
+    "other": 5,
+    "network": 1,
+    "cve": 1,
+    "email-phishing": 1,
+    "memory-safety": 2,
+    "crypto-tls": 3,
+    "access-control": 2,
+    "clickjacking": 1
+   }
+  },
+  "Informatica": {
+   "reports": 68,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xxe": 4,
+    "authn": 4,
+    "sqli": 4,
+    "rce": 7,
+    "cve": 3,
+    "xss": 29,
+    "traversal": 1,
+    "disclosure": 8,
+    "ssti": 1,
+    "ssrf": 1,
+    "upload": 1,
+    "redirect": 1,
+    "csrf": 2,
+    "other": 1,
+    "email-phishing": 1
+   }
+  },
+  "Mars": {
+   "reports": 68,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 3,
+    "xss": 13,
+    "access-control": 11,
+    "upload": 1,
+    "sqli": 5,
+    "traversal": 2,
+    "disclosure": 13,
+    "takeover": 3,
+    "logic": 4,
+    "api": 2,
+    "csrf": 6,
+    "deser": 1,
+    "crypto-tls": 1,
+    "redirect": 1,
+    "network": 1,
+    "crlf": 1
+   }
+  },
+  "Razer": {
+   "reports": 67,
+   "paid": 64,
+   "total": 50075.0,
+   "classes": {
+    "sqli": 12,
+    "rce": 1,
+    "authn": 4,
+    "access-control": 15,
+    "disclosure": 7,
+    "ssrf": 1,
+    "xss": 15,
+    "cloud": 3,
+    "dos": 2,
+    "crypto-tls": 1,
+    "smuggling": 1,
+    "takeover": 4,
+    "race": 1
+   }
+  },
+  "OLX": {
+   "reports": 66,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 37,
+    "access-control": 4,
+    "sqli": 2,
+    "cache": 1,
+    "cve": 1,
+    "disclosure": 6,
+    "crypto-tls": 2,
+    "takeover": 1,
+    "clickjacking": 1,
+    "other": 2,
+    "authn": 4,
+    "traversal": 1,
+    "dos": 1,
+    "csrf": 3
+   }
+  },
+  "WakaTime": {
+   "reports": 63,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 10,
+    "authn": 22,
+    "disclosure": 7,
+    "api": 1,
+    "oauth": 1,
+    "race": 1,
+    "csrf": 2,
+    "redirect": 1,
+    "logic": 3,
+    "cve": 1,
+    "other": 9,
+    "email-phishing": 1,
+    "xss": 1,
+    "clickjacking": 2,
+    "rce": 1
+   }
+  },
+  "AWS VDP": {
+   "reports": 61,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 7,
+    "xss": 2,
+    "disclosure": 21,
+    "cloud": 7,
+    "logic": 1,
+    "access-control": 6,
+    "ssrf": 1,
+    "authn": 4,
+    "other": 3,
+    "cve": 2,
+    "llm": 1,
+    "memory-safety": 3,
+    "sqli": 1,
+    "ssti": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Revive Adserver": {
+   "reports": 61,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 2,
+    "authn": 4,
+    "access-control": 8,
+    "xss": 26,
+    "other": 1,
+    "rce": 5,
+    "disclosure": 3,
+    "logic": 1,
+    "dos": 2,
+    "memory-safety": 1,
+    "csrf": 1,
+    "crypto-tls": 1,
+    "deser": 2,
+    "redirect": 4
+   }
+  },
+  "MariaDB": {
+   "reports": 61,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "traversal": 4,
+    "memory-safety": 22,
+    "authn": 3,
+    "dos": 6,
+    "ssrf": 1,
+    "access-control": 6,
+    "crlf": 3,
+    "crypto-tls": 4,
+    "logic": 1,
+    "csrf": 1,
+    "other": 4,
+    "sqli": 4,
+    "disclosure": 1,
+    "smuggling": 1
+   }
+  },
+  "Basecamp": {
+   "reports": 57,
+   "paid": 20,
+   "total": 53629.0,
+   "classes": {
+    "cloud": 2,
+    "smuggling": 3,
+    "rce": 4,
+    "xss": 10,
+    "traversal": 3,
+    "disclosure": 6,
+    "logic": 3,
+    "dos": 1,
+    "access-control": 5,
+    "authn": 6,
+    "deser": 4,
+    "takeover": 1,
+    "ssrf": 1,
+    "other": 3,
+    "oauth": 2,
+    "email-phishing": 1,
+    "csrf": 1,
+    "redirect": 1
+   }
+  },
+  "Semrush": {
+   "reports": 56,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 2,
+    "disclosure": 4,
+    "logic": 4,
+    "oauth": 2,
+    "access-control": 7,
+    "upload": 1,
+    "ssrf": 3,
+    "xxe": 1,
+    "cors": 5,
+    "api": 1,
+    "xss": 7,
+    "takeover": 1,
+    "authn": 2,
+    "other": 6,
+    "jwt": 1,
+    "redirect": 3,
+    "traversal": 1,
+    "clickjacking": 3,
+    "cache": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Tor": {
+   "reports": 53,
+   "paid": 5,
+   "total": 3600.0,
+   "classes": {
+    "disclosure": 19,
+    "memory-safety": 17,
+    "xss": 1,
+    "dos": 3,
+    "sqli": 1,
+    "other": 5,
+    "email-phishing": 1,
+    "access-control": 1,
+    "traversal": 1,
+    "authn": 1,
+    "logic": 2,
+    "network": 1
+   }
+  },
+  "Chaturbate": {
+   "reports": 52,
+   "paid": 18,
+   "total": 13000.0,
+   "classes": {
+    "access-control": 6,
+    "xss": 8,
+    "authn": 8,
+    "dos": 2,
+    "redirect": 3,
+    "csrf": 6,
+    "other": 3,
+    "disclosure": 3,
+    "race": 1,
+    "ssrf": 2,
+    "cache": 1,
+    "crlf": 1,
+    "logic": 3,
+    "network": 1,
+    "cors": 1,
+    "rce": 1,
+    "email-phishing": 2
+   }
+  },
+  "GSA Bounty": {
+   "reports": 49,
+   "paid": 12,
+   "total": 6050.0,
+   "classes": {
+    "access-control": 4,
+    "smuggling": 1,
+    "xss": 5,
+    "redirect": 4,
+    "rce": 2,
+    "traversal": 1,
+    "ssrf": 2,
+    "sqli": 1,
+    "disclosure": 5,
+    "authn": 6,
+    "csrf": 3,
+    "cache": 2,
+    "takeover": 2,
+    "email-phishing": 1,
+    "memory-safety": 1,
+    "race": 1,
+    "crypto-tls": 1,
+    "logic": 4,
+    "other": 1,
+    "api": 1,
+    "network": 1
+   }
+  },
+  "Liberapay": {
+   "reports": 49,
+   "paid": 2,
+   "total": 200.0,
+   "classes": {
+    "logic": 4,
+    "access-control": 6,
+    "redirect": 2,
+    "deser": 2,
+    "disclosure": 7,
+    "email-phishing": 2,
+    "authn": 10,
+    "xss": 3,
+    "memory-safety": 2,
+    "csrf": 7,
+    "other": 3,
+    "dos": 1
+   }
+  },
+  "IBM": {
+   "reports": 48,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 7,
+    "takeover": 2,
+    "rce": 6,
+    "ssrf": 3,
+    "cloud": 3,
+    "access-control": 6,
+    "xss": 7,
+    "traversal": 3,
+    "disclosure": 5,
+    "llm": 1,
+    "authn": 4,
+    "csrf": 1
+   }
+  },
+  "Infogram": {
+   "reports": 48,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "traversal": 1,
+    "access-control": 2,
+    "ssrf": 4,
+    "memory-safety": 1,
+    "xss": 15,
+    "authn": 10,
+    "other": 4,
+    "cors": 1,
+    "csrf": 2,
+    "disclosure": 1,
+    "dos": 1,
+    "clickjacking": 1,
+    "cve": 1,
+    "email-phishing": 1,
+    "logic": 1,
+    "crypto-tls": 1,
+    "redirect": 1
+   }
+  },
+  "GitHub": {
+   "reports": 47,
+   "paid": 7,
+   "total": 46617.0,
+   "classes": {
+    "access-control": 15,
+    "authn": 3,
+    "csrf": 1,
+    "disclosure": 5,
+    "api": 1,
+    "cloud": 2,
+    "rce": 8,
+    "graphql": 3,
+    "oauth": 1,
+    "other": 2,
+    "redirect": 1,
+    "xss": 1,
+    "llm": 2,
+    "logic": 1,
+    "deser": 1
+   }
+  },
+  "Dropbox": {
+   "reports": 46,
+   "paid": 24,
+   "total": 50624.0,
+   "classes": {
+    "ssrf": 5,
+    "network": 1,
+    "other": 5,
+    "disclosure": 3,
+    "oauth": 2,
+    "csrf": 1,
+    "mobile": 1,
+    "rce": 1,
+    "xss": 9,
+    "logic": 2,
+    "access-control": 3,
+    "crypto-tls": 2,
+    "race": 1,
+    "memory-safety": 2,
+    "authn": 3,
+    "dos": 2,
+    "crlf": 1,
+    "sqli": 1,
+    "email-phishing": 1
+   }
+  },
+  "Imgur": {
+   "reports": 46,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 18,
+    "rce": 3,
+    "cloud": 1,
+    "authn": 3,
+    "access-control": 1,
+    "logic": 1,
+    "ssrf": 3,
+    "disclosure": 3,
+    "email-phishing": 1,
+    "traversal": 2,
+    "takeover": 1,
+    "csrf": 2,
+    "memory-safety": 2,
+    "crypto-tls": 4,
+    "clickjacking": 1
+   }
+  },
+  "Zendesk": {
+   "reports": 46,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "oauth": 1,
+    "access-control": 3,
+    "xss": 18,
+    "rce": 4,
+    "disclosure": 4,
+    "authn": 1,
+    "cache": 1,
+    "ssrf": 1,
+    "redirect": 3,
+    "network": 1,
+    "api": 1,
+    "race": 1,
+    "cloud": 1,
+    "csrf": 2,
+    "mobile": 1,
+    "other": 1,
+    "crypto-tls": 1,
+    "logic": 1
+   }
+  },
+  "Veris": {
+   "reports": 46,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 7,
+    "logic": 1,
+    "cve": 1,
+    "access-control": 13,
+    "xss": 12,
+    "csrf": 2,
+    "disclosure": 5,
+    "crypto-tls": 1,
+    "other": 1,
+    "network": 1,
+    "email-phishing": 1,
+    "redirect": 1
+   }
+  },
+  "Nord Security": {
+   "reports": 45,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 6,
+    "disclosure": 8,
+    "network": 1,
+    "authn": 7,
+    "rce": 2,
+    "cve": 2,
+    "other": 3,
+    "redirect": 2,
+    "csrf": 1,
+    "ssrf": 1,
+    "cors": 2,
+    "xss": 2,
+    "logic": 3,
+    "race": 1,
+    "dos": 1,
+    "clickjacking": 2,
+    "mobile": 1
+   }
+  },
+  "Cloudflare Public Bug Bounty": {
+   "reports": 44,
+   "paid": 23,
+   "total": 36675.0,
+   "classes": {
+    "other": 5,
+    "smuggling": 3,
+    "access-control": 8,
+    "oauth": 2,
+    "xss": 6,
+    "api": 2,
+    "authn": 8,
+    "traversal": 2,
+    "dos": 1,
+    "logic": 2,
+    "ssrf": 1,
+    "cache": 1,
+    "disclosure": 2,
+    "memory-safety": 1
+   }
+  },
+  "LinkedIn": {
+   "reports": 44,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 22,
+    "disclosure": 6,
+    "xss": 5,
+    "oauth": 1,
+    "logic": 2,
+    "csrf": 2,
+    "authn": 5,
+    "other": 1
+   }
+  },
+  "LY Corporation": {
+   "reports": 42,
+   "paid": 20,
+   "total": 49461.35,
+   "classes": {
+    "rce": 1,
+    "cve": 1,
+    "authn": 5,
+    "ssrf": 5,
+    "xss": 5,
+    "disclosure": 3,
+    "access-control": 7,
+    "oauth": 1,
+    "logic": 2,
+    "mobile": 2,
+    "traversal": 3,
+    "crypto-tls": 1,
+    "upload": 1,
+    "smuggling": 1,
+    "cors": 1,
+    "csrf": 1,
+    "email-phishing": 1,
+    "dos": 1
+   }
+  },
+  "IRCCloud": {
+   "reports": 41,
+   "paid": 13,
+   "total": 2750.0,
+   "classes": {
+    "xss": 7,
+    "access-control": 3,
+    "dos": 1,
+    "csrf": 12,
+    "crlf": 1,
+    "authn": 6,
+    "redirect": 1,
+    "other": 6,
+    "disclosure": 2,
+    "memory-safety": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Ian Dunn": {
+   "reports": 41,
+   "paid": 10,
+   "total": 450.0,
+   "classes": {
+    "rce": 7,
+    "access-control": 2,
+    "deser": 2,
+    "xss": 9,
+    "other": 2,
+    "crypto-tls": 2,
+    "disclosure": 6,
+    "redirect": 1,
+    "cve": 2,
+    "csrf": 2,
+    "ssrf": 1,
+    "authn": 5
+   }
+  },
+  "PortSwigger Web Security": {
+   "reports": 40,
+   "paid": 11,
+   "total": 13450.0,
+   "classes": {
+    "traversal": 3,
+    "rce": 2,
+    "network": 3,
+    "xss": 7,
+    "other": 4,
+    "redirect": 3,
+    "authn": 3,
+    "ssrf": 1,
+    "crypto-tls": 2,
+    "logic": 4,
+    "access-control": 4,
+    "memory-safety": 1,
+    "llm": 1,
+    "disclosure": 1,
+    "csrf": 1
+   }
+  },
+  "Vanilla": {
+   "reports": 40,
+   "paid": 31,
+   "total": 10000.0,
+   "classes": {
+    "traversal": 2,
+    "sqli": 2,
+    "access-control": 4,
+    "deser": 4,
+    "xss": 14,
+    "authn": 1,
+    "csrf": 1,
+    "disclosure": 3,
+    "cache": 1,
+    "dos": 1,
+    "logic": 2,
+    "api": 1,
+    "cors": 1,
+    "redirect": 1,
+    "other": 1,
+    "clickjacking": 1
+   }
+  },
+  "Lark Technologies": {
+   "reports": 38,
+   "paid": 4,
+   "total": 10250.0,
+   "classes": {
+    "ssrf": 5,
+    "xss": 9,
+    "access-control": 19,
+    "disclosure": 1,
+    "other": 2,
+    "csrf": 1,
+    "authn": 1
+   }
+  },
+  "UPchieve": {
+   "reports": 38,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 16,
+    "disclosure": 3,
+    "csrf": 1,
+    "cors": 2,
+    "memory-safety": 2,
+    "logic": 1,
+    "email-phishing": 1,
+    "other": 3,
+    "redirect": 1,
+    "cve": 1,
+    "crypto-tls": 2,
+    "clickjacking": 4,
+    "sqli": 1
+   }
+  },
+  "Snapchat": {
+   "reports": 37,
+   "paid": 17,
+   "total": 96900.0,
+   "classes": {
+    "rce": 3,
+    "access-control": 4,
+    "cloud": 2,
+    "disclosure": 5,
+    "authn": 8,
+    "takeover": 4,
+    "ssrf": 2,
+    "logic": 1,
+    "xss": 3,
+    "smuggling": 1,
+    "csrf": 1,
+    "other": 1,
+    "crlf": 1,
+    "clickjacking": 1
+   }
+  },
+  "Udemy": {
+   "reports": 37,
+   "paid": 1,
+   "total": 50.0,
+   "classes": {
+    "xss": 8,
+    "cloud": 4,
+    "cve": 1,
+    "takeover": 3,
+    "access-control": 1,
+    "csrf": 5,
+    "disclosure": 6,
+    "authn": 2,
+    "logic": 2,
+    "crypto-tls": 2,
+    "email-phishing": 1,
+    "other": 2
+   }
+  },
+  "Bumble": {
+   "reports": 36,
+   "paid": 8,
+   "total": 3017.0,
+   "classes": {
+    "xss": 3,
+    "api": 1,
+    "authn": 7,
+    "csrf": 4,
+    "network": 1,
+    "disclosure": 6,
+    "other": 6,
+    "oauth": 1,
+    "race": 1,
+    "takeover": 1,
+    "logic": 1,
+    "access-control": 2,
+    "redirect": 1,
+    "cloud": 1
+   }
+  },
+  "Radancy": {
+   "reports": 36,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 4,
+    "dos": 2,
+    "disclosure": 9,
+    "crlf": 1,
+    "authn": 2,
+    "ssrf": 1,
+    "xss": 4,
+    "sqli": 1,
+    "redirect": 2,
+    "csrf": 1,
+    "cache": 1,
+    "crypto-tls": 6,
+    "other": 2
+   }
+  },
+  "Keybase": {
+   "reports": 35,
+   "paid": 15,
+   "total": 23200.0,
+   "classes": {
+    "access-control": 9,
+    "traversal": 1,
+    "other": 2,
+    "logic": 4,
+    "redirect": 1,
+    "xss": 4,
+    "dos": 3,
+    "authn": 1,
+    "disclosure": 4,
+    "race": 2,
+    "csrf": 1,
+    "network": 1,
+    "email-phishing": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Instacart": {
+   "reports": 35,
+   "paid": 12,
+   "total": 1200.0,
+   "classes": {
+    "authn": 5,
+    "access-control": 4,
+    "xss": 5,
+    "disclosure": 3,
+    "redirect": 2,
+    "cve": 1,
+    "ssrf": 1,
+    "csrf": 4,
+    "race": 1,
+    "other": 3,
+    "mobile": 1,
+    "takeover": 1,
+    "dos": 1,
+    "rce": 1,
+    "oauth": 1,
+    "websocket": 1
+   }
+  },
+  "Algolia": {
+   "reports": 34,
+   "paid": 14,
+   "total": 3400.0,
+   "classes": {
+    "rce": 1,
+    "cache": 1,
+    "api": 1,
+    "disclosure": 6,
+    "xss": 12,
+    "redirect": 1,
+    "authn": 6,
+    "crypto-tls": 1,
+    "email-phishing": 2,
+    "traversal": 1,
+    "other": 2
+   }
+  },
+  "ExpressionEngine": {
+   "reports": 34,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 2,
+    "crypto-tls": 2,
+    "traversal": 3,
+    "xss": 8,
+    "csrf": 3,
+    "disclosure": 3,
+    "upload": 2,
+    "rce": 7,
+    "access-control": 1,
+    "redirect": 3
+   }
+  },
+  "ok.ru": {
+   "reports": 34,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 1,
+    "access-control": 5,
+    "xss": 9,
+    "authn": 2,
+    "csrf": 2,
+    "mobile": 1,
+    "sqli": 1,
+    "traversal": 1,
+    "disclosure": 3,
+    "other": 8,
+    "ssrf": 1
+   }
+  },
+  "Glassdoor": {
+   "reports": 33,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 18,
+    "authn": 2,
+    "csrf": 2,
+    "disclosure": 2,
+    "access-control": 3,
+    "cache": 2,
+    "cloud": 1,
+    "email-phishing": 1,
+    "client-side": 1,
+    "redirect": 1
+   }
+  },
+  "RubyGems": {
+   "reports": 31,
+   "paid": 6,
+   "total": 5000.0,
+   "classes": {
+    "deser": 2,
+    "crypto-tls": 1,
+    "traversal": 5,
+    "rce": 5,
+    "host-header": 1,
+    "access-control": 2,
+    "oauth": 1,
+    "disclosure": 1,
+    "redirect": 2,
+    "other": 2,
+    "authn": 3,
+    "dos": 2,
+    "takeover": 1,
+    "xss": 2,
+    "crlf": 1
+   }
+  },
+  "Harvest": {
+   "reports": 31,
+   "paid": 24,
+   "total": 7150.0,
+   "classes": {
+    "cloud": 1,
+    "disclosure": 4,
+    "logic": 4,
+    "xss": 5,
+    "rce": 1,
+    "access-control": 9,
+    "other": 2,
+    "csrf": 3,
+    "mobile": 1,
+    "authn": 1
+   }
+  },
+  "Omise": {
+   "reports": 31,
+   "paid": 10,
+   "total": 1450.0,
+   "classes": {
+    "redirect": 3,
+    "xss": 2,
+    "ssrf": 3,
+    "access-control": 6,
+    "takeover": 1,
+    "cloud": 1,
+    "authn": 7,
+    "sqli": 1,
+    "disclosure": 3,
+    "other": 1,
+    "race": 1,
+    "api": 1,
+    "csrf": 1
+   }
+  },
+  "Visma Public": {
+   "reports": 30,
+   "paid": 30,
+   "total": 6200.0,
+   "classes": {
+    "traversal": 1,
+    "smuggling": 1,
+    "upload": 2,
+    "xss": 5,
+    "access-control": 11,
+    "ssrf": 1,
+    "csrf": 1,
+    "logic": 3,
+    "authn": 2,
+    "redirect": 2,
+    "disclosure": 1
+   }
+  },
+  "Cloudflare Vulnerability Disclosure": {
+   "reports": 29,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 1,
+    "xss": 9,
+    "ssrf": 1,
+    "access-control": 1,
+    "traversal": 1,
+    "rce": 1,
+    "csrf": 5,
+    "network": 1,
+    "authn": 2,
+    "dos": 1,
+    "other": 3,
+    "disclosure": 1,
+    "crypto-tls": 1,
+    "clickjacking": 1
+   }
+  },
+  "Boozt Fashion AB": {
+   "reports": 28,
+   "paid": 13,
+   "total": 1830.0,
+   "classes": {
+    "access-control": 1,
+    "host-header": 2,
+    "xss": 3,
+    "authn": 9,
+    "takeover": 1,
+    "dos": 1,
+    "disclosure": 2,
+    "other": 5,
+    "crlf": 1,
+    "logic": 1,
+    "crypto-tls": 1,
+    "csrf": 1
+   }
+  },
+  "Unikrn": {
+   "reports": 28,
+   "paid": 6,
+   "total": 365.0,
+   "classes": {
+    "disclosure": 5,
+    "authn": 3,
+    "redirect": 3,
+    "traversal": 2,
+    "access-control": 2,
+    "ssti": 1,
+    "csrf": 5,
+    "rce": 1,
+    "xss": 1,
+    "other": 5
+   }
+  },
+  "Moneybird": {
+   "reports": 27,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 6,
+    "redirect": 3,
+    "access-control": 2,
+    "xss": 8,
+    "rce": 2,
+    "other": 1,
+    "logic": 2,
+    "crypto-tls": 1,
+    "upload": 1,
+    "disclosure": 1
+   }
+  },
+  "Stripe": {
+   "reports": 26,
+   "paid": 6,
+   "total": 15000.0,
+   "classes": {
+    "logic": 2,
+    "access-control": 7,
+    "csrf": 3,
+    "xss": 3,
+    "authn": 3,
+    "race": 1,
+    "ssrf": 2,
+    "other": 3,
+    "api": 1,
+    "deser": 1
+   }
+  },
+  "Linux Foundation Decentralized Trust": {
+   "reports": 26,
+   "paid": 8,
+   "total": 6500.0,
+   "classes": {
+    "rce": 3,
+    "cloud": 1,
+    "dos": 4,
+    "authn": 2,
+    "deser": 3,
+    "traversal": 3,
+    "xss": 3,
+    "cache": 1,
+    "memory-safety": 1,
+    "other": 3,
+    "crypto-tls": 1,
+    "client-side": 1
+   }
+  },
+  "Uzbey": {
+   "reports": 26,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 5,
+    "other": 5,
+    "memory-safety": 1,
+    "sqli": 2,
+    "xss": 6,
+    "authn": 1,
+    "csrf": 1,
+    "crypto-tls": 1,
+    "logic": 1,
+    "rce": 1,
+    "dos": 1,
+    "clickjacking": 1
+   }
+  },
+  "Mavenlink": {
+   "reports": 25,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 3,
+    "access-control": 5,
+    "disclosure": 3,
+    "csrf": 3,
+    "logic": 1,
+    "other": 2,
+    "authn": 4,
+    "clickjacking": 2,
+    "xss": 2
+   }
+  },
+  "Inflection": {
+   "reports": 24,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 5,
+    "access-control": 6,
+    "xss": 3,
+    "clickjacking": 1,
+    "other": 2,
+    "logic": 2,
+    "crlf": 1,
+    "cache": 2,
+    "authn": 1,
+    "email-phishing": 1
+   }
+  },
+  "RATELIMITED": {
+   "reports": 24,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "takeover": 1,
+    "access-control": 3,
+    "other": 4,
+    "cve": 2,
+    "upload": 1,
+    "disclosure": 8,
+    "network": 1,
+    "xss": 1,
+    "smuggling": 1,
+    "csrf": 1,
+    "cloud": 1
+   }
+  },
+  "Adobe": {
+   "reports": 24,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 3,
+    "other": 1,
+    "xss": 14,
+    "rce": 1,
+    "logic": 1,
+    "access-control": 1,
+    "xxe": 1,
+    "traversal": 1,
+    "cve": 1
+   }
+  },
+  "Superhuman (formerly Grammarly)": {
+   "reports": 23,
+   "paid": 6,
+   "total": 19550.0,
+   "classes": {
+    "oauth": 1,
+    "disclosure": 3,
+    "authn": 4,
+    "websocket": 2,
+    "cors": 1,
+    "xss": 5,
+    "other": 2,
+    "csrf": 1,
+    "access-control": 2,
+    "logic": 2
+   }
+  },
+  "Mapbox": {
+   "reports": 23,
+   "paid": 11,
+   "total": 11800.0,
+   "classes": {
+    "rce": 2,
+    "xss": 10,
+    "cloud": 2,
+    "mobile": 1,
+    "authn": 1,
+    "disclosure": 3,
+    "redirect": 2,
+    "memory-safety": 1,
+    "dos": 1
+   }
+  },
+  "CS Money": {
+   "reports": 23,
+   "paid": 9,
+   "total": 3450.0,
+   "classes": {
+    "xss": 2,
+    "dos": 4,
+    "authn": 6,
+    "access-control": 2,
+    "csrf": 1,
+    "graphql": 1,
+    "redirect": 1,
+    "logic": 2,
+    "clickjacking": 1,
+    "other": 2,
+    "sqli": 1
+   }
+  },
+  "Lab45": {
+   "reports": 23,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 1,
+    "xss": 13,
+    "access-control": 2,
+    "ssrf": 1,
+    "xxe": 1,
+    "csrf": 5
+   }
+  },
+  "Cuvva": {
+   "reports": 23,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 2,
+    "crlf": 1,
+    "other": 4,
+    "authn": 6,
+    "disclosure": 2,
+    "xss": 1,
+    "clickjacking": 3,
+    "logic": 1,
+    "crypto-tls": 2,
+    "csrf": 1
+   }
+  },
+  "WePay": {
+   "reports": 22,
+   "paid": 16,
+   "total": 3050.0,
+   "classes": {
+    "authn": 5,
+    "csrf": 5,
+    "access-control": 3,
+    "xss": 3,
+    "network": 1,
+    "disclosure": 1,
+    "redirect": 2,
+    "takeover": 1,
+    "clickjacking": 1
+   }
+  },
+  "Mixmax": {
+   "reports": 22,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 2,
+    "access-control": 1,
+    "other": 4,
+    "clickjacking": 1,
+    "xss": 5,
+    "disclosure": 2,
+    "csrf": 1,
+    "crlf": 1,
+    "takeover": 1,
+    "authn": 2,
+    "memory-safety": 1,
+    "network": 1
+   }
+  },
+  "Discourse": {
+   "reports": 21,
+   "paid": 11,
+   "total": 4672.0,
+   "classes": {
+    "dos": 2,
+    "other": 1,
+    "traversal": 1,
+    "rce": 1,
+    "xss": 8,
+    "access-control": 3,
+    "disclosure": 2,
+    "ssrf": 1,
+    "csrf": 2
+   }
+  },
+  "PlayStation": {
+   "reports": 20,
+   "paid": 18,
+   "total": 122200.0,
+   "classes": {
+    "rce": 1,
+    "access-control": 5,
+    "memory-safety": 8,
+    "ssrf": 2,
+    "disclosure": 1,
+    "xss": 1,
+    "client-side": 1,
+    "other": 1
+   }
+  },
+  "Grab": {
+   "reports": 20,
+   "paid": 8,
+   "total": 15250.0,
+   "classes": {
+    "sqli": 1,
+    "disclosure": 6,
+    "memory-safety": 1,
+    "xss": 6,
+    "access-control": 3,
+    "authn": 1,
+    "mobile": 1,
+    "rce": 1
+   }
+  },
+  "Factlink": {
+   "reports": 20,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 3,
+    "dos": 1,
+    "authn": 5,
+    "csrf": 3,
+    "other": 2,
+    "crypto-tls": 2,
+    "cors": 1,
+    "xss": 1,
+    "clickjacking": 1,
+    "redirect": 1
+   }
+  },
+  "Mattermost": {
+   "reports": 19,
+   "paid": 6,
+   "total": 2250.0,
+   "classes": {
+    "authn": 3,
+    "xss": 3,
+    "websocket": 1,
+    "dos": 5,
+    "crypto-tls": 1,
+    "rce": 1,
+    "other": 1,
+    "access-control": 3,
+    "cors": 1
+   }
+  },
+  "BlockDev Sp. Z o.o": {
+   "reports": 19,
+   "paid": 1,
+   "total": 500.0,
+   "classes": {
+    "authn": 6,
+    "other": 2,
+    "logic": 2,
+    "disclosure": 4,
+    "sqli": 1,
+    "ssrf": 1,
+    "access-control": 1,
+    "xss": 1,
+    "cve": 1
+   }
+  },
+  "Nintendo": {
+   "reports": 19,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "crypto-tls": 1,
+    "disclosure": 1,
+    "dos": 1,
+    "access-control": 3,
+    "authn": 1,
+    "network": 1,
+    "memory-safety": 9,
+    "other": 1,
+    "rce": 1
+   }
+  },
+  "Kaspersky": {
+   "reports": 19,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 2,
+    "xss": 2,
+    "disclosure": 3,
+    "crypto-tls": 1,
+    "network": 1,
+    "authn": 3,
+    "rce": 5,
+    "clickjacking": 1,
+    "memory-safety": 1
+   }
+  },
+  "Kartpay": {
+   "reports": 19,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 6,
+    "authn": 4,
+    "smuggling": 1,
+    "other": 1,
+    "network": 1,
+    "redirect": 2,
+    "jwt": 1,
+    "xss": 2,
+    "logic": 1
+   }
+  },
+  "drchrono": {
+   "reports": 19,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xxe": 1,
+    "xss": 4,
+    "authn": 4,
+    "access-control": 2,
+    "disclosure": 4,
+    "csrf": 3,
+    "crypto-tls": 1
+   }
+  },
+  "Showmax": {
+   "reports": 18,
+   "paid": 12,
+   "total": 5384.0,
+   "classes": {
+    "authn": 3,
+    "redirect": 1,
+    "access-control": 2,
+    "xss": 2,
+    "other": 1,
+    "disclosure": 3,
+    "api": 1,
+    "cors": 1,
+    "cve": 2,
+    "logic": 1,
+    "race": 1
+   }
+  },
+  "Judge.me": {
+   "reports": 18,
+   "paid": 10,
+   "total": 5550.0,
+   "classes": {
+    "xss": 11,
+    "access-control": 2,
+    "race": 1,
+    "rce": 2,
+    "disclosure": 1,
+    "logic": 1
+   }
+  },
+  "BugPoC": {
+   "reports": 18,
+   "paid": 7,
+   "total": 1900.0,
+   "classes": {
+    "disclosure": 1,
+    "xss": 11,
+    "traversal": 2,
+    "other": 2,
+    "access-control": 1,
+    "logic": 1
+   }
+  },
+  "Urban Dictionary": {
+   "reports": 18,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 5,
+    "disclosure": 4,
+    "race": 2,
+    "crlf": 1,
+    "authn": 1,
+    "network": 1,
+    "email-phishing": 1,
+    "redirect": 2,
+    "takeover": 1
+   }
+  },
+  "Engel & Völkers Technology GmbH": {
+   "reports": 18,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 1,
+    "sqli": 1,
+    "xss": 6,
+    "disclosure": 5,
+    "xxe": 1,
+    "cve": 1,
+    "authn": 1,
+    "ssrf": 1,
+    "email-phishing": 1
+   }
+  },
+  "General Motors": {
+   "reports": 18,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 1,
+    "xss": 12,
+    "disclosure": 2,
+    "logic": 3
+   }
+  },
+  "U.S. General Services Administration": {
+   "reports": 17,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 5,
+    "authn": 4,
+    "csrf": 1,
+    "crlf": 1,
+    "cache": 1,
+    "disclosure": 3,
+    "xss": 1,
+    "traversal": 1
+   }
+  },
+  "Pushwoosh": {
+   "reports": 17,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 6,
+    "other": 1,
+    "logic": 1,
+    "authn": 2,
+    "xss": 3,
+    "rce": 1,
+    "cloud": 1,
+    "clickjacking": 1,
+    "memory-safety": 1
+   }
+  },
+  "Respondly": {
+   "reports": 17,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 7,
+    "redirect": 1,
+    "oauth": 1,
+    "authn": 1,
+    "other": 4,
+    "disclosure": 2,
+    "clickjacking": 1
+   }
+  },
+  "inDrive": {
+   "reports": 16,
+   "paid": 4,
+   "total": 7418.0,
+   "classes": {
+    "sqli": 1,
+    "authn": 1,
+    "access-control": 1,
+    "xss": 6,
+    "ssrf": 1,
+    "api": 1,
+    "logic": 1,
+    "disclosure": 3,
+    "crlf": 1
+   }
+  },
+  "Flickr": {
+   "reports": 16,
+   "paid": 7,
+   "total": 5429.0,
+   "classes": {
+    "xss": 1,
+    "disclosure": 2,
+    "dos": 1,
+    "logic": 1,
+    "redirect": 4,
+    "authn": 1,
+    "traversal": 1,
+    "csrf": 1,
+    "other": 2,
+    "access-control": 2
+   }
+  },
+  "Vercel": {
+   "reports": 16,
+   "paid": 1,
+   "total": 1026.0,
+   "classes": {
+    "access-control": 1,
+    "redirect": 5,
+    "oauth": 1,
+    "csrf": 1,
+    "xss": 4,
+    "disclosure": 1,
+    "authn": 2,
+    "traversal": 1
+   }
+  },
+  "DuckDuckGo": {
+   "reports": 16,
+   "paid": 1,
+   "total": 500.0,
+   "classes": {
+    "ssrf": 4,
+    "xss": 7,
+    "xxe": 2,
+    "rce": 2,
+    "mobile": 1
+   }
+  },
+  "Enter": {
+   "reports": 16,
+   "paid": 10,
+   "total": 1763.0,
+   "classes": {
+    "authn": 4,
+    "access-control": 1,
+    "logic": 1,
+    "csrf": 2,
+    "other": 1,
+    "rce": 1,
+    "disclosure": 3,
+    "xss": 3
+   }
+  },
+  "OWOX, Inc.": {
+   "reports": 16,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 3,
+    "cache": 1,
+    "authn": 2,
+    "upload": 1,
+    "rce": 1,
+    "cloud": 1,
+    "takeover": 4,
+    "disclosure": 1,
+    "crlf": 1,
+    "clickjacking": 1
+   }
+  },
+  "RelateIQ": {
+   "reports": 16,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 3,
+    "other": 1,
+    "disclosure": 2,
+    "csrf": 3,
+    "crypto-tls": 4,
+    "ssrf": 1,
+    "authn": 1,
+    "redirect": 1
+   }
+  },
+  "Logitech": {
+   "reports": 15,
+   "paid": 5,
+   "total": 900.0,
+   "classes": {
+    "redirect": 3,
+    "ssrf": 1,
+    "disclosure": 1,
+    "access-control": 3,
+    "csrf": 2,
+    "logic": 1,
+    "xss": 2,
+    "crlf": 1,
+    "clickjacking": 1
+   }
+  },
+  "Passit": {
+   "reports": 15,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "clickjacking": 1,
+    "authn": 6,
+    "other": 3,
+    "rce": 1,
+    "disclosure": 1,
+    "redirect": 1,
+    "xss": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Elastic": {
+   "reports": 14,
+   "paid": 2,
+   "total": 15000.0,
+   "classes": {
+    "rce": 3,
+    "xss": 2,
+    "cve": 1,
+    "disclosure": 1,
+    "ssrf": 1,
+    "csrf": 1,
+    "access-control": 2,
+    "crypto-tls": 1,
+    "traversal": 1,
+    "xxe": 1
+   }
+  },
+  "EXNESS": {
+   "reports": 14,
+   "paid": 3,
+   "total": 3600.0,
+   "classes": {
+    "ssrf": 2,
+    "xss": 2,
+    "crlf": 1,
+    "other": 3,
+    "access-control": 4,
+    "logic": 1,
+    "takeover": 1
+   }
+  },
+  "pixiv": {
+   "reports": 14,
+   "paid": 9,
+   "total": 9100.0,
+   "classes": {
+    "logic": 1,
+    "access-control": 3,
+    "rce": 1,
+    "xss": 3,
+    "csrf": 1,
+    "clickjacking": 1,
+    "redirect": 2,
+    "authn": 1,
+    "disclosure": 1
+   }
+  },
+  "Upserve": {
+   "reports": 14,
+   "paid": 8,
+   "total": 7850.0,
+   "classes": {
+    "xss": 6,
+    "redirect": 2,
+    "logic": 3,
+    "disclosure": 1,
+    "authn": 2
+   }
+  },
+  "Hiro": {
+   "reports": 14,
+   "paid": 3,
+   "total": 400.0,
+   "classes": {
+    "authn": 3,
+    "disclosure": 5,
+    "redirect": 1,
+    "other": 2,
+    "crypto-tls": 1,
+    "csrf": 1,
+    "clickjacking": 1
+   }
+  },
+  "Autodesk": {
+   "reports": 14,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 1,
+    "xss": 5,
+    "cors": 1,
+    "disclosure": 3,
+    "access-control": 3,
+    "cve": 1
+   }
+  },
+  "Homebrew": {
+   "reports": 14,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 3,
+    "other": 1,
+    "api": 1,
+    "memory-safety": 2,
+    "access-control": 3,
+    "rce": 1,
+    "crlf": 1,
+    "cloud": 1,
+    "clickjacking": 1
+   }
+  },
+  "Sony": {
+   "reports": 14,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 2,
+    "sqli": 3,
+    "crypto-tls": 1,
+    "ssrf": 1,
+    "traversal": 1,
+    "deser": 2,
+    "rce": 2,
+    "authn": 1,
+    "xss": 1
+   }
+  },
+  "lemlist": {
+   "reports": 14,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 2,
+    "authn": 2,
+    "xss": 5,
+    "upload": 1,
+    "ssrf": 1,
+    "logic": 1,
+    "other": 1,
+    "clickjacking": 1
+   }
+  },
+  "GoCD": {
+   "reports": 14,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 7,
+    "disclosure": 2,
+    "cloud": 1,
+    "csrf": 1,
+    "other": 1,
+    "authn": 1,
+    "ssrf": 1
+   }
+  },
+  "PayPal": {
+   "reports": 13,
+   "paid": 7,
+   "total": 107900.0,
+   "classes": {
+    "smuggling": 2,
+    "rce": 1,
+    "access-control": 2,
+    "cache": 1,
+    "csrf": 1,
+    "redirect": 2,
+    "xss": 3,
+    "deser": 1
+   }
+  },
+  "Semmle": {
+   "reports": 13,
+   "paid": 4,
+   "total": 6000.0,
+   "classes": {
+    "traversal": 2,
+    "access-control": 1,
+    "disclosure": 3,
+    "api": 1,
+    "xss": 2,
+    "csrf": 1,
+    "authn": 1,
+    "rce": 1,
+    "other": 1
+   }
+  },
+  "Enjin": {
+   "reports": 13,
+   "paid": 2,
+   "total": 800.0,
+   "classes": {
+    "authn": 3,
+    "csrf": 3,
+    "upload": 2,
+    "xss": 1,
+    "race": 2,
+    "access-control": 1,
+    "rce": 1
+   }
+  },
+  "XVIDEOS": {
+   "reports": 13,
+   "paid": 5,
+   "total": 750.0,
+   "classes": {
+    "xss": 2,
+    "authn": 3,
+    "other": 1,
+    "redirect": 1,
+    "disclosure": 2,
+    "logic": 2,
+    "crlf": 1,
+    "csrf": 1
+   }
+  },
+  "Greenhouse.io": {
+   "reports": 13,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "cloud": 1,
+    "email-phishing": 1,
+    "disclosure": 2,
+    "xss": 1,
+    "memory-safety": 1,
+    "cache": 2,
+    "redirect": 1,
+    "authn": 1,
+    "crlf": 1,
+    "logic": 1,
+    "network": 1
+   }
+  },
+  "Reverb.com": {
+   "reports": 13,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "race": 1,
+    "disclosure": 2,
+    "logic": 1,
+    "xss": 4,
+    "access-control": 1,
+    "cloud": 1,
+    "csrf": 1,
+    "api": 1
+   }
+  },
+  "50m-ctf": {
+   "reports": 13,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 3,
+    "other": 5,
+    "traversal": 1,
+    "disclosure": 2,
+    "sqli": 2
+   }
+  },
+  "Courier": {
+   "reports": 13,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 8,
+    "cloud": 1,
+    "dos": 1,
+    "email-phishing": 1,
+    "csrf": 1,
+    "oauth": 1
+   }
+  },
+  "Shipt": {
+   "reports": 12,
+   "paid": 7,
+   "total": 5900.0,
+   "classes": {
+    "access-control": 2,
+    "takeover": 3,
+    "disclosure": 2,
+    "mobile": 1,
+    "api": 1,
+    "logic": 1,
+    "clickjacking": 1,
+    "redirect": 1
+   }
+  },
+  "Doppler": {
+   "reports": 12,
+   "paid": 1,
+   "total": 250.0,
+   "classes": {
+    "logic": 3,
+    "access-control": 3,
+    "xss": 2,
+    "other": 1,
+    "authn": 2,
+    "disclosure": 1
+   }
+  },
+  "Deriv.com": {
+   "reports": 12,
+   "paid": 3,
+   "total": 200.0,
+   "classes": {
+    "crlf": 1,
+    "authn": 4,
+    "xss": 4,
+    "disclosure": 1,
+    "clickjacking": 1,
+    "takeover": 1
+   }
+  },
+  "Django": {
+   "reports": 12,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 4,
+    "csrf": 1,
+    "authn": 1,
+    "traversal": 1,
+    "dos": 1,
+    "rce": 1,
+    "deser": 1,
+    "logic": 1,
+    "other": 1
+   }
+  },
+  "Cosmos": {
+   "reports": 11,
+   "paid": 4,
+   "total": 24000.0,
+   "classes": {
+    "other": 1,
+    "race": 1,
+    "access-control": 2,
+    "memory-safety": 1,
+    "dos": 3,
+    "cloud": 1,
+    "logic": 2
+   }
+  },
+  "MetaMask": {
+   "reports": 11,
+   "paid": 6,
+   "total": 6350.0,
+   "classes": {
+    "authn": 1,
+    "email-phishing": 1,
+    "takeover": 1,
+    "logic": 2,
+    "rce": 1,
+    "disclosure": 1,
+    "xss": 2,
+    "traversal": 1,
+    "clickjacking": 1
+   }
+  },
+  "Helium": {
+   "reports": 11,
+   "paid": 4,
+   "total": 900.0,
+   "classes": {
+    "access-control": 4,
+    "race": 1,
+    "redirect": 1,
+    "smuggling": 1,
+    "authn": 1,
+    "network": 1,
+    "ssrf": 1,
+    "other": 1
+   }
+  },
+  "Ed": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 3,
+    "redirect": 1,
+    "oauth": 1,
+    "dos": 2,
+    "access-control": 2,
+    "xss": 1,
+    "other": 1
+   }
+  },
+  "██████": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "mobile": 2,
+    "other": 2,
+    "xxe": 1,
+    "traversal": 1,
+    "xss": 1,
+    "rce": 1,
+    "authn": 1,
+    "sqli": 1,
+    "csrf": 1
+   }
+  },
+  "Bykea": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 5,
+    "disclosure": 1,
+    "websocket": 1,
+    "logic": 3,
+    "llm": 1
+   }
+  },
+  "Krisp": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "deser": 1,
+    "access-control": 3,
+    "csrf": 1,
+    "other": 1,
+    "race": 1,
+    "cve": 1,
+    "disclosure": 2,
+    "logic": 1
+   }
+  },
+  "Smule": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "logic": 1,
+    "authn": 4,
+    "takeover": 1,
+    "cache": 1,
+    "ssrf": 1,
+    "redirect": 1,
+    "disclosure": 1,
+    "xss": 1
+   }
+  },
+  "DRIVE.NET, Inc.": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 6,
+    "other": 1,
+    "xss": 1,
+    "csrf": 1,
+    "logic": 1,
+    "disclosure": 1
+   }
+  },
+  "Dropcontact": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 7,
+    "logic": 1,
+    "access-control": 2,
+    "email-phishing": 1
+   }
+  },
+  "Hanno's projects": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 3,
+    "redirect": 4,
+    "sqli": 2,
+    "ssrf": 1,
+    "email-phishing": 1
+   }
+  },
+  "Bitwarden": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "access-control": 1,
+    "other": 2,
+    "ssrf": 2,
+    "disclosure": 1,
+    "logic": 1,
+    "network": 1,
+    "rce": 1
+   }
+  },
+  "Mobile Vikings": {
+   "reports": 11,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 3,
+    "authn": 2,
+    "xss": 5,
+    "csrf": 1
+   }
+  },
+  "Airbnb": {
+   "reports": 10,
+   "paid": 1,
+   "total": 2500.0,
+   "classes": {
+    "crlf": 1,
+    "oauth": 1,
+    "xss": 2,
+    "access-control": 2,
+    "logic": 1,
+    "disclosure": 1,
+    "csrf": 1,
+    "crypto-tls": 1
+   }
+  },
+  "FetLife": {
+   "reports": 10,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "dos": 1,
+    "api": 1,
+    "xss": 2,
+    "network": 1,
+    "access-control": 2,
+    "disclosure": 2,
+    "race": 1
+   }
+  },
+  "Whisper": {
+   "reports": 10,
+   "paid": 6,
+   "total": 320.0,
+   "classes": {
+    "xss": 1,
+    "mobile": 1,
+    "disclosure": 3,
+    "dos": 1,
+    "redirect": 2,
+    "crypto-tls": 1,
+    "email-phishing": 1
+   }
+  },
+  "Dust": {
+   "reports": 10,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "access-control": 5,
+    "llm": 1,
+    "race": 1,
+    "authn": 1,
+    "logic": 1
+   }
+  },
+  "SingleStore": {
+   "reports": 10,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "access-control": 5,
+    "race": 3,
+    "traversal": 1
+   }
+  },
+  "h1-5411-CTF": {
+   "reports": 10,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xxe": 2,
+    "deser": 1,
+    "rce": 3,
+    "other": 3,
+    "traversal": 1
+   }
+  },
+  "MyCrypto": {
+   "reports": 10,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 4,
+    "email-phishing": 3,
+    "clickjacking": 1,
+    "other": 1,
+    "network": 1
+   }
+  },
+  "Stellar.org": {
+   "reports": 10,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "logic": 2,
+    "authn": 2,
+    "access-control": 1,
+    "memory-safety": 1,
+    "cve": 2,
+    "xss": 1,
+    "other": 1
+   }
+  },
+  "LibSass": {
+   "reports": 10,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "memory-safety": 10
+   }
+  },
+  "Lyst": {
+   "reports": 9,
+   "paid": 4,
+   "total": 1350.0,
+   "classes": {
+    "takeover": 1,
+    "csrf": 1,
+    "other": 2,
+    "xss": 1,
+    "cache": 1,
+    "ssrf": 1,
+    "redirect": 1,
+    "logic": 1
+   }
+  },
+  "Evernote": {
+   "reports": 9,
+   "paid": 4,
+   "total": 1100.0,
+   "classes": {
+    "xss": 2,
+    "csrf": 1,
+    "authn": 1,
+    "disclosure": 1,
+    "ssrf": 1,
+    "traversal": 1,
+    "xxe": 1,
+    "access-control": 1
+   }
+  },
+  "Lichess": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "traversal": 1,
+    "ssrf": 1,
+    "other": 2,
+    "authn": 2,
+    "redirect": 1,
+    "csrf": 1,
+    "access-control": 1
+   }
+  },
+  "Zivver": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xxe": 1,
+    "authn": 2,
+    "access-control": 2,
+    "disclosure": 2,
+    "xss": 2
+   }
+  },
+  "Bime": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "disclosure": 2,
+    "xxe": 1,
+    "ssrf": 1,
+    "takeover": 1,
+    "other": 1,
+    "rce": 1,
+    "memory-safety": 1
+   }
+  },
+  "U.S. Department of State": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 1,
+    "access-control": 3,
+    "xss": 3,
+    "ssrf": 1,
+    "disclosure": 1
+   }
+  },
+  "Palo Alto Software": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "authn": 1,
+    "access-control": 5,
+    "takeover": 1,
+    "clickjacking": 1
+   }
+  },
+  "Azbuka Vkusa": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 3,
+    "authn": 1,
+    "xss": 2,
+    "network": 1,
+    "other": 1,
+    "redirect": 1
+   }
+  },
+  "Aspen": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "disclosure": 3,
+    "cors": 1,
+    "logic": 1,
+    "clickjacking": 1,
+    "other": 1
+   }
+  },
+  "ImpressCMS": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 2,
+    "xss": 2,
+    "authn": 3,
+    "traversal": 1,
+    "access-control": 1
+   }
+  },
+  "MS-DOS": {
+   "reports": 9,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "dos": 1,
+    "disclosure": 2,
+    "authn": 2,
+    "memory-safety": 1,
+    "rce": 1,
+    "other": 2
+   }
+  },
+  "Rootstock Labs": {
+   "reports": 8,
+   "paid": 3,
+   "total": 11000.0,
+   "classes": {
+    "dos": 6,
+    "deser": 1,
+    "disclosure": 1
+   }
+  },
+  "InnoGames": {
+   "reports": 8,
+   "paid": 8,
+   "total": 8350.0,
+   "classes": {
+    "sqli": 1,
+    "race": 1,
+    "disclosure": 1,
+    "logic": 1,
+    "cache": 1,
+    "access-control": 2,
+    "xss": 1
+   }
+  },
+  "Ping Identity": {
+   "reports": 8,
+   "paid": 3,
+   "total": 400.0,
+   "classes": {
+    "disclosure": 2,
+    "host-header": 1,
+    "xss": 1,
+    "other": 2,
+    "authn": 1,
+    "email-phishing": 1
+   }
+  },
+  "Notepad++": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "memory-safety": 4,
+    "rce": 3,
+    "dos": 1
+   }
+  },
+  "Quora": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 5,
+    "mobile": 1,
+    "other": 1,
+    "dos": 1
+   }
+  },
+  "Glovo": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "xss": 2,
+    "memory-safety": 1,
+    "ssti": 1,
+    "disclosure": 2,
+    "authn": 1
+   }
+  },
+  "TomTom": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 2,
+    "access-control": 1,
+    "cloud": 1,
+    "xss": 3,
+    "csrf": 1
+   }
+  },
+  "Central Security Project": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 4,
+    "deser": 1,
+    "xxe": 2,
+    "network": 1
+   }
+  },
+  "FantasyTote": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "crypto-tls": 2,
+    "authn": 2,
+    "rce": 2,
+    "other": 2
+   }
+  },
+  "WebSummit": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "takeover": 1,
+    "xss": 2,
+    "other": 1,
+    "cloud": 1,
+    "redirect": 1,
+    "sqli": 1
+   }
+  },
+  "DigitalSellz": {
+   "reports": 8,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "cloud": 2,
+    "other": 3,
+    "csrf": 1,
+    "disclosure": 1
+   }
+  },
+  "GlassWire": {
+   "reports": 7,
+   "paid": 3,
+   "total": 450.0,
+   "classes": {
+    "access-control": 2,
+    "rce": 2,
+    "disclosure": 1,
+    "other": 1,
+    "clickjacking": 1
+   }
+  },
+  "withinsecurity": {
+   "reports": 7,
+   "paid": 1,
+   "total": 250.0,
+   "classes": {
+    "email-phishing": 2,
+    "logic": 1,
+    "dos": 1,
+    "other": 1,
+    "cve": 1,
+    "crypto-tls": 1
+   }
+  },
+  "BOHEMIA INTERACTIVE a.s.": {
+   "reports": 7,
+   "paid": 1,
+   "total": 80.0,
+   "classes": {
+    "clickjacking": 1,
+    "oauth": 1,
+    "access-control": 1,
+    "authn": 2,
+    "disclosure": 1,
+    "cve": 1
+   }
+  },
+  "LeaseWeb": {
+   "reports": 7,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "xss": 1,
+    "disclosure": 3,
+    "clickjacking": 1,
+    "other": 1,
+    "memory-safety": 1
+   }
+  },
+  "Tucows (VDP)": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "xss": 1,
+    "csrf": 1,
+    "logic": 1,
+    "access-control": 1,
+    "disclosure": 2
+   }
+  },
+  "Equifax-vdp": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "xss": 3,
+    "takeover": 1,
+    "disclosure": 2
+   }
+  },
+  "Lovable VDP": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 3,
+    "logic": 2,
+    "redirect": 2
+   }
+  },
+  "JetBlue": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "cloud": 1,
+    "xss": 2,
+    "cve": 1,
+    "redirect": 3
+   }
+  },
+  "WHO COVID-19 Mobile App": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "xss": 1,
+    "other": 2,
+    "email-phishing": 2,
+    "authn": 1
+   }
+  },
+  "Endless Group": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "host-header": 1,
+    "disclosure": 2,
+    "xss": 1,
+    "cve": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Solana BBP": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "traversal": 1,
+    "disclosure": 1,
+    "dos": 2,
+    "logic": 1,
+    "memory-safety": 2
+   }
+  },
+  "Avito": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 2,
+    "xss": 2,
+    "memory-safety": 1,
+    "email-phishing": 1,
+    "disclosure": 1
+   }
+  },
+  "RBKmoney": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "takeover": 1,
+    "crypto-tls": 1,
+    "xss": 1,
+    "redirect": 1,
+    "disclosure": 1,
+    "logic": 1
+   }
+  },
+  "Secret": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "crypto-tls": 2,
+    "csrf": 1,
+    "disclosure": 2,
+    "other": 1
+   }
+  },
+  "C2FO": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 1,
+    "disclosure": 2,
+    "authn": 1,
+    "other": 2,
+    "crypto-tls": 1
+   }
+  },
+  "Zaption": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 2,
+    "xss": 2,
+    "csrf": 1,
+    "rce": 1,
+    "access-control": 1
+   }
+  },
+  "StopTheHacker": {
+   "reports": 7,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 5,
+    "disclosure": 1,
+    "csrf": 1
+   }
+  },
+  "Aiven Ltd": {
+   "reports": 6,
+   "paid": 5,
+   "total": 22000.0,
+   "classes": {
+    "rce": 1,
+    "crlf": 1,
+    "upload": 1,
+    "deser": 1,
+    "traversal": 1,
+    "csrf": 1
+   }
+  },
+  "PuTTY (European Commission - DIGIT)": {
+   "reports": 6,
+   "paid": 1,
+   "total": 3645.9,
+   "classes": {
+    "memory-safety": 5,
+    "dos": 1
+   }
+  },
+  "Augur": {
+   "reports": 6,
+   "paid": 6,
+   "total": 13350.0,
+   "classes": {
+    "access-control": 1,
+    "logic": 2,
+    "client-side": 1,
+    "takeover": 1,
+    "cloud": 1
+   }
+  },
+  "Urban Company": {
+   "reports": 6,
+   "paid": 2,
+   "total": 2000.0,
+   "classes": {
+    "authn": 2,
+    "ssrf": 1,
+    "other": 1,
+    "disclosure": 1,
+    "logic": 1
+   }
+  },
+  "Linktree": {
+   "reports": 6,
+   "paid": 3,
+   "total": 1950.0,
+   "classes": {
+    "xss": 2,
+    "access-control": 2,
+    "upload": 1,
+    "redirect": 1
+   }
+  },
+  "BTFS": {
+   "reports": 6,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "takeover": 1,
+    "xss": 2,
+    "clickjacking": 1,
+    "disclosure": 1,
+    "cors": 1
+   }
+  },
+  "Eobot": {
+   "reports": 6,
+   "paid": 2,
+   "total": 22.0,
+   "classes": {
+    "dos": 1,
+    "xss": 1,
+    "other": 2,
+    "access-control": 1,
+    "disclosure": 1
+   }
+  },
+  "Expedia Group Bug Bounty": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 1,
+    "cache": 1,
+    "xss": 2,
+    "disclosure": 1,
+    "client-side": 1
+   }
+  },
+  "MercadoLibre": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "xss": 3,
+    "rce": 1,
+    "other": 1
+   }
+  },
+  "Top Echelon Software": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "clickjacking": 1,
+    "api": 1,
+    "authn": 1,
+    "access-control": 1,
+    "other": 1,
+    "disclosure": 1
+   }
+  },
+  "Tennessee Valley Authority": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "traversal": 1,
+    "disclosure": 1,
+    "sqli": 1,
+    "access-control": 1
+   }
+  },
+  "arkadiyt-projects": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 2,
+    "traversal": 2,
+    "access-control": 1,
+    "other": 1
+   }
+  },
+  "FormAssembly": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "other": 1,
+    "xss": 2,
+    "crypto-tls": 1
+   }
+  },
+  "Coursera": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 3,
+    "authn": 3
+   }
+  },
+  "ThisData": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "api": 1,
+    "host-header": 1,
+    "csrf": 1,
+    "xss": 2,
+    "email-phishing": 1
+   }
+  },
+  "FanFootage": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "dos": 1,
+    "csrf": 2,
+    "other": 2
+   }
+  },
+  "ReddAPI": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "other": 2,
+    "crypto-tls": 1,
+    "xss": 1
+   }
+  },
+  "Xero": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 3,
+    "redirect": 1,
+    "crypto-tls": 1,
+    "disclosure": 1
+   }
+  },
+  "joola.io": {
+   "reports": 6,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "crypto-tls": 3,
+    "other": 2,
+    "network": 1
+   }
+  },
+  "Lob": {
+   "reports": 5,
+   "paid": 2,
+   "total": 2000.0,
+   "classes": {
+    "memory-safety": 1,
+    "smuggling": 1,
+    "ssrf": 1,
+    "access-control": 1,
+    "disclosure": 1
+   }
+  },
+  "Zenly": {
+   "reports": 5,
+   "paid": 3,
+   "total": 2250.0,
+   "classes": {
+    "takeover": 1,
+    "disclosure": 3,
+    "authn": 1
+   }
+  },
+  "Affirm": {
+   "reports": 5,
+   "paid": 3,
+   "total": 1250.0,
+   "classes": {
+    "access-control": 1,
+    "takeover": 2,
+    "redirect": 1,
+    "disclosure": 1
+   }
+  },
+  "Clario": {
+   "reports": 5,
+   "paid": 2,
+   "total": 600.0,
+   "classes": {
+    "redirect": 1,
+    "authn": 1,
+    "other": 1,
+    "dos": 1,
+    "xss": 1
+   }
+  },
+  "Dropbox Acquisitions": {
+   "reports": 5,
+   "paid": 3,
+   "total": 1161.0,
+   "classes": {
+    "access-control": 1,
+    "disclosure": 1,
+    "xss": 1,
+    "authn": 1,
+    "other": 1
+   }
+  },
+  "MainWP": {
+   "reports": 5,
+   "paid": 5,
+   "total": 250.0,
+   "classes": {
+    "xss": 5
+   }
+  },
+  "Blockchain": {
+   "reports": 5,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "disclosure": 2,
+    "xss": 1,
+    "smuggling": 1,
+    "rce": 1
+   }
+  },
+  "Roblox": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "takeover": 2,
+    "access-control": 1,
+    "xss": 1,
+    "dos": 1
+   }
+  },
+  "Insightly": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "xss": 2,
+    "authn": 1,
+    "csrf": 1
+   }
+  },
+  "Hemi VDP": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 3,
+    "access-control": 2
+   }
+  },
+  "Staging.every.org": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "race": 1,
+    "authn": 1,
+    "other": 2,
+    "disclosure": 1
+   }
+  },
+  "Trint Ltd": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 2,
+    "access-control": 2,
+    "oauth": 1
+   }
+  },
+  "Trellix": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "rce": 1,
+    "xss": 1,
+    "disclosure": 1
+   }
+  },
+  "phpBB": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 2,
+    "ssrf": 2,
+    "client-side": 1
+   }
+  },
+  "Essity": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 2,
+    "xss": 1,
+    "crlf": 1,
+    "sqli": 1
+   }
+  },
+  "Fastify": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 1,
+    "dos": 3,
+    "redirect": 1
+   }
+  },
+  "Myndr": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "redirect": 1,
+    "cors": 2,
+    "authn": 1
+   }
+  },
+  "Polymail, Inc.": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 1,
+    "access-control": 1,
+    "xss": 2,
+    "oauth": 1
+   }
+  },
+  "OpenMage": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "email-phishing": 1,
+    "access-control": 1,
+    "csrf": 1,
+    "redirect": 1,
+    "dos": 1
+   }
+  },
+  "jsDelivr": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 1,
+    "rce": 1,
+    "crypto-tls": 1,
+    "xss": 2
+   }
+  },
+  "Faceless": {
+   "reports": 5,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "other": 3,
+    "disclosure": 1
+   }
+  },
+  "Tools for Humanity": {
+   "reports": 4,
+   "paid": 3,
+   "total": 3800.0,
+   "classes": {
+    "race": 1,
+    "access-control": 1,
+    "logic": 1,
+    "xss": 1
+   }
+  },
+  "VLC (European Commission - DIGIT)": {
+   "reports": 4,
+   "paid": 4,
+   "total": 6200.32,
+   "classes": {
+    "memory-safety": 4
+   }
+  },
+  "Quantopian": {
+   "reports": 4,
+   "paid": 4,
+   "total": 6300.0,
+   "classes": {
+    "xss": 3,
+    "other": 1
+   }
+  },
+  "Block.one": {
+   "reports": 4,
+   "paid": 4,
+   "total": 5500.0,
+   "classes": {
+    "memory-safety": 4
+   }
+  },
+  "MyEtherWallet": {
+   "reports": 4,
+   "paid": 2,
+   "total": 2750.0,
+   "classes": {
+    "xss": 1,
+    "disclosure": 1,
+    "authn": 1,
+    "other": 1
+   }
+  },
+  "OPPO": {
+   "reports": 4,
+   "paid": 4,
+   "total": 850.0,
+   "classes": {
+    "access-control": 1,
+    "authn": 1,
+    "xss": 1,
+    "disclosure": 1
+   }
+  },
+  "Sorare": {
+   "reports": 4,
+   "paid": 3,
+   "total": 900.0,
+   "classes": {
+    "dos": 1,
+    "crypto-tls": 1,
+    "other": 1,
+    "graphql": 1
+   }
+  },
+  "Drugs.com": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "xss": 2
+   }
+  },
+  "Fastly VDP": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 1,
+    "access-control": 2,
+    "cve": 1
+   }
+  },
+  "Qulture.Rocks": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "deser": 1,
+    "access-control": 1,
+    "disclosure": 1
+   }
+  },
+  "Malwarebytes": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "race": 1,
+    "email-phishing": 1,
+    "disclosure": 1,
+    "authn": 1
+   }
+  },
+  "Panther Labs": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "takeover": 2,
+    "other": 1
+   }
+  },
+  "Genasys Technologies": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "oauth": 1,
+    "disclosure": 1,
+    "logic": 1
+   }
+  },
+  "TD Bank": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 3,
+    "disclosure": 1
+   }
+  },
+  "Dashlane": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "access-control": 1,
+    "logic": 1,
+    "disclosure": 1
+   }
+  },
+  "OneWeb": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "cve": 1,
+    "email-phishing": 1,
+    "takeover": 1,
+    "xss": 1
+   }
+  },
+  "bitaccess": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "other": 1,
+    "email-phishing": 1
+   }
+  },
+  "Alohi": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 3,
+    "access-control": 1
+   }
+  },
+  "Rockset": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "cloud": 1,
+    "disclosure": 1,
+    "access-control": 1,
+    "authn": 1
+   }
+  },
+  "CodeIgniter": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "disclosure": 2,
+    "other": 1
+   }
+  },
+  "APITest.IO": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 1,
+    "other": 1,
+    "disclosure": 1,
+    "clickjacking": 1
+   }
+  },
+  "Skyliner": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "deser": 1,
+    "other": 1,
+    "redirect": 1,
+    "logic": 1
+   }
+  },
+  "Nutanix": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 2,
+    "ssrf": 1,
+    "cloud": 1
+   }
+  },
+  "SecNews": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "logic": 1,
+    "email-phishing": 1,
+    "xss": 1,
+    "access-control": 1
+   }
+  },
+  "GlobaLeaks": {
+   "reports": 4,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "crypto-tls": 1,
+    "disclosure": 1,
+    "logic": 1,
+    "email-phishing": 1
+   }
+  },
+  "Intel Corporation": {
+   "reports": 3,
+   "paid": 3,
+   "total": 7500.0,
+   "classes": {
+    "other": 2,
+    "memory-safety": 1
+   }
+  },
+  "AMBER AI": {
+   "reports": 3,
+   "paid": 1,
+   "total": 1500.0,
+   "classes": {
+    "api": 2,
+    "redirect": 1
+   }
+  },
+  "Tron Foundation": {
+   "reports": 3,
+   "paid": 3,
+   "total": 2600.0,
+   "classes": {
+    "disclosure": 2,
+    "dos": 1
+   }
+  },
+  "SideFX": {
+   "reports": 3,
+   "paid": 3,
+   "total": 1100.0,
+   "classes": {
+    "xss": 1,
+    "authn": 1,
+    "other": 1
+   }
+  },
+  "Files.com": {
+   "reports": 3,
+   "paid": 1,
+   "total": 600.0,
+   "classes": {
+    "access-control": 1,
+    "disclosure": 1,
+    "csrf": 1
+   }
+  },
+  "CoinMate.io": {
+   "reports": 3,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "disclosure": 1,
+    "authn": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Xiaomi": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 2,
+    "cors": 1
+   }
+  },
+  "BCM Messenger": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "cloud": 1,
+    "authn": 1
+   }
+  },
+  "Kindred Group": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 2,
+    "access-control": 1
+   }
+  },
+  "Exodus": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "cache": 2,
+    "disclosure": 1
+   }
+  },
+  "UPS VDP": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "access-control": 1,
+    "xss": 1
+   }
+  },
+  "PUBG": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 3
+   }
+  },
+  "Vend VDP": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "race": 1,
+    "access-control": 1,
+    "redirect": 1
+   }
+  },
+  "R3": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "disclosure": 1,
+    "email-phishing": 1
+   }
+  },
+  "Python Cryptographic Authority": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1,
+    "logic": 1,
+    "xss": 1
+   }
+  },
+  "JamieWeb": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1,
+    "crypto-tls": 1,
+    "smuggling": 1
+   }
+  },
+  "Recorded Future": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 2,
+    "disclosure": 1
+   }
+  },
+  "Nuri": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "redirect": 1,
+    "graphql": 1
+   }
+  },
+  "Agoric": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "network": 1,
+    "xss": 1,
+    "dos": 1
+   }
+  },
+  "MCUboot": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 2,
+    "email-phishing": 1
+   }
+  },
+  "CFP Time": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "logic": 2,
+    "authn": 1
+   }
+  },
+  "WP API": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "crypto-tls": 2
+   }
+  },
+  "Gener8": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "other": 1,
+    "clickjacking": 1
+   }
+  },
+  "MapsMarker.com e.U.": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 1,
+    "other": 1,
+    "xss": 1
+   }
+  },
+  "MapLogin": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 3
+   }
+  },
+  "Twitter Algorithmic Bias": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 3
+   }
+  },
+  "Nearby Live": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "disclosure": 1,
+    "authn": 1
+   }
+  },
+  "Block.io": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "crypto-tls": 1,
+    "xss": 1,
+    "rce": 1
+   }
+  },
+  "Kadira": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "email-phishing": 1,
+    "api": 1,
+    "crypto-tls": 1
+   }
+  },
+  "Square Open Source": {
+   "reports": 3,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 2,
+    "cache": 1
+   }
+  },
+  "Teleport": {
+   "reports": 2,
+   "paid": 1,
+   "total": 21000.0,
+   "classes": {
+    "access-control": 1,
+    "authn": 1
+   }
+  },
+  "Gatecoin": {
+   "reports": 2,
+   "paid": 1,
+   "total": 500.0,
+   "classes": {
+    "xss": 1,
+    "access-control": 1
+   }
+  },
+  "ForeScout Technologies": {
+   "reports": 2,
+   "paid": 1,
+   "total": 250.0,
+   "classes": {
+    "xss": 2
+   }
+  },
+  "Kraden": {
+   "reports": 2,
+   "paid": 2,
+   "total": 350.0,
+   "classes": {
+    "logic": 1,
+    "access-control": 1
+   }
+  },
+  "Robinhood": {
+   "reports": 2,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "redirect": 1,
+    "csrf": 1
+   }
+  },
+  "Openfolio": {
+   "reports": 2,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "xss": 1,
+    "other": 1
+   }
+  },
+  "Alliance of American Football": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "logic": 1
+   }
+  },
+  "Palantir Public": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "sqli": 1,
+    "authn": 1
+   }
+  },
+  "A.S. Watson Group": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "authn": 1
+   }
+  },
+  "Yoti": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 1,
+    "authn": 1
+   }
+  },
+  "Frontegg": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "logic": 1,
+    "api": 1
+   }
+  },
+  "DigitalOcean": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "xss": 1
+   }
+  },
+  "Zego": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "cloud": 1
+   }
+  },
+  "Daimler Truck": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "xss": 1
+   }
+  },
+  "Curve": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "network": 1,
+    "logic": 1
+   }
+  },
+  "1Password - Enterprise Password Manager": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1,
+    "api": 1
+   }
+  },
+  "MobiSystems Ltd.": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "cloud": 2
+   }
+  },
+  "Insulet Corporation": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "takeover": 1
+   }
+  },
+  "Publitas": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "cve": 1
+   }
+  },
+  "Chainlink": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "email-phishing": 1,
+    "network": 1
+   }
+  },
+  "ecobee": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "traversal": 1
+   }
+  },
+  "Invision Power Services, Inc.": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 1,
+    "access-control": 1
+   }
+  },
+  "Coalition, Inc.": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1,
+    "authn": 1
+   }
+  },
+  "SecurityScorecard": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 2
+   }
+  },
+  "LifeOmic": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 1,
+    "authn": 1
+   }
+  },
+  "passhash": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "dos": 1,
+    "other": 1
+   }
+  },
+  "Deconf": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 2
+   }
+  },
+  "Parrot Sec": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "network": 1
+   }
+  },
+  "Certly": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1,
+    "other": 1
+   }
+  },
+  "Ozon": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1,
+    "xss": 1
+   }
+  },
+  "Bookfresh": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1,
+    "access-control": 1
+   }
+  },
+  "Teradici": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1,
+    "authn": 1
+   }
+  },
+  "Anghami": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1,
+    "sqli": 1
+   }
+  },
+  "delight.im": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "csrf": 2
+   }
+  },
+  "Flox": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "logic": 2
+   }
+  },
+  "WordPoints": {
+   "reports": 2,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "crypto-tls": 1,
+    "rce": 1
+   }
+  },
+  "Zilliqa": {
+   "reports": 1,
+   "paid": 1,
+   "total": 10000.0,
+   "classes": {
+    "access-control": 1
+   }
+  },
+  "SKALE Network": {
+   "reports": 1,
+   "paid": 1,
+   "total": 2500.0,
+   "classes": {
+    "memory-safety": 1
+   }
+  },
+  "Postmates": {
+   "reports": 1,
+   "paid": 1,
+   "total": 500.0,
+   "classes": {
+    "cache": 1
+   }
+  },
+  "Dynatrace": {
+   "reports": 1,
+   "paid": 1,
+   "total": 750.0,
+   "classes": {
+    "access-control": 1
+   }
+  },
+  "Insolar": {
+   "reports": 1,
+   "paid": 1,
+   "total": 1000.0,
+   "classes": {
+    "logic": 1
+   }
+  },
+  "Bitso": {
+   "reports": 1,
+   "paid": 1,
+   "total": 1000.0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "Newegg": {
+   "reports": 1,
+   "paid": 1,
+   "total": 250.0,
+   "classes": {
+    "disclosure": 1
+   }
+  },
+  "Twitter": {
+   "reports": 1,
+   "paid": 1,
+   "total": 560.0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "Sheer": {
+   "reports": 1,
+   "paid": 1,
+   "total": 200.0,
+   "classes": {
+    "network": 1
+   }
+  },
+  "Traffic Factory": {
+   "reports": 1,
+   "paid": 1,
+   "total": 200.0,
+   "classes": {
+    "cve": 1
+   }
+  },
+  "Hyatt Hotels": {
+   "reports": 1,
+   "paid": 1,
+   "total": 300.0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "FileZilla": {
+   "reports": 1,
+   "paid": 1,
+   "total": 250.0,
+   "classes": {
+    "memory-safety": 1
+   }
+  },
+  "Figma": {
+   "reports": 1,
+   "paid": 1,
+   "total": 150.0,
+   "classes": {
+    "race": 1
+   }
+  },
+  "Midpoint (European Commission - DIGIT)": {
+   "reports": 1,
+   "paid": 1,
+   "total": 168.68,
+   "classes": {
+    "disclosure": 1
+   }
+  },
+  "SMTP2GO BBP": {
+   "reports": 1,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "FanDuel": {
+   "reports": 1,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "network": 1
+   }
+  },
+  "Status.im": {
+   "reports": 1,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "api": 1
+   }
+  },
+  "Smartsheet": {
+   "reports": 1,
+   "paid": 1,
+   "total": 100.0,
+   "classes": {
+    "disclosure": 1
+   }
+  },
+  "Lyft": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 1
+   }
+  },
+  "Chrome": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "Remitly": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "hostinger": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "HackerOne H1P BBP1": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "DataStax": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "logic": 1
+   }
+  },
+  "KAYAK": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "Google": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "rce": 1
+   }
+  },
+  "Frans Visits Vegas": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "Ford": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "takeover": 1
+   }
+  },
+  "Picsart": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "oauth": 1
+   }
+  },
+  "ProductBoard, Inc.": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "Priceline": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "Flock": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "takeover": 1
+   }
+  },
+  "Magic": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "smuggling": 1
+   }
+  },
+  "Hacker Target": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssrf": 1
+   }
+  },
+  "Railto LLC": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "HubSpot Inactive": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "ssti": 1
+   }
+  },
+  "Planet Labs": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "api": 1
+   }
+  },
+  "Laravel": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "On": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "graphql": 1
+   }
+  },
+  "MOD Supply Chain VDP": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "traversal": 1
+   }
+  },
+  "Soleo": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "traversal": 1
+   }
+  },
+  "BlockFi": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 1
+   }
+  },
+  "Kryptor": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "OV-chipkaart": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "Socusoft": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "Trustpilot": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1
+   }
+  },
+  "RGhost": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1
+   }
+  },
+  "Ionity GmbH": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "Gymshark": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "takeover": 1
+   }
+  },
+  "SMTP2GO": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "CompanyHub": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "People Interactive": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "disclosure": 1
+   }
+  },
+  "BlackRock": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 1
+   }
+  },
+  "vulners.com": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "cve": 1
+   }
+  },
+  "Proctorio": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "RecargaPay": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "access-control": 1
+   }
+  },
+  "O1 Labs": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "email-phishing": 1
+   }
+  },
+  "Meredith": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "CERT/CC": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "redirect": 1
+   }
+  },
+  "MoneyStream": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "Lacework": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  },
+  "Y Combinator": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "xss": 1
+   }
+  },
+  "Cakebet": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "memory-safety": 1
+   }
+  },
+  "KIWI.KI GmbH": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "takeover": 1
+   }
+  },
+  "BitHunt": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "authn": 1
+   }
+  },
+  "Coin.Space": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "network": 1
+   }
+  },
+  "Hubdia": {
+   "reports": 1,
+   "paid": 0,
+   "total": 0,
+   "classes": {
+    "other": 1
+   }
+  }
+ }
+}
