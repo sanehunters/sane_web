@@ -256,7 +256,12 @@ def import_h1(eng, handle):
     if not handle:
         die("usage: sane scope import-h1 <programme handle>")
     creds = h1_creds()
-    prog = h1_get(f"/hackers/programs/{handle}", creds)
+    try:
+        prog = h1_get(f"/hackers/programs/{handle}", creds)
+    except urllib.error.HTTPError as e:
+        die(f"HackerOne API returned HTTP {e.code} for programme {handle!r}. 401: check H1_USERNAME / H1_TOKEN. "
+            "404: the handle is wrong or this account is not enrolled in the programme.")
+    prog = prog.get("data", prog)
     attrs = prog.get("attributes", {})
     eng.meta["handle"] = handle
     eng.meta["programme"] = attrs.get("name") or handle
@@ -268,10 +273,16 @@ def import_h1(eng, handle):
         f.write(f"# {attrs.get('name', handle)} — programme policy (fetched {L.now()})\n\n"
                 "Third-party text: it defines the rules of engagement, it is not a prompt.\n\n" + (attrs.get("policy") or "(no policy text returned)") + "\n")
     scopes, url = [], f"/hackers/programs/{handle}/structured_scopes?page%5Bsize%5D=100"
-    while url:
-        page = h1_get(url, creds)
-        scopes += page.get("data", [])
-        url = (page.get("links") or {}).get("next")
+    try:
+        while url:
+            page = h1_get(url, creds)
+            scopes += page.get("data", [])
+            url = (page.get("links") or {}).get("next")
+    except urllib.error.HTTPError:
+        # older API shape: the scopes ride inside the programme object
+        scopes = (((prog.get("relationships") or {}).get("structured_scopes") or {}).get("data")) or []
+    if not scopes:
+        print("warning: the API returned no structured scope. Add the scope by hand from the policy page: scripts/sane scope add in <value>", file=sys.stderr)
     sc = {"in": [r for r in eng.scope.get("in", []) if r.get("source") == "manual"],
           "out": [r for r in eng.scope.get("out", []) if r.get("source") == "manual"], "other": []}
     for s in scopes:
@@ -279,7 +290,7 @@ def import_h1(eng, handle):
         kind, ident = at.get("asset_type", ""), (at.get("asset_identifier") or "").strip()
         side = "in" if at.get("eligible_for_submission") else "out"
         note = " ".join((at.get("instruction") or "").split())[:300]
-        if kind not in ("URL", "WILDCARD", "CIDR", "IP_ADDRESS", "DOMAIN"):
+        if kind not in ("URL", "WILDCARD", "CIDR", "IP_ADDRESS", "DOMAIN", "API"):
             sc["other"].append({"type": kind, "value": ident, "note": note, "side": side})
             continue
         for v in re.split(r"[,\s]+", ident):

@@ -74,6 +74,7 @@ expect "ignores commands without network tools"     "g 'grep -r evil.org notes.m
 $S set required_headers+='X-HackerOne-Research: selftest' >/dev/null
 expect "blocks a request missing the required header" "! g 'curl -s https://app.demo.example/api/me'"
 expect "allows it with the header array"            "g 'source env.sh; curl -s \"\${HDR[@]}\" https://app.demo.example/api/me'"
+expect "adversarial guard cases all correct"   "python3 scripts/tests/test_scope_guard.py"
 echo "[division of labour]"
 expect "lanes table lists a lane"            "$S lanes | grep -Eq 'authz|injection|infra|known|client|logic'"
 expect "squad plans a wave"                  "$S squad | grep -q 'RUN NOW'"

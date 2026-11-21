@@ -117,6 +117,9 @@ def targets_in(cmd, scanner_present):
         h = L.norm_host(m.group(0))
         if h and not VAR_HOST.search(m.group(1)):
             out.add(h)
+    # a Host header names the virtual host the request is really for
+    for m in re.finditer(r"(?i)\b(?:Host|X-Forwarded-Host|X-Host|X-Original-Host|X-Forwarded-Server):\s*([A-Za-z0-9._\-]+\.[A-Za-z]{2,24})\b", cmd):
+        out.add(L.norm_host(m.group(1)))
     try:
         toks = shlex.split(cmd, comments=False, posix=True)
     except ValueError:
