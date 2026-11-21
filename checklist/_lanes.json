@@ -1,0 +1,72 @@
+{
+  "_doc": "Lanes divide the hunt on one deployment into streams of work that different agents can run at the same time without colliding. A lane is a set of chapters that share a way of working: the same accounts, the same tools, the same kind of thinking. `scripts/sane next --lane <lane>` and `scripts/sane brief class-hunter <asset> --lane <lane>` use this file. docs/10-operations.md explains the division.",
+  "lanes": {
+    "known": {
+      "title": "Known vulnerabilities",
+      "chapters": ["cve"],
+      "agent": "cve-exploiter",
+      "sessions": "none",
+      "parallel": "always",
+      "needs": "a product name, ideally a version, in recon/<host>/tech.json",
+      "thinking": "Pin the exact version, look up what is known, verify with the advisory's own request, prove minimally. Fast, and occasionally the best finding of the engagement.",
+      "when": "first: as soon as the fingerprint names a product"
+    },
+    "infra": {
+      "title": "Infrastructure and exposure",
+      "chapters": ["takeover", "disclosure", "cache", "smuggling", "host-header", "cloud", "network", "recon"],
+      "agent": "class-hunter",
+      "sessions": "none, or account A read-only for a few items",
+      "parallel": "always",
+      "needs": "the fingerprint; nothing else",
+      "thinking": "What is exposed that should not be, and how do the layers in front of the application disagree with it? Mostly unauthenticated. Recon items here produce new surface for every other lane.",
+      "when": "first: runs alongside mapping"
+    },
+    "authz": {
+      "title": "Identity and authorisation",
+      "chapters": ["access-control", "authn", "oauth", "jwt", "api", "graphql", "websocket"],
+      "agent": "class-hunter",
+      "sessions": "A and B in different tenants; a low-privilege member and an admin in A's tenant",
+      "parallel": "one authenticated lane per account pair",
+      "needs": "the application map (PB-04), accounts A and B, the object and role model",
+      "thinking": "Who is allowed to do what to which object, and where is that decided? Replay every request as the wrong user, the wrong tenant, the wrong role, and through every alternative route. The highest-yield lane on any application with accounts.",
+      "when": "after mapping; first among the authenticated lanes"
+    },
+    "logic": {
+      "title": "Business logic and concurrency",
+      "chapters": ["logic", "race"],
+      "agent": "class-hunter",
+      "sessions": "A, and B where a second party is involved",
+      "parallel": "one authenticated lane per account pair",
+      "needs": "the application map, the money and limits model, an account with something to spend or a limit to hit",
+      "thinking": "What does the business assume happens once, in order, at the server's price? Break the order, the count and the arithmetic. Needs understanding more than tooling.",
+      "when": "after authz, or in parallel with it when a second account pair exists"
+    },
+    "injection": {
+      "title": "Server-side input handling",
+      "chapters": ["sqli", "nosqli", "ssti", "rce", "traversal", "xxe", "deser", "ssrf", "upload", "crlf", "llm"],
+      "agent": "class-hunter",
+      "sessions": "A",
+      "parallel": "one authenticated lane per account pair",
+      "needs": "the application map with every parameter-taking endpoint, the technology facts, an OOB callback host for the blind variants",
+      "thinking": "Which input reaches an interpreter, a parser, a file system or an outbound request, and can I see or infer the result? Probe by behaviour with a control; tools only once a behaviour is established.",
+      "when": "after mapping; pairs well with infra in parallel"
+    },
+    "client": {
+      "title": "Client-side and cross-origin",
+      "chapters": ["xss", "csrf", "cors", "redirect", "clickjacking", "client-side", "proto-pollution"],
+      "agent": "class-hunter",
+      "sessions": "A as attacker, B as victim in the scriptable browser",
+      "parallel": "one authenticated lane per account pair",
+      "needs": "the application map, the saved JavaScript bundles, a scriptable browser",
+      "thinking": "What runs in the victim's browser on the target's origin, and what will the target accept from another origin? Every proof ends in the victim's session, shown in the browser.",
+      "when": "after mapping"
+    }
+  },
+  "concurrency": {
+    "_doc": "Rules the coordinator follows when running lanes at the same time on ONE deployment. Across different deployments everything may run in parallel, within the programme rate.",
+    "always": "Lanes marked 'always' need no shared session and may run beside any other lane.",
+    "per-account-pair": "Authenticated lanes change the state of the accounts they use. Two of them on the same accounts corrupt each other's tests (a logout, a changed e-mail, a spent coupon). Run them one after another on the pair A/B, or give each its own pair (A2/B2, A3/B3) and record the pairs in engagement.json accounts[].",
+    "rate": "The programme rate is a ceiling for everything sent to one deployment. With K agents on a deployment each gets rate/K. `scripts/sane brief ... --share K` writes the share into the brief.",
+    "order": ["known", "infra", "authz", "injection", "client", "logic"]
+  }
+}

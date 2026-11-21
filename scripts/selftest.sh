@@ -10,6 +10,8 @@ expect(){ if eval "$2" >/dev/null 2>&1; then ok "$1"; else bad "$1"; fi; }
 python3 scripts/demo_target.py $PORT & SRV=$!; trap 'kill $SRV 2>/dev/null; rm -rf "$SANE_ENGAGEMENT_ROOT"' EXIT; sleep 1
 
 echo "[lint]";      expect "every chapter lints" "python3 scripts/lint_checklist.py"
+expect "generated skills and agents are up to date" "python3 scripts/build_claude.py --check"
+expect "every chapter belongs to a lane" "python3 -c \"import json,os; l=json.load(open('checklist/_lanes.json'))['lanes']; ch={c for d in l.values() for c in d['chapters']}; have={f[:-3] for f in os.listdir('checklist') if f.endswith('.md')}; import sys; sys.exit(0 if have<=ch else 1)\""
 echo "[engagement]"
 $S new selftest --handle demo >/dev/null
 $S scope add in 127.0.0.1 --type ip >/dev/null
@@ -72,6 +74,13 @@ expect "ignores commands without network tools"     "g 'grep -r evil.org notes.m
 $S set required_headers+='X-HackerOne-Research: selftest' >/dev/null
 expect "blocks a request missing the required header" "! g 'curl -s https://app.demo.example/api/me'"
 expect "allows it with the header array"            "g 'source env.sh; curl -s \"\${HDR[@]}\" https://app.demo.example/api/me'"
+echo "[division of labour]"
+expect "lanes table lists a lane"            "$S lanes | grep -Eq 'authz|injection|infra|known|client|logic'"
+expect "squad plans a wave"                  "$S squad | grep -q 'RUN NOW'"
+expect "squad emits JSON for the workflow"   "$S squad --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert \"wave\" in d and \"map\" in d'"
+expect "a brief carries authorisation, rate share and return" "$S brief class-hunter 127.0.0.1 --lane injection --share 2 | grep -q 'requests per second from you'"
+expect "no brief for an out-of-scope host"   "! $S brief class-hunter evil.org --lane authz"
+expect "research mode emits twelve lenses"   "[ \"\$($S squad --mode research 127.0.0.1 --json | python3 -c 'import json,sys; print(len(json.load(sys.stdin)[\"lenses\"]))')\" = 12 ]"
 echo "[library]"
 expect "kb search finds reports"  "$S kb search ssrf webhook | grep -q '^#'"
 expect "card prints prior art"    "$S card SSR-003 127.0.0.1 | grep -q 'hackerone.com/reports/'"

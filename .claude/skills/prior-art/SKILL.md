@@ -3,6 +3,8 @@ name: prior-art
 description: Look up disclosed HackerOne reports — by class, programme, feature or keyword — to see how a bug was found before, what a programme pays for, how a protection was bypassed, or whether a finding is a likely duplicate. Use when starting a programme, aiming a test, stuck behind a filter, or checking for duplicates.
 ---
 
+<!-- GENERATED from src/skills/prior-art.md by scripts/build_claude.py. Edit that file or the included playbook, then rebuild. -->
+
 # /prior-art — the report library
 
 15,219 disclosed reports, classified into the checklist's taxonomy. Every row links to hackerone.com and to the

@@ -53,8 +53,9 @@ more.
 | `checklist/_facts.json` | the fact vocabulary the gates use |
 | `kb/reports/` | 15,219 disclosed HackerOne reports by class, linked; `scripts/sane kb` searches them |
 | `docs/` | reporting style, severity, evidence standard, the graveyard, the item schema |
-| `scripts/sane` | the console: scope, recon, fingerprint, facts, plan, cards, CVE lookup, findings, gate |
-| `.claude/` | hooks, skills, agents |
+| `docs/10-operations.md` | how the work is divided: roles, lanes, waves, briefs, reading returns |
+| `scripts/sane` | the console: scope, recon, fingerprint, facts, plan, lanes, briefs, cards, CVE lookup, findings, gate |
+| `.claude/` | hooks, skills, agents, saved workflows. Skills and agents are generated from `src/` by `scripts/build_claude.py` and carry their playbook in full |
 | `engagements/<name>/` | private programme state and evidence. Git-ignored here; its own repository |
 
 ## Skills and agents
@@ -65,6 +66,7 @@ more.
 | Surface | `/scope` · `/recon` · `/map` |
 | Test | `/plan` · `/hunt` · `/cve-hunt` · `/research` · `/prior-art` |
 | Prove and ship | `/verify` · `/chain` · `/report` · `/triage-reply` |
+| Divide and run in parallel | `/squad` (hunt wave) · `/squad cve` · `/squad research <host>` · `/squad verify F-NNN` |
 
 | Agent | Job | Writes |
 |---|---|---|
@@ -76,9 +78,16 @@ more.
 | `verify-reproduce` · `verify-guard` · `verify-triager` | PB-09, one lens each, no shared reasoning | a verdict |
 | `report-writer` | PB-11 | `findings/F-NNN/report.md`, `poc/` |
 
-Every brief to an agent begins with the authorisation basis, the programme, the in-scope asset it may touch, the
-rate limit and the required headers, copied from `scripts/sane status`. No recorded basis, no delegation. One
-hunter per deployment at a time: they share the rate budget and the sessions.
+**Dividing the work** (`docs/10-operations.md`). The hunt on a deployment is split into six lanes: `known` and
+`infra` need no session and run beside anything; `authz`, `injection`, `client` and `logic` change account state,
+so one of them runs per account pair at a time. `scripts/sane squad` plans who runs now, on what, at what share of
+the rate; `/squad` launches it as a workflow that verifies every candidate with three independent lenses.
+
+**Every delegation uses `scripts/sane brief <agent> <asset> [--lane L] [--share K]`**, which writes the complete
+brief: authorisation basis, the one host the agent may touch, its rate share, required headers, accounts, its
+queue with timeboxes, the material on disk, and what to return. No recorded basis, no brief. Add what you know
+that is not on disk; never add what you expect the agent to find. Check every return against the disk
+(`scripts/sane coverage`, the evidence folder) before acting on it.
 
 ## The report library and HexBrain
 
