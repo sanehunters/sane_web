@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 13 are written (187 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 14 are written (200 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -72,7 +72,7 @@ Sessions: A. Agent: `class-hunter`.
 | [SQL injection](sqli.md) | `SQL` | written | 14 | `http, app\|api, params` | [338 reports, 85 paid, median $1,350](../kb/reports/sqli.md) |
 | NoSQL, LDAP & other query injection | `NSQ` | queued |  | `—` | [16 reports, 4 paid, median $2,750](../kb/reports/nosqli.md) |
 | Command & code injection (RCE) | `RCE` | queued |  | `—` | [606 reports, 111 paid, median $1,500](../kb/reports/rce.md) |
-| Path traversal, LFI & RFI | `LFI` | queued |  | `—` | [356 reports, 64 paid, median $1,000](../kb/reports/traversal.md) |
+| [Path traversal, LFI & RFI](traversal.md) | `LFI` | written | 13 | `http, app\|api` | [356 reports, 64 paid, median $1,000](../kb/reports/traversal.md) |
 | File upload | `UPL` | queued |  | `—` | [43 reports, 10 paid, median $500](../kb/reports/upload.md) |
 | CRLF & header injection | `CRL` | queued |  | `—` | [148 reports, 24 paid, median $450](../kb/reports/crlf.md) |
 
