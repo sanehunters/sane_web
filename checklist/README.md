@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 19 are written (260 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 20 are written (268 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -74,7 +74,7 @@ Sessions: A. Agent: `class-hunter`.
 | [Command & code injection (RCE)](rce.md) | `RCE` | written | 14 | `http, app\|api` | [606 reports, 111 paid, median $1,500](../kb/reports/rce.md) |
 | [Path traversal, LFI & RFI](traversal.md) | `LFI` | written | 13 | `http, app\|api` | [356 reports, 64 paid, median $1,000](../kb/reports/traversal.md) |
 | File upload | `UPL` | queued |  | `—` | [43 reports, 10 paid, median $500](../kb/reports/upload.md) |
-| CRLF & header injection | `CRL` | queued |  | `—` | [148 reports, 24 paid, median $450](../kb/reports/crlf.md) |
+| [CRLF & header injection](crlf.md) | `CRL` | written | 8 | `http` | [148 reports, 24 paid, median $450](../kb/reports/crlf.md) |
 
 ## Lane `client` — Client-side and cross-origin
 
