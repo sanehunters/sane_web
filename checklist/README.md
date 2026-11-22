@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 10 are written (141 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 11 are written (155 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -69,7 +69,7 @@ Sessions: A. Agent: `class-hunter`.
 | [XML external entities & XML injection](xxe.md) | `XXE` | written | 10 | `http, app\|api` | [59 reports, 10 paid, median $1,250](../kb/reports/xxe.md) |
 | Server-side template injection | `TPL` | queued |  | `—` | [21 reports, 6 paid, median $2,300](../kb/reports/ssti.md) |
 | [Insecure deserialization](deser.md) | `DSR` | written | 11 | `http, app\|api` | [101 reports, 29 paid, median $1,000](../kb/reports/deser.md) |
-| SQL injection | `SQL` | queued |  | `—` | [338 reports, 85 paid, median $1,350](../kb/reports/sqli.md) |
+| [SQL injection](sqli.md) | `SQL` | written | 14 | `http, app\|api, params` | [338 reports, 85 paid, median $1,350](../kb/reports/sqli.md) |
 | NoSQL, LDAP & other query injection | `NSQ` | queued |  | `—` | [16 reports, 4 paid, median $2,750](../kb/reports/nosqli.md) |
 | Command & code injection (RCE) | `RCE` | queued |  | `—` | [606 reports, 111 paid, median $1,500](../kb/reports/rce.md) |
 | Path traversal, LFI & RFI | `LFI` | queued |  | `—` | [356 reports, 64 paid, median $1,000](../kb/reports/traversal.md) |

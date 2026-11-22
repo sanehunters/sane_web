@@ -14,8 +14,8 @@
 
 ## Why it pays
 
-Four in five disclosed reports in this class were not paid (155 of them went to one disclosure programme that
-pays nothing), and the median of the paid fifth is $500. The money is at the top and follows one rule: the
+Four in five disclosed reports in this class were not paid (155 of them went to one programme, which paid a
+single one), and the median of the paid fifth is $500. The money is at the top and follows one rule: the
 disclosed thing let the reporter into something. A GitHub token inside a public desktop app (#1087489, $50,000),
 a client certificate committed to a git repository (#591813, $40,000), registry credentials in an employee's
 public repository (#911606, $15,000), an SVN working copy under the web root (#72243, $10,000), `/heapdump` and
@@ -140,8 +140,9 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   and let the programme decide whether the pack may be downloaded.
 - **Proof:** `HEAD` and `config` as served, the number of tracked files with ten names from the index, and the
   first lines of one decompressed blob that is plainly private server-side code. For a credential: the file and
-  key name, the value cut to its first and last four characters, and the output of one identity call (see
-  INF-002).
+  key name, the value cut to its first and last four characters, and the output of one read-only identity call
+  (`aws sts get-caller-identity` for an AWS key pair, `curl -sS -H "Authorization: Bearer <token>"
+  https://api.github.com/user` for a GitHub token; INF-002 lists more). Make no second call.
 - **Not a finding when:** every path under `/.git/` returns 200 with the same HTML (compare with `control`; the
   formats above do not match). Only `HEAD` is readable and `config`, `index` and objects are refused: nothing can
   be rebuilt. The remote in `config` is a public repository and the tree is that repository: an open-source
@@ -280,9 +281,11 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   `.DS_Store` names only assets the site already links: most programmes close it as informative, #142549 ($560)
   is the exception. A dump that holds user rows is a finding, and also an incident: stop at the first record
   and follow PB-14.
-- **Escalate:** credentials follow the identity-call rule of INF-002. Recovered source is read for flaws the
-  black-box tests cannot see and reported under that class. Names from `.DS_Store` and from the archive listing
-  go back into step 2 and into INF-017.
+- **Escalate:** a credential in the copy gets one read-only identity call and nothing more
+  (`aws sts get-caller-identity` for an AWS key pair, `curl -sS -H "Authorization: Bearer <token>"
+  https://api.github.com/user` for a GitHub token; INF-002 lists the others); database, SMTP and SSH passwords
+  are reported unvalidated. Recovered source is read for flaws the black-box tests cannot see and reported
+  under that class. Names from `.DS_Store` and from the archive listing go back into step 2 and into INF-017.
 
 ### INF-004 · A credential shipped in a JavaScript bundle or its source map authenticates to a non-public service
 
@@ -410,10 +413,13 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   `******` (Boot 3 masks all values by default) and no dump, trace or log file is readable: key names alone are
   low or informative. `prometheus` or `metrics` alone are counters. The 200 is the single-page app's
   `index.html` (content type `text/html`). A `/env` that belongs to another product.
-- **Escalate:** credentials follow the identity-call rule (INF-002 lists the calls). `mappings` is the complete
-  route table for the access-control and API chapters. An actuator that is closed from outside is still a
-  target for SSR-003 (`http://localhost:8080/actuator/env`). `gateway/routes` and `jolokia` have their own CVE
-  history: use the advisory's read-only check from the CVE chapter, never the write.
+- **Escalate:** a credential read from `env` gets one read-only identity call and nothing more
+  (`aws sts get-caller-identity` for an AWS key pair, `curl -sS -H "Authorization: Bearer <token>"
+  https://api.github.com/user` for a GitHub token; INF-002 lists the others); database and broker passwords
+  are reported unvalidated. `mappings` is the complete route table for the access-control and API chapters. An
+  actuator that is closed from outside is still a target for SSR-003 (`http://localhost:8080/actuator/env`).
+  `gateway/routes` and `jolokia` have their own CVE history: use the advisory's read-only check from the CVE
+  chapter, never the write.
 
 ### INF-006 · A PHP debug surface is public: Laravel debug mode or Telescope, the Symfony profiler, a debug bar or `phpinfo()`
 
@@ -468,11 +474,13 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   without secrets (`version-disclosure`). `phpinfo()` whose environment section holds no secret: low or
   informative, 27 reports carry it in the title and one was paid, $60 (#165930). Telescope or Horizon answering
   403 or redirecting to a login (the gate works). `APP_ENV=local` values that validate nowhere.
-- **Escalate:** `APP_KEY` goes to DSR-009; database and cloud credentials follow the identity-call rule of
-  INF-002. A stored request of our own account B read from the debug store by an anonymous client is a session
-  theft primitive: prove takeover on B only (#1883806 reached an admin account this way). A `phpinfo()` page
-  echoes the request's cookies, including `HttpOnly` ones: with any XSS on the same origin it turns script
-  execution into session theft. `/_ignition/execute-solution` on old Ignition is a known CVE: CVE chapter.
+- **Escalate:** `APP_KEY` goes to DSR-009. A cloud or API key gets one read-only identity call and nothing more
+  (`aws sts get-caller-identity` for an AWS key pair; INF-002 lists the others); database and mail passwords
+  are reported unvalidated. A stored request of our own account B read from the debug store by an anonymous
+  client is a session theft primitive: prove takeover on B only (#1883806 reached an admin account this way). A
+  `phpinfo()` page echoes the request's cookies, including `HttpOnly` ones: with any XSS on the same origin it
+  turns script execution into session theft. `/_ignition/execute-solution` on old Ignition is a known CVE: CVE
+  chapter.
 
 ### INF-007 · Django or Rails runs in debug or development mode and its error and info pages print settings, routes and source
 
@@ -526,9 +534,11 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   headers alone (`version-disclosure`). Every sensitive setting is starred and no frame holds a secret: routes
   and paths only, low or informative on most programmes (#2965143 and #1874836 were not paid).
 - **Escalate:** a Django `SECRET_KEY` found in a frame or an unmasked alias goes to DSR-010 (pickled sessions)
-  and to forging signed cookies for our own account; a Rails `secret_key_base` goes to DSR-011. Connection URLs
-  and cloud keys follow the identity-call rule of INF-002 (#1083543 listed AWS, SMTP and database secrets from
-  one debug page). The URLconf and `/rails/info/routes` are the route list for the access-control chapter.
+  and to forging signed cookies for our own account; a Rails `secret_key_base` goes to DSR-011. A cloud or API
+  key gets one read-only identity call and nothing more (`aws sts get-caller-identity` for an AWS key pair;
+  INF-002 lists the others); connection URLs with database, SMTP or broker passwords are reported unvalidated
+  (#1083543 listed AWS, SMTP and database secrets from one debug page). The URLconf and `/rails/info/routes`
+  are the route list for the access-control chapter.
   `/letter_opener` with a reset link for B is account takeover on that deployment: authentication chapter. A
   Werkzeug console without a PIN, `web-console` or Better Errors' REPL is code execution: record a candidate
   and follow the RCE chapter's minimal proof.
@@ -630,8 +640,10 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   No injection payloads here: a database error after a quote character is a lead for the SQL chapter, not a
   disclosure.
 - **Proof:** the request and the raw response with the secret's name and its value cut to four characters each
-  side, and proof that it is live: one identity call for a credential (INF-002 lists them), or for a signing
-  secret an offline check that it verifies our own cookie or token (no request needed).
+  side, and proof that it is live: one read-only identity call for a credential
+  (`aws sts get-caller-identity` for an AWS key pair, `curl -sS -H "Authorization: Bearer <token>"
+  https://api.github.com/user` for a GitHub token; INF-002 lists the others), or for a signing secret an
+  offline check that it verifies our own cookie or token (no request needed).
 - **Not a finding when:** the trace shows file paths, class names and framework versions only
   (`version-disclosure`). The message is SQL syntax text without data. The error echoes our own input or our
   own token back to us. The secret-looking word is a field name in a validation message ("password is too
@@ -899,12 +911,12 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   "no `Cache-Control` header on an authenticated page", with no shared cache storing anything, are
   `missing-headers` and `session-expiry` material and need the victim's device (`physical`).
 - **Escalate:** a stored CSRF token or session cookie is account takeover of whoever filled the cache: prove it
-  by reading A's entry as B, never by waiting for a real user's. One request with no session to the route's
-  real URL, without the cache parameter, shows whether live responses are already shared; if it returns
-  somebody's data, stop at that response and follow PB-14. When only paths that look static are stored, the
-  same data is reached by path confusion (`/account/x.css`, `/api/me;.js`): that is cache deception and belongs
-  to the cache chapter, as does anything that needs an unkeyed header. A signed file URL inside a cached
-  response feeds INF-012.
+  on A's own entry, read with no session, never by waiting for a real user's. One request with no session to
+  the route's real URL, without the cache parameter, shows whether live responses are already shared; if it
+  returns somebody's data, stop at that response and follow PB-14. When only paths that look static are stored,
+  the same data is reached by path confusion (`/account/x.css`, `/api/me;.js`): that is cache deception and
+  belongs to the cache chapter, as does anything that needs an unkeyed header. A signed file URL inside a
+  cached response feeds INF-012.
 
 ### INF-014 · An image uploaded by one user is served to other users with its EXIF position and device data intact
 
@@ -999,23 +1011,12 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   gh api --paginate "orgs/$ORG/repos?type=public&per_page=100" --jq '.[] | [.full_name, .fork, .pushed_at, .size] | @tsv' > "$D/repos.tsv"
   gh api --paginate "orgs/$ORG/public_members?per_page=100" --jq '.[].login' > "$D/members.txt"
   # 2. code search over all public code. The endpoint allows 10 requests a minute: one query every 7 seconds.
-  while read -r q; do
+  for t in '"DOM" password' '"DOM" secret_key' '"DOM" api_key' '"DOM" "BEGIN RSA PRIVATE KEY"' '"DOM" jdbc' '"DOM" filename:.env' \
+           '"DOM" filename:.npmrc _authToken' '"DOM" filename:credentials aws_secret_access_key' '"internal.DOM"' '"corp.DOM"' \
+           'org:ORG filename:.env DB_PASSWORD' 'org:ORG "Authorization: Bearer"' 'org:ORG AKIA'; do
+    q=${t//DOM/$DOM}; q=${q//ORG/$ORG}
     gh api -X GET search/code -f q="$q" -f per_page=50 --jq '.items[] | [.repository.full_name, .path, .html_url] | @tsv'; sleep 7
-  done > "$D/code-hits.tsv" <<EOF
-  "$DOM" password
-  "$DOM" secret_key
-  "$DOM" api_key
-  "$DOM" "BEGIN RSA PRIVATE KEY"
-  "$DOM" jdbc
-  "$DOM" filename:.env
-  "$DOM" filename:.npmrc _authToken
-  "$DOM" filename:credentials aws_secret_access_key
-  "internal.$DOM"
-  "corp.$DOM"
-  org:$ORG filename:.env DB_PASSWORD
-  org:$ORG "Authorization: Bearer"
-  org:$ORG AKIA
-  EOF
+  done > "$D/code-hits.tsv"
   cut -f1 "$D/code-hits.tsv" | sort | uniq -c | sort -rn | head -30          # which repositories keep appearing
   # commits that say they removed a secret: the secret is in the parent commit
   for q in "org:$ORG remove password" "org:$ORG remove secret" "org:$ORG remove credentials" "org:$ORG remove api key"; do
@@ -1033,6 +1034,8 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   curl -sS "https://gitlab.com/api/v4/groups?search=$ORG&per_page=50" | jq -r '.[] | [.id, .full_path, .visibility] | @tsv'
   curl -sS "https://gitlab.com/api/v4/groups/<group id>/projects?visibility=public&include_subgroups=true&per_page=100" | jq -r '.[].http_url_to_repo' > "$D/gitlab-repos.txt"
   while read -r r; do trufflehog git "$r" --no-verification --json >> "$D/trufflehog-gitlab.jsonl"; done < "$D/gitlab-repos.txt"
+  jq -r '.SourceMetadata.Data.Git as $g | [.DetectorName, $g.repository, $g.file, $g.commit[0:10], (.Raw[0:4] + "..." + .Raw[-4:])] | @tsv' \
+    "$D/trufflehog-gitlab.jsonl" | sort -u | head -40
   #    GitLab code search inside the group (GITLAB_TOKEN: our own read-only token). It needs advanced search on the
   #    group: an error object instead of a list (400, 403) means it is off, and the scan above is the way.
   curl -sS -H "PRIVATE-TOKEN: $GITLAB_TOKEN" "https://gitlab.com/api/v4/groups/<group id>/search?scope=blobs&search=password&per_page=50" | jq -r 'arrays | .[] | [.project_id, .path, .ref] | @tsv'
@@ -1207,9 +1210,8 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
     "$D/urls.txt" | sort -u > "$D/cand-tokens.txt"; wc -l "$D/cand-files.txt" "$D/cand-tokens.txt"
   # 3. which candidates does the live host still serve? A control first, then one ranged GET each, at $RATE
   curl -sS "${HDR[@]}" -r 0-1023 -o "$D/control.bin" -w "CONTROL %{http_code} %{size_download} %{content_type}\n" "$T/sane$RANDOM.sql"
-  head -300 "$D/cand-files.txt" | while read -r u; do p="/${u#*://*/}"
-    curl -sS "${HDR[@]}" --path-as-is -r 0-1023 -o "$D/live-$(printf %s "$p" | md5sum | cut -c1-8)" \
-      -w "%{http_code} %{size_download} %{content_type} $p\n" "$T$p"; sleep "$W"
+  head -300 "$D/cand-files.txt" | while read -r u; do p="/${u#*://*/}"; h=$(printf %s "$p" | md5sum | cut -c1-8)
+    curl -sS "${HDR[@]}" --path-as-is -r 0-1023 -o "$D/live-$h" -w "%{http_code} %{size_download} %{content_type} live-$h $p\n" "$T$p"; sleep "$W"
   done | tee "$D/live.txt" | grep -E '^(200|206) '
   file "$D"/live-* | grep -viE 'HTML document|empty' | head -40                                   # what the first kilobyte really is
   curl -sSI "${HDR[@]}" "$T<path of a hit>" | grep -iE '^(content-length|last-modified|content-type):'
@@ -1233,9 +1235,9 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   copy at the archive is history. The file is public on purpose (press material, price lists, open data) or is
   still linked from the site. The 200 is the single-page app's shell (`text/html` for every path). Entries in
   `robots.txt` and sitemap URLs are not secrets (#1724771 was not paid). The only sensitive thing is in the
-  archive's copy: personal data or tokens in archived pages earn the organisation a removal request to the
-  archive and the reporter an informative or a low (#3210022 and #80118 were not paid), unless a credential in
-  that copy still validates (#1639011, rated medium).
+  copy held by an archive or a search-engine cache: personal data or tokens there earn the organisation a
+  removal request and the reporter an informative or a low (#3210022 and #80118 were not paid), unless a
+  credential in that copy still validates (#1639011, rated medium).
 - **Escalate:** a live backup or dump follows the proof rules of INF-003, a configuration file those of
   INF-002. Old bundles and configuration files from the archive are read under INF-004, with the same single
   identity call (#1639011: keys in archived API responses were still valid). Old API versions and admin paths
@@ -1247,10 +1249,10 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
 ## Graveyard
 
 - **Internal host names and private IP addresses.** `10.x` or `ip-172-31-...` in a header, an error page, a
-  bundle, a DNS record or a certificate. Informative on every programme; no exclusion tag exists because
+  bundle, a DNS record or a certificate. Informative on almost every programme; no exclusion tag exists, and
   policies name it literally. By title, 32 reports name an internal address, an internal host or an origin IP:
-  nine were paid, median $150, and the only one above $280 was an SSRF chain (#826097). Record it and park it:
-  it is the target list for SSR-010 and for the host-header chapter.
+  nine were paid, median $150, and the only one above $280 was an SSRF chain (#826097). Not carded here. Record
+  the names and park them: they are the target list for SSR-010 and for the host-header chapter.
 - **The origin address behind a CDN.** Knowing it is not a finding. A rule the edge enforces and the origin
   does not is, and it is reported as that bypass with the request the edge blocked.
 - **`phpinfo()`, `/server-status`, an auto-index with nothing in it, stack traces, full paths, version
@@ -1267,8 +1269,9 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
   impact to rate.
 - **Metadata files that hold nothing.** `/.git/HEAD` alone, `.gitignore`, a `.DS_Store` that names public
   files, `robots.txt`, `sitemap.xml`, `package.json`, `composer.lock`, `security.txt`, `crossdomain.xml`.
-- **Public API documentation.** Swagger UI or an OpenAPI file for an API that is meant to be public; the
-  anonymous Jira system dashboard; an open service-desk sign-up; a public roadmap board.
+- **Public on purpose.** Swagger UI or an OpenAPI file for an API that is meant to be public; a published
+  Postman collection with placeholders; the anonymous Jira system dashboard; an open service-desk sign-up; a
+  public roadmap board.
 - **Spring `health` and `info`, `/nginx_status`, `/metrics` with counters only.**
 - **Missing `Cache-Control`, or the page shown again by the back button after logout** (`missing-headers`,
   `session-expiry`, `physical`), with no shared cache storing the response.
