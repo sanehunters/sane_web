@@ -1,6 +1,6 @@
 # Build progress
 
-_Updated 2026-11-22 13:01 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
+_Updated 2026-11-22 13:06 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
 
 | | | |
 |---|---|---|
@@ -13,12 +13,12 @@ _Updated 2026-11-22 13:01 UTC by `scripts/publish_progress.sh`. Refreshes every 
 
 6 agent(s) working:
 
-- `write:cache`
+- `write:client-side`
 - `write:cors`
+- `write:host-header`
 - `write:nosqli`
-- `write:race`
 - `write:ssti`
-- `write:upload`
+- `write:websocket`
 
 Order of work: every chapter is written first (most-paid classes first), then every chapter gets an adversarial review. "Reviewed" therefore stays at zero until the writers are done.
 
@@ -35,7 +35,7 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [Cross-site request forgery](checklist/csrf.md) | `client` | written | 12 |  | 22 Nov 08:08 |  |
 | [Open redirect](checklist/redirect.md) | `client` | written | 10 |  | 22 Nov 08:01 |  |
 | [Cross-site scripting](checklist/xss.md) | `client` | written | 18 |  | 21 Nov 17:32 |  |
-| [Web cache poisoning & cache deception](checklist/cache.md) | `infra` | written | 9 | being written | 22 Nov 13:01 |  |
+| [Web cache poisoning & cache deception](checklist/cache.md) | `infra` | written | 9 |  | 22 Nov 13:02 |  |
 | [Cloud, storage buckets & CI/CD exposure](checklist/cloud.md) | `infra` | written | 14 |  | 22 Nov 08:10 |  |
 | [Information disclosure, secrets & exposed files](checklist/disclosure.md) | `infra` | written | 17 |  | 22 Nov 07:12 |  |
 | [Network services on IP & CIDR assets](checklist/network.md) | `infra` | written | 12 |  | 22 Nov 12:54 |  |
@@ -49,19 +49,19 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [XML external entities & XML injection](checklist/xxe.md) | `injection` | written | 10 |  | 21 Nov 12:53 |  |
 | [Known CVEs, default installs & technology-specific bugs](checklist/cve.md) | `known` | written | 17 |  | 22 Nov 02:54 |  |
 | [Business logic, payments & abuse of functionality](checklist/logic.md) | `logic` | written | 15 |  | 22 Nov 07:12 |  |
-| [Race conditions](checklist/race.md) | `logic` | written | 10 | being written | 22 Nov 13:00 |  |
-| WebSocket | `authz` | queued |  |  |  |  |
+| [Race conditions](checklist/race.md) | `logic` | written | 10 |  | 22 Nov 13:00 |  |
+| WebSocket | `authz` | queued |  | being written |  |  |
 | Clickjacking & UI redressing | `client` | queued |  |  |  |  |
-| Client-side: postMessage, DOM, CSP, JS supply chain | `client` | queued |  |  |  |  |
+| Client-side: postMessage, DOM, CSP, JS supply chain | `client` | queued |  | being written |  |  |
 | CORS misconfiguration | `client` | queued |  | being written |  |  |
 | Prototype pollution | `client` | queued |  |  |  |  |
-| Host header attacks | `infra` | queued |  |  |  |  |
+| Host header attacks | `infra` | queued |  | being written |  |  |
 | Recon & hidden surface (method chapter) | `infra` | queued |  |  |  |  |
 | HTTP request smuggling & desync | `infra` | queued |  |  |  |  |
 | LLM & AI features | `injection` | queued |  |  |  |  |
 | NoSQL, LDAP & other query injection | `injection` | queued |  | being written |  |  |
 | Server-side template injection | `injection` | queued |  | being written |  |  |
-| File upload | `injection` | queued |  | being written |  |  |
+| File upload | `injection` | queued |  |  |  |  |
 
 ## Everything else
 

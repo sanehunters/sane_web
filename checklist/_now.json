@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-22 13:01 UTC",
+ "updated": "2026-11-22 13:06 UTC",
  "running": [
-  "write:cache",
+  "write:client-side",
   "write:cors",
+  "write:host-header",
   "write:nosqli",
-  "write:race",
   "write:ssti",
-  "write:upload"
+  "write:websocket"
  ],
  "paused": false
 }

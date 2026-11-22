@@ -129,6 +129,7 @@ rules are known) → CCH-008 (application caches, two accounts, manual) → CCH-
   get(){ local f=$1; shift; curl -sS "${HDR[@]}" -D "$f.h" -o "$f.b" "$@"; sleep "$W"; }
   sig(){ tr -d '\r' < "$1.h" | awk -v n="$(grep -c '' "$1.b")" 'NR==1{s=$2} tolower($1)=="content-type:"{t=$2} tolower($1)=="location:"{l=$2} END{print s, t, l, n " lines"}'; }
   C="${H^^}:443"                         # inert: a browser reads https://APP.EXAMPLE.COM:443/x as https://app.example.com/x
+  X="cch001.${OOB:-example.org}"         # a host of ours, sent only on keys proved isolated (steps 3 and 4)
   mk(){ echo $(( $(grep -c -F "${H^^}" "$1") + $(grep -ci -F "$H:443" "$1") )); }
   # 0. the buster is part of the key: a new name misses, the same name hits, another new name misses
   k="cch001k$RANDOM"; get "$D/k1" "$T$P?$k=1"; get "$D/k2" "$T$P?$k=1"; get "$D/k3" "$T$P?${k}x=1"
@@ -154,10 +155,9 @@ rules are known) → CCH-008 (application caches, two accounts, manual) → CCH-
   # 3. per changed row: the input on a fresh buster, the same URL from a clean client, a new buster without the input
   hv="X-Forwarded-Host: $C"              # the row under test, exactly as sent above
   b="cch001v$RANDOM"; get "$D/v1" -H "$hv" "$T$P?$b=1"; get "$D/v2" "$T$P?$b=1"; get "$D/v3" "$T$P?${b}x=1"
-  for f in v1 v2 v3; do echo "$f $(hit "$D/$f.h") | $(sig "$D/$f") | inert $(mk "$D/$f.b")"; done | tee "$D/verdict.txt"
+  for f in v1 v2 v3; do echo "$f $(hit "$D/$f.h") | $(sig "$D/$f") | inert $(mk "$D/$f.b") | ours $(grep -c -F "$X" "$D/$f.b")"; done | tee "$D/verdict.txt"
   # wanted: v1 changed, v2 the same change with HIT, v3 the baseline. The change on v3 means it outlived our key: CCH-007.
   # 4. host headers that showed nothing in step 1, once each with a host of ours, then a new buster as the control
-  X="cch001.${OOB:-example.org}"
   for h in X-Forwarded-Host X-Host X-Forwarded-Server X-Original-Host; do b="cch001n$RANDOM"
     get "$D/$b" -H "$h: $X" "$T$P?$b=1"; get "$D/$b.iso" "$T$P?${b}x=1"
     echo "$h | ours $(grep -c -F "$X" "$D/$b.b") | new buster $(grep -c -F "$X" "$D/$b.iso.b")"
@@ -172,8 +172,8 @@ rules are known) → CCH-008 (application caches, two accounts, manual) → CCH-
   a response that does not depend on our buster: stop all requests, note the time and the `Cache-Control`, and
   follow PB-14 (the target degraded).
 - **Proof:** `key.txt` (MISS, HIT, MISS: our buster is a key of its own, so the real page was never touched) and the
-  raw captures of step 3: `v1` with the input, `v2` without it on the same URL carrying the change with a hit
-  marker, and `v3` on a new buster without it showing the normal page. Name the input, the cache (`Server`, `Via`,
+  raw captures of step 3, run with our host for a host header: `v1` with the input, `v2` without it on the same URL
+  carrying the change with a hit marker, and `v3` on a new buster without it showing the normal page. Name the input, the cache (`Server`, `Via`,
   `CF-Ray`, `X-Served-By`, `X-Amz-Cf-Pop`), the lifetime (`Cache-Control` against `Age`) and where in the page the
   value lands. A triager repeats the three requests with a buster of their own.
 - **Not a finding when:** `v2` shows the normal page or a miss: the input is in the key, the response is `private`
@@ -225,8 +225,8 @@ rules are known) → CCH-008 (application caches, two accounts, manual) → CCH-
   D="$E/evidence/$H/CCH-002"; mkdir -p "$D"; W=$(awk -v r="$RATE" 'BEGIN{w=1/r; printf "%.2f", (w<1?1:w)}')
   P="/"; HN="X-Forwarded-Host"          # the page and the unkeyed header CCH-001 proved; for CCH-003 and CCH-004 see below
   hit(){ tr -d '\r' < "$1" | grep -qiE '^((cf-cache-status|x-cache|x-vercel-cache|x-nextjs-cache|x-drupal-cache|x-cache-status|cache-status): .*hit|age: *[1-9]|x-varnish: *[0-9]+ +[0-9]+)' && echo HIT || echo MISS; }
-  # 1. where the inert value landed in CCH-001's stored page, and what would refuse a file of ours
-  grep -noE "<script[^>]*src=[\"'][^\"']*${H^^}[^\"']*|[\"']https?://${H^^}[^\"']*\.(js|mjs|json)|integrity=[\"'][^\"']+" "$E/evidence/$H/CCH-001/v2.b" | head -20
+  # 1. where CCH-001's value (inert, or our cch001. host) landed in its stored page, and what would refuse a file of ours
+  grep -noE "<script[^>]*src=[\"'][^\"']*(${H^^}|cch001\.)[^\"']*|[\"']https?://(${H^^}|cch001\.)[^\"']*\.(js|mjs|json)|integrity=[\"'][^\"']+" "$E/evidence/$H/CCH-001/v2.b" | head -20
   tr -d '\r' < "$E/evidence/$H/CCH-001/v2.h" | grep -i '^content-security-policy'
   # 2. for (b) and (d), on the $OOB host (port 443 as root there, with a certificate for its name):
   cat > srv.py <<'PY'
@@ -796,8 +796,8 @@ rules are known) → CCH-008 (application caches, two accounts, manual) → CCH-
   search-engine metadata, informative on most programmes.
 - **Denial of service where the policy excludes it (`dos`).** 18 of the 48 reports filed under the class are titled
   as denial of service or inaccessibility and they carry the four largest bounties, but a programme that excludes
-  availability closes them N/A. CCH-009 runs only under `dos-ok`. Where the policy excludes floods and volumetric tests and says nothing
-  about cache poisoning, the operator asks the programme before setting `dos-ok`.
+  availability closes them N/A. CCH-009 runs only under `dos-ok`. Where the policy excludes floods and volumetric
+  tests and says nothing about cache poisoning, the operator asks the programme before setting `dos-ok`.
 - **Deception of nothing private.** A deceptive URL that stores a page whose only account data is a name, a
   preference or a public field: #439021 was closed informative and #1484468 was rated low as theoretical. A finding
   needs personal data, a token or a CSRF value.
