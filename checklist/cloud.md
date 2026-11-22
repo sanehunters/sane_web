@@ -222,7 +222,8 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   D="$E/evidence/$H/CLD-002"; mkdir -p "$D"; U=$(jq -r '.authorisation.h1_username // empty' "$E/engagement.json"); U=${U:-researcher}
   N='<bucket name the asset uses>'; M="h1-$U-cld002-$(date -u +%Y%m%d%H%M%S)-$RANDOM.txt"; echo "$N $M" > "$D/target.txt"
   printf 'Harmless write test by HackerOne user %s for %s at %s UTC. Safe to delete.\n' "$U" "$H" "$(date -u '+%F %T')" > "$D/$M"
-  # 1. read-only evidence: the ACL grants to everyone or to any AWS account, and the GCS permissions of an anonymous caller
+  # 1. read-only evidence (first line for S3, second for GCS): the ACL grants to everyone or to any AWS account,
+  #    and the permissions GCS reports for an anonymous caller
   curl -sS "${HDR[@]}" "https://$N.s3.amazonaws.com/?acl" | grep -oE 'groups/global/[A-Za-z]+</URI></Grantee><Permission>[A-Z_]+'
   curl -sS "${HDR[@]}" "https://storage.googleapis.com/storage/v1/b/$N/iam/testPermissions?permissions=storage.objects.create&permissions=storage.objects.delete" | jq -c .
   ```
@@ -989,7 +990,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   upload session.
 - **Not a finding when:** `/v2/` answers 401 with a `Bearer realm` and the token service refuses an anonymous
   catalogue scope. The registry serves public images on purpose: an open-source project's, a Harbor public project,
-  a pull-through cache of public images. `/version`, `/healthz`, `/livez` and `/readyz` are public on every cluster
+  a pull-through cache of public images. `/version`, `/healthz`, `/livez` and `/readyz` are public by default
   (`version-disclosure`); `system:anonymous` refused with 403 is closed; a rules review that lists only
   `selfsubjectaccessreviews`, `selfsubjectrulesreviews` and non-resource URLs is the default `system:basic-user`. A
   kubelet 401 is webhook authentication working. etcd that asks for a client certificate. Many unrelated services
