@@ -1,0 +1,222 @@
+{
+ "_doc": "What each checklist chapter must cover. Read by scripts/chapters_todo.py to build the args of the write-chapters workflow. A chapter without a brief here was written by hand; its file is the specification.",
+ "chapters": [
+  {
+   "slug": "access-control",
+   "prefix": "BAC",
+   "items": "14 to 18",
+   "scope": "IDOR/BOLA across every identifier position (path, query, body, header, GraphQL id, file name); BFLA (method swap, admin endpoints called by a low role, old API versions); horizontal versus vertical; multi-tenant isolation; invite and share-link scoping; indirect references (export, attachments, websockets, search); UUIDs leaked elsewhere that make unguessable ids guessable; state-changing IDOR proven on our own second account; 403/401 bypass techniques (path normalisation, header tricks such as X-Original-URL, method override); privilege escalation through role parameters; access to objects after removal from a team or after downgrade.",
+   "gate": "http, app|api for the chapter; items use object-ids, roles, multi-tenant, invite, two-accounts, priv-accounts precisely."
+  },
+  {
+   "slug": "api",
+   "prefix": "API",
+   "items": "12 to 15",
+   "scope": "Mass assignment (role/isAdmin/verified/price/owner fields; discover names from GET responses, docs and bundles); excessive data exposure (fields the UI hides); old and alternate API versions and mobile APIs with weaker checks (/v1 vs /v3, /internal, /beta); content-type and method confusion; HTTP parameter pollution and JSON duplicate-key parser differentials; exposed API docs (Swagger/OpenAPI/Postman) leading to an unauthenticated endpoint sweep at the programme rate; API keys in bundles and their privilege; improper inventory (staging API with production data); pagination and filter abuse to bulk-enumerate (stop at proof); JSON type juggling (array/object/boolean/number where a string is expected); webhook or callback signature validation missing; gRPC-web and JSON-RPC reflection.",
+   "gate": "http, api for the chapter; items use api-docs, spa, login, account, two-accounts, priv-accounts, object-ids precisely."
+  },
+  {
+   "slug": "authn",
+   "prefix": "AUT",
+   "items": "14 to 18",
+   "scope": "Password reset (token leak via Referer or Host, token reuse or predictability, no invalidation after use or after password change, user-controlled email parameter arrays or duplicates, response manipulation); 2FA/OTP (bypass by skipping the step, code reuse, brute force with rate-limit bypass within programme limits, backup codes, 2FA not enforced on alternate endpoints or APIs, disabling 2FA without the code); login (rate-limit bypass headers, default credentials on our own tenant only); registration (duplicate, Unicode or case email confusion; pre-account takeover via unverified email plus SSO); email verification bypass; email change without re-authentication; session (fixation, not invalidated after password change or logout, concurrent sessions); remember-me tokens; user enumeration (usually excluded).",
+   "gate": "http, app|api, login for the chapter; items use password-reset, mfa, signup, cookie-auth, oauth-login, email-out, account, two-accounts, bruteforce-ok precisely."
+  },
+  {
+   "slug": "cache",
+   "prefix": "CCH",
+   "items": "8 to 11",
+   "scope": "Unkeyed header poisoning (X-Forwarded-Host, X-Forwarded-Scheme, X-Original-URL, X-Host) with a cache-buster ALWAYS in place; unkeyed query parameters and parameter cloaking; fat GET; cache-key normalisation flaws; web cache deception (path confusion /account/x.css, delimiters ;, %23, %3f, encoded dot-segments, static-directory and static-extension rules); cache-poisoning DoS (excluded unless allowed); poisoning of redirects or JavaScript imports giving stored XSS at scale; application-level cache poisoning; Vary handling. Every How uses a unique cache-buster so no real user is served a poisoned response; proving against the un-busted key is a single final confirmation only where the policy allows it, and is reverted.",
+   "gate": "http, cache|cdn for the chapter; items use login, cookie-auth, account, two-accounts, reflect, dos-ok precisely."
+  },
+  {
+   "slug": "clickjacking",
+   "prefix": "UIR",
+   "items": "5 to 7",
+   "scope": "Framing of a sensitive one-click action (delete account, OAuth consent, payment, role grant); frame-ancestors and X-Frame-Options analysis and per-page gaps; double-clickjacking; drag-and-drop and cursorjacking; frame-buster bypass with the sandbox attribute; reverse tabnabbing; UI misrepresentation in permission prompts. Mostly graveyard: say exactly when it pays (a sensitive state change in one or two clicks, with a PoC page).",
+   "gate": "http, app, login, state-change for the chapter; items use cookie-auth, oauth-provider, payments, browser precisely."
+  },
+  {
+   "slug": "client-side",
+   "prefix": "CSD",
+   "items": "10 to 13",
+   "scope": "postMessage listeners without origin checks (and with flawed ones: indexOf, startsWith, regex); postMessage senders using * that leak tokens; DOM clobbering; client-side template injection (AngularJS, Vue); client-side path traversal (CSPT) to CSRF or XSS; a pointer to prototype-pollution gadgets (PPL); source-map and bundle analysis for hidden routes and secrets; dependency confusion from package names in bundles and source maps (Unit: programme; prove by registry lookup that the name is unclaimed and stop: claim nothing without the programme's permission); sensitive data in localStorage/sessionStorage exposed to XSS; service-worker scope abuse; dangling markup; CSS-injection exfiltration; XS-leaks.",
+   "gate": "http for the chapter; items use spa, postmessage, source-maps, user-content, login, browser precisely."
+  },
+  {
+   "slug": "cloud",
+   "prefix": "CLD",
+   "items": "11 to 14",
+   "scope": "S3/GCS/Azure Blob list, read, write and ACL checks unauthenticated and as any authenticated cloud user (our own cloud account; a write test is one uniquely named harmless text file, deleted afterwards, only where the policy allows write tests); bucket-name guessing from organisation naming (Unit: programme); pre-signed URL flaws; Firebase (open Realtime Database .json, Firestore rules, Storage rules); Cognito (self sign-up enabled on an internal pool, unauthenticated identity-pool credentials and what they can reach, attribute tampering such as custom:role or email); exposed CI/CD (Jenkins, GitLab runners, GitHub Actions pull_request_target on in-scope public repositories, artefact leaks); container and registry exposure (public Docker registry /v2/_catalog, exposed Kubernetes API or kubelet, etcd); serverless function URLs and API Gateway stages without auth; CloudFront or alternate-domain misrouting; cloud metadata via SSRF (pointer to SSR-003); leaked cloud keys: read-only identity check only; Terraform state exposure; exposed monitoring (pointer to the CVE chapter).",
+   "gate": "Chapter gate `http|ip|cloud-storage`; items use cloud-storage, known-product, login, signup, api, spa precisely."
+  },
+  {
+   "slug": "cors",
+   "prefix": "COR",
+   "items": "7 to 9",
+   "scope": "Reflected Origin with credentials; null origin; prefix, suffix and regex flaws (target.com.evil.tld, eviltarget.com); trusted subdomain plus XSS or takeover; pre-production origin trusted; wildcard with credentials through a cache; internal-network CORS; CORS on token or API-key endpoints; Vary: Origin missing leading to cache poisoning. Proof is a hosted page reading authenticated data cross-origin with victim B's session.",
+   "gate": "http, cors-headers for the chapter; items use cookie-auth, login, two-accounts, browser, cache precisely."
+  },
+  {
+   "slug": "crlf",
+   "prefix": "CRL",
+   "items": "6 to 8",
+   "scope": "CRLF in a redirect Location or path giving response splitting, then XSS or cookie injection (session fixation); CRLF in header-reflected parameters; encodings that survive (%0d%0a, %E5%98%8A%E5%98%8D, %0a only, \\r\\n inside JSON); CRLF in outgoing requests the server makes (SSRF header injection, pointer to SSR); SMTP or e-mail header injection in contact and invite forms (Bcc injection proven to our own inbox); log injection is graveyard; HTTP/2-to-HTTP/1 downgrade CRLF (pointer to SMG).",
+   "gate": "http for the chapter; items use redirect-param, email-out, params, url-fetch, http2, reverse-proxy precisely."
+  },
+  {
+   "slug": "csrf",
+   "prefix": "CSR",
+   "items": "9 to 12",
+   "scope": "State-changing action with no token; token not tied to the session; token removable; method downgrade (POST to GET); content-type tricks (text/plain JSON, form-encoded accepted by a JSON endpoint); SameSite analysis (Lax two-minute window, top-level GET, None); Referer/Origin validation bypass; CSRF on email or password change leading to account takeover; CSRF on OAuth account linking; login CSRF (usually excluded); GraphQL over GET or form; requests that need no CORS preflight. Proof is a self-contained HTML page that changes state in our own victim account B.",
+   "gate": "http, app|api, cookie-auth, state-change for the chapter."
+  },
+  {
+   "slug": "cve",
+   "prefix": "CVE",
+   "items": "14 to 17",
+   "scope": "THIS CHAPTER IS A PRIORITY. It drives a CVE-exploiter flow (read /home/lamp/checklist/playbooks/PB-07-cve.md first): identify product and exact version, look up CVEs, verify with a safe advisory-specific check, exploit to a demonstrated non-destructive impact, report. Items in this order: (1) precise product and version fingerprint (headers, favicon hash, static-file hashes, /version endpoints, error pages, JavaScript bundle banners, login-page build ids) recorded to $E/recon/$H/tech.json; (2) CVE lookup for each product@version with `scripts/sane cve \"$H\"` (NVD by CPE, CISA KEV, EPSS, HexBrain find_cves/get_cve, local nuclei templates) and ranking: unauthenticated first, KEV-listed, EPSS, public exploit, impact; (3) nuclei restricted to the matched ids or product tags with `-rl $RATE` (never the whole template set); (4) manual verification of a hit with the exact request from the advisory, because a version match alone is not a finding; (5) exploitation to minimal proof per impact type (file read: /etc/hostname; RCE: id or hostname via OOB; auth bypass: one protected page title on our own tenant; SQLi: version string; SSRF: metadata identity) and stop; (6) the N-day patch-gap rule in programme policy; (7) default credentials on identified products: vendor defaults only, a handful of attempts, never brute force; (8) exposed management interfaces of known products (Jenkins script console, Grafana, Kibana, phpMyAdmin, Spring Boot actuator, Tomcat manager, JBoss, WebLogic console, Solr, Elasticsearch, RabbitMQ, Airflow, Kubernetes dashboard/API, Docker API, Consul, etcd, Prometheus, Hadoop YARN, Jupyter); (9) WordPress: core, plugin and theme enumeration to version to CVE (wpscan with a throttle, or readme.txt versions by hand), xmlrpc, REST API exposures; (10) other CMS and e-commerce (Drupal, Joomla, Magento, AEM dispatcher bypass, Sitecore, SharePoint); (11) Java stack families (Spring4Shell, Log4Shell via OOB, Struts OGNL, Confluence/Jira, WebLogic, Tomcat) with safe detection; (12) edge, VPN and gateway appliances (Citrix, F5, Fortinet, Ivanti/Pulse, PAN-OS GlobalProtect, Exchange/OWA) version to CVE; (13) vulnerable JavaScript libraries: a finding only with a working exploit path in THIS app; (14) dependency and SBOM leaks (package.json, composer.lock, exposed /vendor/ or /node_modules/) to server-side component versions to CVE; (15) variant analysis: when a CVE is patched, test the adjacent endpoint, parameter or encoding the patch may have missed. Proof for every item is the advisory-specific request and the response showing the vulnerable behaviour, never a version string. Not-a-finding-when must cover back-ported patches (distro packages keep old version strings), WAF virtual patching, version-only matches and honeypots. Other documents refer to item CVE-001 as the version-pinning item and CVE-015 as the variant-analysis item: keep those two numbers for those two topics.",
+   "gate": "http, known-product|cms|wordpress|spring|java|php|dotnet|node|python|ruby for the chapter."
+  },
+  {
+   "slug": "disclosure",
+   "prefix": "INF",
+   "items": "14 to 17",
+   "scope": "Exposed VCS and config (/.git/HEAD, /.env, /.svn, /.DS_Store, backup and editor files, /config.json); secrets in JavaScript bundles and source maps (validate keys ONLY with one read-only identity call such as aws sts get-caller-identity, and stop); debug and diagnostic endpoints (Spring actuator /env and /heapdump, Laravel debug and Telescope, Django debug, Rails routes, phpinfo, /server-status, Symfony profiler); directory listing; verbose errors with secrets; PII in API responses beyond what the UI shows; sensitive data in URLs leaking through Referer or analytics; predictable export, report or invoice URLs; cached authenticated pages; metadata in uploaded or served files; internal hostnames and IPs (graveyard); public code-host search for organisation secrets (Unit: programme; GitHub/GitLab search through the API); public Postman, Swagger, Trello or Jira boards (Unit: programme); Wayback and Common Crawl for removed-but-live sensitive files (Unit: host). Be strict in Not-a-finding-when: a key designed to be public (Google Maps browser key, Firebase web config, Stripe publishable key, Sentry DSN) is not a finding; proof needs the secret to grant access to something.",
+   "gate": "http for the chapter; items use spa, source-maps, spring, php, python, ruby, java, login, account, api precisely."
+  },
+  {
+   "slug": "host-header",
+   "prefix": "HHI",
+   "items": "6 to 8",
+   "scope": "Password-reset link poisoning (Host, X-Forwarded-Host, duplicate Host, absolute-URI request line), proven on our own account's e-mail only; routing-based SSRF to internal virtual hosts; access to internal or admin virtual hosts by Host value; virtual-host brute force (Unit: host); Host-based cache poisoning (pointer to CCH); connection-state attacks (first-request validation); the list of Host override headers. Other documents refer to HHI-001 as the reset-link poisoning item: keep that number for it.",
+   "gate": "http for the chapter; items use password-reset, email-out, reverse-proxy, cache, account, ip precisely."
+  },
+  {
+   "slug": "llm",
+   "prefix": "LLM",
+   "items": "8 to 10",
+   "scope": "Direct prompt injection to system-prompt or secret disclosure (often excluded); indirect prompt injection through content the assistant reads (documents, web pages, tickets, e-mails) leading to data exfiltration via Markdown image or link rendering; tool and function-call abuse (IDOR through the agent: asking it to fetch another tenant's data); SSRF through browsing or URL tools; XSS through unsanitised model output rendered as HTML; cross-user or cross-tenant conversation leakage; excessive agency (state-changing tools without confirmation); prompt injection stored on shared resources that hits other users. Be honest in the graveyard: jailbreaks, harmful-content generation and hallucinations are not security findings on most programmes.",
+   "gate": "http, ai-feature for the chapter; items use login, two-accounts, multi-tenant, user-content, url-fetch, oob, browser precisely."
+  },
+  {
+   "slug": "logic",
+   "prefix": "BIZ",
+   "items": "12 to 15",
+   "scope": "Price, quantity and currency tampering; negative amounts; coupon stacking and reuse; step skipping in multi-step flows; plan and feature-flag bypass (paid features on a free plan); refund and credit abuse; limits and quota bypass; trial abuse; state-machine violations; workflow approval bypass; rounding; client-side-enforced restrictions; email or phone verification state abuse. Every proof ends in an entitlement or state visible in our own account; no cashing out, no repeated abuse.",
+   "gate": "http, app|api for the chapter; items use payments, limited-action, login, account, roles, signup precisely."
+  },
+  {
+   "slug": "network",
+   "prefix": "NET",
+   "items": "10 to 12",
+   "scope": "For IP/CIDR assets and non-HTTP services: port discovery at the programme rate (naabu -rate / nmap -T3 --max-rate; top ports first, the full range only when justified); service identification; unauthenticated data stores (Redis INFO, Memcached stats, MongoDB listDatabases, Elasticsearch _cat/indices, CouchDB, Cassandra, ZooKeeper stat) proven with a read-only banner or metadata command, never user data beyond names and counts; anonymous FTP/SMB/NFS/rsync listing; exposed remote administration (RDP/VNC/SSH with password auth is not a finding by itself); SNMP public community; SMTP open relay (send only to our own mailbox); DNS zone transfer and open resolver (open resolver is graveyard); exposed JDWP/JMX/RMI/Docker/kubelet (pointer to CVE and CLD); web services on non-standard ports feed back into the web chapters (set http); services on IPs that belong to someone else (cloud IP churn): verify ownership before any test (reverse DNS, a TLS certificate SAN matching an in-scope name, or the programme's explicit CIDR). Every How includes the rate flag and says to stop at the banner.",
+   "gate": "`ip|nonweb-ports` for the chapter."
+  },
+  {
+   "slug": "nosqli",
+   "prefix": "NSQ",
+   "items": "7 to 9",
+   "scope": "MongoDB operator injection in JSON and in query-string bracket syntax ([$ne], [$regex]); authentication bypass; $where and JavaScript injection; blind extraction via $regex (prove on our own account's field); LDAP filter injection; XPath injection; Elasticsearch/Lucene query-string injection; GraphQL-to-NoSQL resolvers; ORM filter-object injection (Prisma, Sequelize, Mongoose where-clauses built from user JSON).",
+   "gate": "http, app|api, params for the chapter; items use login, node, account, graphql precisely."
+  },
+  {
+   "slug": "oauth",
+   "prefix": "OAU",
+   "items": "12 to 15",
+   "scope": "redirect_uri validation bypasses; state missing and login CSRF; code reuse and leak via Referer; implicit-flow token leak; account-linking CSRF; pre-account takeover via unverified IdP email; client secret exposure; scope upgrade; PKCE downgrade; OIDC id_token validation (aud, iss, nonce); dynamic client registration SSRF; SAML (signature wrapping, comment injection, signature stripping, replay, XXE in SAMLResponse); provider side (open client registration, consent bypass).",
+   "gate": "http, app|api, oauth-login|oauth-provider|saml for the chapter; gate each item precisely with oauth-login, oauth-provider or saml plus capabilities."
+  },
+  {
+   "slug": "proto-pollution",
+   "prefix": "PPL",
+   "items": "6 to 8",
+   "scope": "Server-side pollution detection with safe, reversible probes (JSON __proto__ / constructor.prototype with the status-code, json-spaces, exposed-headers and charset detection gadgets that do not break the app); known gadget routes to RCE described but proven only with the benign gadgets; client-side pollution via URL (?__proto__[x]=, hash) with DOM-XSS gadgets in common libraries; pollution through query-string parsers (qs); deep-merge endpoints. Server-side probes must be reversible and say how to undo them; warn that global pollution can break the app for all users, so only the documented non-destructive detection properties are used.",
+   "gate": "http for the chapter; server-side items require node; client-side items require spa, browser."
+  },
+  {
+   "slug": "race",
+   "prefix": "RAC",
+   "items": "8 to 10",
+   "scope": "Single-packet attack over HTTP/2 and last-byte synchronisation over HTTP/1.1; limit overrun on redeem, withdraw, vote, invite; double spend; race on the 2FA/OTP attempt counter; race on email change and verification; TOCTOU on file-upload validation; race on sign-up uniqueness; partial-construction races. Give a runnable Python harness (h2 or httpx with HTTP/2, or raw sockets for last-byte sync) or `curl --parallel` in How. Twenty to thirty parallel requests is the scale: this is not load testing.",
+   "gate": "http, app|api for the chapter; items use limited-action, payments, http2, mfa, signup, upload, account precisely."
+  },
+  {
+   "slug": "rce",
+   "prefix": "RCE",
+   "items": "11 to 14",
+   "scope": "OS command injection (argument and shell contexts, blind via time and OOB DNS, argument injection into git/curl/ssh/tar/ffmpeg/convert); code injection (eval-like sinks, dynamic imports, expression evaluators, server-side spreadsheet or formula engines); file-processing vectors (ImageMagick delegates, Ghostscript, ExifTool, LibreOffice conversions, archive extraction to a web root, with pointers to the upload and traversal chapters); package or plugin install features; admin run-script, webhook or cron features abused as a low role; git or repository import; PDF/LaTeX injection (\\write18, \\input); Log4Shell-style JNDI lookups in logged headers (java, oob); SSI and ESI injection. Proof is one harmless command output (id, hostname) or an OOB DNS lookup carrying the hostname; never a shell, never persistence, never lateral movement.",
+   "gate": "http, app|api for the chapter; items use params, upload, file-processing, url-fetch, render, template-input, java, php, node, python, ruby, roles, priv-accounts, oob precisely."
+  },
+  {
+   "slug": "recon",
+   "prefix": "RCN",
+   "items": "12 to 15",
+   "scope": "A method chapter: items are hidden-surface hypotheses, each producing new assets, endpoints or facts that feed the other chapters rather than findings (Severity mostly 'None standalone; ...'). Passive subdomain sources (crt.sh, subfinder, HexBrain get_attack_surface, chaos) with scope filtering FIRST (`scripts/sane scope filter`); permutation brute force only when a wildcard scope allows; virtual-host discovery on in-scope IPs; historical URLs (waybackurls/gau) to removed-but-live endpoints and old parameters; JavaScript bundle mining for routes, API hosts and feature flags (and source maps); content discovery with stack-appropriate wordlists (`ffuf -rate`); recursion on interesting 403/401 directories; parameter discovery (arjun/x8) on dynamic endpoints only; API version walking; staging/dev/internal twins of production with weaker auth; mobile-app endpoint extraction when the app is in scope; favicon, hash and certificate pivoting to sibling hosts (verify scope before touching); acquisitions and alternate TLDs only if the scope says so; HTTP services on other ports of in-scope hosts (8080/8443/3000/5000/9000); monitoring for new assets over time (Unit: programme). Prior art: the recon class has no reports of its own, so grep kb/data/index.jsonl for titles that show the technique paying (staging, wayback, vhost, forgotten, old version, backup).",
+   "gate": "Use `http|ip` as the chapter gate and give programme-level items Unit: programme and host-level ones Unit: host."
+  },
+  {
+   "slug": "redirect",
+   "prefix": "RDR",
+   "items": "8 to 10",
+   "scope": "Parameter-based redirect bypass list (//, backslashes, @, whitespace, scheme tricks, domain confusions); path-based (//evil.com); redirect after login and logout; javascript: scheme in a redirect giving XSS; redirect to OAuth token or code theft; redirect as an SSRF allow-list bypass; header-based (Host/X-Forwarded-Host); meta refresh and DOM-based (location = param). Be honest: a standalone open redirect is low or excluded; the chain is what pays.",
+   "gate": "http, app|api for the chapter; items use redirect-param, login, oauth-login, url-fetch, spa, browser precisely."
+  },
+  {
+   "slug": "smuggling",
+   "prefix": "SMG",
+   "items": "8 to 10",
+   "scope": "CL.TE, TE.CL, TE.TE obfuscation, H2.CL and H2.TE downgrade, CL.0, client-side desync, h2c upgrade smuggling, HTTP/2 header and pseudo-header injection (CRLF in h2 headers), request tunnelling, response-queue poisoning explained but NOT performed against live users, pause-based desync. Safety rules in every How: timing-based detection first; confirm only with a self-targeted differential (our own follow-up request on the same connection, our own prefix); never poison a shared connection in a way that captures or breaks other users' requests; keep attempts few. CLI tools: smuggler.py, h2csmuggler, raw sockets in Python, curl --http2-prior-knowledge.",
+   "gate": "http, reverse-proxy for the chapter; items use http2, cache, browser precisely."
+  },
+  {
+   "slug": "sqli",
+   "prefix": "SQL",
+   "items": "11 to 14",
+   "scope": "Detection by behaviour before any tool (quote, arithmetic and boolean pairs; time delays kept short; error signatures per DBMS); injection points people miss (ORDER BY/sort/limit/column-name parameters, JSON body keys and nested values, headers and cookies, second-order through stored values, GraphQL arguments, filter DSLs, batch/import/CSV features, search); boolean-blind and time-blind proof with a minimal extraction (DBMS version and current user only); WAF bypass approach; sqlmap used correctly (targeted with -p, low level and risk, --delay, never bulk-dump modes, never OS-shell modes); ORM-specific injections (raw fragments, Rails/Sequelize/Django extra, JSON operators); out-of-band exfiltration. Proof stops at version, user and table names of the app schema.",
+   "gate": "http, app|api, params for the chapter; tech tags and oob, waf, graphql where the technique needs them."
+  },
+  {
+   "slug": "ssti",
+   "prefix": "TPL",
+   "items": "8 to 10",
+   "scope": "Detection polyglot and arithmetic probes per engine family; an engine identification decision tree (Jinja2, Twig, Freemarker, Velocity, Thymeleaf/SpEL, ERB, Handlebars/Pug/EJS, Smarty, Go templates, Razor); where templates hide (email templates, notification formats, PDF templates, CMS themes, error pages, file-name and subject fields); sandbox escapes at proof level; expression-language injection (OGNL/SpEL/EL in Java); blind SSTI via OOB. Proof is arithmetic evaluated server-side plus one harmless read (id, hostname or the engine's config object); no shells, no persistence.",
+   "gate": "http, app|api for the chapter; items use template-input, reflect, params, email-out, render, java, python, php, ruby, node, dotnet, oob precisely."
+  },
+  {
+   "slug": "takeover",
+   "prefix": "STO",
+   "items": "8 to 10",
+   "scope": "CNAME to an unclaimed third-party service (per-service fingerprints: GitHub Pages, Heroku, S3 NoSuchBucket, Azure *.azurewebsites.net / *.cloudapp.net / *.trafficmanager.net NXDOMAIN, Fastly, Shopify, Zendesk, ReadMe, Netlify, Surge, Pantheon, Tumblr, Unbounce, Elastic Beanstalk region reuse; say that can-i-take-over-xyz is the reference for which services are still claimable); NXDOMAIN CNAME targets and expired apex domains; NS delegation to unclaimed zones (dangling NS); MX takeover; dangling A records to released cloud IPs (hard, usually not provable safely); second-order takeover (JS/CSS/iframe loaded from a dead external domain or bucket, giving stored XSS on the main app; broken link hijacking on social handles is low); S3 bucket referenced but nonexistent. Claim protocol: programme policy first (takeover-ok); claim with a non-indexable harmless proof file at an unguessable path (an HTML comment with the H1 username, nothing at the root); screenshot and dig output; release or hand over as policy says; never host content at the root, never capture cookies or traffic. Most items are Unit: host.",
+   "gate": "The chapter gate must NOT require http (a dead host is the point): use cname-3p|dangling|cloud-storage|http and gate items with cname-3p, dangling, takeover-ok precisely."
+  },
+  {
+   "slug": "traversal",
+   "prefix": "LFI",
+   "items": "10 to 13",
+   "scope": "Path traversal in file, download, template and language parameters (encoding ladder: ../, ..%2f, %2e%2e%2f, double encoding, ....//, ..;/, backslashes, overlong UTF-8, null byte on old stacks); absolute path override; traversal in upload file names (write); zip-slip on archive extraction; PHP wrappers (php://filter, phar://, data://) gated on php; LFI-to-RCE routes (log or session poisoning) described but proven only to file read; reverse-proxy path normalisation mismatch (/static/..;/admin, nginx alias off-by-slash) gated on reverse-proxy; traversal in S3 or object-storage keys; RFI. The proof file is harmless (/etc/hostname, first lines of /etc/passwd, win.ini).",
+   "gate": "http, app|api for the chapter; items use file-param, upload, file-processing, php, java, reverse-proxy, cloud-storage precisely."
+  },
+  {
+   "slug": "upload",
+   "prefix": "UPL",
+   "items": "11 to 14",
+   "scope": "Extension filter bypass (double extension, case, trailing dot or space, null byte, alternate executable extensions per stack); content-type and magic-byte bypass; polyglots; SVG or HTML upload served on the app origin giving stored XSS; upload path and file-name traversal; overwrite of other users' files; execution check (prove with a file that only prints a fixed marker, then delete it); pre-signed URL abuse (S3 POST policy or PUT with an attacker-chosen key or content type); unrestricted size or type as storage abuse (usually excluded); image processors (ImageTragick; EXIF GPS not stripped as privacy); archive upload (zip-slip; zip bombs are DoS and excluded); CSV/XLSX import injection; files accessible without authentication or at predictable URLs; malware-scan bypass is graveyard.",
+   "gate": "http, app|api, upload for the chapter; items use file-processing, cloud-storage, user-content, tech tags, two-accounts, browser precisely."
+  },
+  {
+   "slug": "websocket",
+   "prefix": "WSS",
+   "items": "6 to 8",
+   "scope": "Cross-site WebSocket hijacking (Origin not checked plus cookie auth); missing authentication on the handshake or missing per-message authorisation (IDOR via channel or room ids); message tampering and injection (XSS/SQLi through frames); subscription to other tenants' channels; token in the URL; socket.io, SignalR and ActionCable specifics. Give runnable websocat or Python websockets snippets.",
+   "gate": "http, websocket for the chapter; items use cookie-auth, login, two-accounts, multi-tenant, browser precisely."
+  },
+  {
+   "slug": "xss",
+   "prefix": "XSS",
+   "items": "15 to 18",
+   "scope": "Reflected (HTML body, attribute, JavaScript string, URL/href, CSS contexts: context-first payload selection); stored (profile fields, file names, rich text and Markdown, SVG upload, emails and notifications, admin-facing fields as blind XSS with a callback); DOM (sources to sinks from bundle grep: location.hash/search, postMessage, innerHTML, document.write, jQuery sinks, client-side routers); mutation XSS in sanitisers; CSP bypass (JSONP endpoints, script gadgets, base-uri, upload-hosted scripts); XSS via content-type sniffing or files served on the app origin; XSS in error pages and 404s; header-based (Referer/User-Agent rendered in admin logs); cookie-to-XSS; a WAF bypass method; escalation to account takeover (session, CSRF-token or API-key theft, forced email change) which is what gets paid. Proof is script execution in the target origin shown with alert(document.domain) or a callback carrying document.domain, captured with the scriptable browser.",
+   "gate": "http, app for the chapter; items use reflect, user-content, rich-text, upload, spa, postmessage, waf, browser, oob, two-accounts precisely."
+  }
+ ]
+}
