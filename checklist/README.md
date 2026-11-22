@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 24 are written (314 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 27 are written (342 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -67,10 +67,10 @@ Sessions: A. Agent: `class-hunter`.
 | LLM & AI features | `LLM` | queued |  | `—` | [15 reports, 0 paid, median $0](../kb/reports/llm.md) |
 | [Server-side request forgery](ssrf.md) | `SSR` | written | 10 | `http, app\|api` | [365 reports, 112 paid, median $714](../kb/reports/ssrf.md) |
 | [XML external entities & XML injection](xxe.md) | `XXE` | written | 10 | `http, app\|api` | [59 reports, 10 paid, median $1,250](../kb/reports/xxe.md) |
-| Server-side template injection | `TPL` | queued |  | `—` | [21 reports, 6 paid, median $2,300](../kb/reports/ssti.md) |
+| [Server-side template injection](ssti.md) | `TPL` | written | 10 | `http, app\|api` | [21 reports, 6 paid, median $2,300](../kb/reports/ssti.md) |
 | [Insecure deserialization](deser.md) | `DSR` | written | 11 | `http, app\|api` | [101 reports, 29 paid, median $1,000](../kb/reports/deser.md) |
 | [SQL injection](sqli.md) | `SQL` | written | 14 | `http, app\|api, params` | [338 reports, 85 paid, median $1,350](../kb/reports/sqli.md) |
-| NoSQL, LDAP & other query injection | `NSQ` | queued |  | `—` | [16 reports, 4 paid, median $2,750](../kb/reports/nosqli.md) |
+| [NoSQL, LDAP & other query injection](nosqli.md) | `NSQ` | written | 9 | `http, app\|api, params` | [16 reports, 4 paid, median $2,750](../kb/reports/nosqli.md) |
 | [Command & code injection (RCE)](rce.md) | `RCE` | written | 14 | `http, app\|api` | [606 reports, 111 paid, median $1,500](../kb/reports/rce.md) |
 | [Path traversal, LFI & RFI](traversal.md) | `LFI` | written | 13 | `http, app\|api` | [356 reports, 64 paid, median $1,000](../kb/reports/traversal.md) |
 | File upload | `UPL` | queued |  | `—` | [43 reports, 10 paid, median $500](../kb/reports/upload.md) |
@@ -86,7 +86,7 @@ Sessions: A as attacker, B as victim in the scriptable browser. Agent: `class-hu
 |---|---|---|---|---|---|
 | [Cross-site scripting](xss.md) | `XSS` | written | 18 | `http, app` | [2,640 reports, 569 paid, median $500](../kb/reports/xss.md) |
 | [Cross-site request forgery](csrf.md) | `CSR` | written | 12 | `http, app\|api, cookie-auth, state-change` | [556 reports, 99 paid, median $300](../kb/reports/csrf.md) |
-| CORS misconfiguration | `COR` | queued |  | `—` | [61 reports, 5 paid, median $500](../kb/reports/cors.md) |
+| [CORS misconfiguration](cors.md) | `COR` | written | 9 | `http, cors-headers` | [61 reports, 5 paid, median $500](../kb/reports/cors.md) |
 | [Open redirect](redirect.md) | `RDR` | written | 10 | `http` | [362 reports, 70 paid, median $300](../kb/reports/redirect.md) |
 | Prototype pollution | `PPL` | queued |  | `—` | [53 reports, 0 paid, median $0](../kb/reports/proto-pollution.md) |
 | Clickjacking & UI redressing | `UIR` | queued |  | `—` | [170 reports, 11 paid, median $500](../kb/reports/clickjacking.md) |

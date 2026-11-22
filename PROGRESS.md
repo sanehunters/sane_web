@@ -1,13 +1,13 @@
 # Build progress
 
-_Updated 2026-11-22 13:27 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
+_Updated 2026-11-22 13:32 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
 
 | | | |
 |---|---|---|
-| Chapters written | `█████████████░░░░░░░` | **24 of 36** (314 test cards) |
+| Chapters written | `███████████████░░░░░` | **27 of 36** (342 test cards) |
 | Chapters reviewed | `░░░░░░░░░░░░░░░░░░░░` | **0 of 36** |
 | Drafts in progress | | 0 (on the `wip` branch until they lint) |
-| Not started | | 12 |
+| Not started | | 9 |
 
 ## Right now
 
@@ -32,6 +32,7 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [GraphQL](checklist/graphql.md) | `authz` | written | 13 |  | 21 Nov 12:53 |  |
 | [JWT & signed-token flaws](checklist/jwt.md) | `authz` | written | 11 |  | 21 Nov 12:53 |  |
 | [OAuth, OIDC, SAML & SSO](checklist/oauth.md) | `authz` | written | 15 |  | 22 Nov 12:59 |  |
+| [CORS misconfiguration](checklist/cors.md) | `client` | written | 9 | being written | 22 Nov 13:32 |  |
 | [Cross-site request forgery](checklist/csrf.md) | `client` | written | 12 |  | 22 Nov 08:08 |  |
 | [Open redirect](checklist/redirect.md) | `client` | written | 10 |  | 22 Nov 08:01 |  |
 | [Cross-site scripting](checklist/xss.md) | `client` | written | 18 |  | 21 Nov 17:32 |  |
@@ -42,9 +43,11 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [Subdomain takeover & dangling DNS](checklist/takeover.md) | `infra` | written | 10 |  | 22 Nov 08:03 |  |
 | [CRLF & header injection](checklist/crlf.md) | `injection` | written | 8 |  | 22 Nov 12:30 |  |
 | [Insecure deserialization](checklist/deser.md) | `injection` | written | 11 |  | 21 Nov 12:53 |  |
+| [NoSQL, LDAP & other query injection](checklist/nosqli.md) | `injection` | written | 9 | being written | 22 Nov 13:30 |  |
 | [Command & code injection (RCE)](checklist/rce.md) | `injection` | written | 14 |  | 22 Nov 07:59 |  |
 | [SQL injection](checklist/sqli.md) | `injection` | written | 14 |  | 22 Nov 02:51 |  |
 | [Server-side request forgery](checklist/ssrf.md) | `injection` | written | 10 |  | 21 Nov 12:22 |  |
+| [Server-side template injection](checklist/ssti.md) | `injection` | written | 10 | being written | 22 Nov 13:32 |  |
 | [Path traversal, LFI & RFI](checklist/traversal.md) | `injection` | written | 13 |  | 22 Nov 07:55 |  |
 | [XML external entities & XML injection](checklist/xxe.md) | `injection` | written | 10 |  | 21 Nov 12:53 |  |
 | [Known CVEs, default installs & technology-specific bugs](checklist/cve.md) | `known` | written | 17 |  | 22 Nov 02:54 |  |
@@ -53,14 +56,11 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | WebSocket | `authz` | queued |  | being written |  |  |
 | Clickjacking & UI redressing | `client` | queued |  |  |  |  |
 | Client-side: postMessage, DOM, CSP, JS supply chain | `client` | queued |  | being written |  |  |
-| CORS misconfiguration | `client` | queued |  | being written |  |  |
 | Prototype pollution | `client` | queued |  |  |  |  |
 | Host header attacks | `infra` | queued |  | being written |  |  |
 | Recon & hidden surface (method chapter) | `infra` | queued |  |  |  |  |
 | HTTP request smuggling & desync | `infra` | queued |  |  |  |  |
 | LLM & AI features | `injection` | queued |  |  |  |  |
-| NoSQL, LDAP & other query injection | `injection` | queued |  | being written |  |  |
-| Server-side template injection | `injection` | queued |  | being written |  |  |
 | File upload | `injection` | queued |  |  |  |  |
 
 ## Everything else
