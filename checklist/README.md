@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 14 are written (200 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 15 are written (210 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -87,7 +87,7 @@ Sessions: A as attacker, B as victim in the scriptable browser. Agent: `class-hu
 | [Cross-site scripting](xss.md) | `XSS` | written | 18 | `http, app` | [2,640 reports, 569 paid, median $500](../kb/reports/xss.md) |
 | Cross-site request forgery | `CSR` | queued |  | `—` | [556 reports, 99 paid, median $300](../kb/reports/csrf.md) |
 | CORS misconfiguration | `COR` | queued |  | `—` | [61 reports, 5 paid, median $500](../kb/reports/cors.md) |
-| Open redirect | `RDR` | queued |  | `—` | [362 reports, 70 paid, median $300](../kb/reports/redirect.md) |
+| [Open redirect](redirect.md) | `RDR` | written | 10 | `http` | [362 reports, 70 paid, median $300](../kb/reports/redirect.md) |
 | Prototype pollution | `PPL` | queued |  | `—` | [53 reports, 0 paid, median $0](../kb/reports/proto-pollution.md) |
 | Clickjacking & UI redressing | `UIR` | queued |  | `—` | [170 reports, 11 paid, median $500](../kb/reports/clickjacking.md) |
 | Client-side: postMessage, DOM, CSP, JS supply chain | `CSD` | queued |  | `—` | [16 reports, 2 paid, median $1,000](../kb/reports/client-side.md) |

