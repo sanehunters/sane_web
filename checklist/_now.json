@@ -1,0 +1,12 @@
+{
+ "updated": "2026-11-22 12:40 UTC",
+ "running": [
+  "write:cache",
+  "write:clickjacking",
+  "write:network",
+  "write:oauth",
+  "write:race",
+  "write:smuggling"
+ ],
+ "paused": false
+}

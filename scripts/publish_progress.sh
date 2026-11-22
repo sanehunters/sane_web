@@ -22,6 +22,8 @@ round() {
   # shellcheck disable=SC2086
   [ -n "${JOURNALS:-}" ] && python3 scripts/build_log.py $JOURNALS >/dev/null 2>&1
   python3 scripts/chapter_index.py >/dev/null 2>&1
+  # shellcheck disable=SC2086
+  python3 scripts/progress_report.py ${JOURNALS:-} >/dev/null 2>&1
   # chapters: only those that lint
   good=""; drafts=""
   for f in $(git status --porcelain checklist/ | awk '{print $2}' | grep -E '^checklist/[a-z-]+\.md$'); do
@@ -29,12 +31,13 @@ round() {
   done
   # shellcheck disable=SC2086
   [ -n "$good" ] && git add $good
-  git add checklist/README.md checklist/_reviewed.txt checklist/_buildlog.jsonl 2>/dev/null
+  git add PROGRESS.md checklist/README.md checklist/_reviewed.txt checklist/_buildlog.jsonl checklist/_now.json 2>/dev/null
   git add -u -- . ':!checklist/*.md' 2>/dev/null          # other tracked files that changed
   git add src scripts docs playbooks templates .claude kb/classes.json 2>/dev/null   # new files outside checklist/
   if ! git diff --cached --quiet; then
     n=$(ls checklist/*.md | grep -vc README); r=$(grep -vc '^#' checklist/_reviewed.txt 2>/dev/null); r=${r:-0}
-    git commit -q -m "Progress: $n chapters on disk, $r reviewed$( [ -n "$good" ] && echo "; chapters:$(echo "$good" | sed 's#checklist/##g; s#\.md##g')")
+    w=$(python3 scripts/chapters_todo.py 2>/dev/null | grep -Eo '^[0-9]+/[0-9]+ written' | head -1)
+    git commit -q -m "Progress: ${w:-$n chapters on disk}, $r reviewed$( [ -n "$good" ] && echo "; new or updated:$(echo "$good" | sed 's#checklist/##g; s#\.md##g')")
 
 Co-Authored-By: Claude Mythos 5.2 <noreply@anthropic.com>"
     push origin main

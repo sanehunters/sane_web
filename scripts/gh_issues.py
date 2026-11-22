@@ -309,8 +309,18 @@ def cmd_chapters(repo, reviewed_slugs):
     written = [r for r in rows if r["written"]]
     cards = sum(len(r["items"]) for r in written)
     pbs = {t.split(" ")[0]: i["number"] for t, i in existing(repo, "playbook").items()}
-    b = ["What exists in this repository and what is still being written. Regenerated automatically; the commit history is the detail.", "",
-         "### Components", ""]
+    now = {}
+    try:
+        now = json.load(open(os.path.join(ROOT, "checklist", "_now.json"), encoding="utf-8"))
+    except Exception:
+        pass
+    b = ["What exists in this repository and what is still being written. Regenerated automatically; the commit history is the detail. "
+         "A fuller page with timestamps is [`PROGRESS.md`](../blob/main/PROGRESS.md).", ""]
+    if now:
+        b += [f"**Updated {now.get('updated', '')}.** " + (
+            ("Paused (usually a usage limit; it resumes by itself). Waiting: " if now.get("paused") else "Working now: ")
+            + ", ".join(f"`{x}`" for x in now.get("running", [])) if now.get("running") else "No agent is running."), ""]
+    b += ["### Components", ""]
     for name, paths, desc in COMPONENTS:
         ok = all(os.path.exists(os.path.join(ROOT, p)) for p in paths)
         b.append(f"- [{'x' if ok else ' '}] **{name}** — {desc} (" + ", ".join(f"[`{p}`](../blob/main/{p})" for p in paths[:3]) + ")")

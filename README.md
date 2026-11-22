@@ -8,6 +8,10 @@ did not find it, and writes the report a triager can act on in one read.
 
 It runs on Claude Opus 5.5, Opus 5 or Mythos 5.2. Sibling repositories: `sane_android`, `sane_windows`.
 
+> **Build status:** [`PROGRESS.md`](PROGRESS.md) shows what is written, what is being written right now and what is
+> left, refreshed every few minutes during a build. The [build tracker issue](../../issues/53) and the
+> [chapter milestone](../../milestone/1) show the same on the Issues tab.
+
 ## What is different about it
 
 **It does not run every test on every asset.** Each asset gets a record of *facts* (what it is, what it runs,
