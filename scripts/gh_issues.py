@@ -12,6 +12,11 @@ discuss amendments.
   scripts/gh_issues.py list [--repo owner/name]
       print the playbook issues with their numbers and links.
 
+  scripts/gh_issues.py chapters [--reviewed slug,slug] [--repo owner/name]
+      one issue per checklist chapter (label `chapter`, milestone "Checklist: 36 chapters") listing its test cards,
+      and a "Build tracker" issue showing every component and chapter with its state. Chapters named in
+      checklist/_reviewed.txt or --reviewed are closed. Safe to run repeatedly.
+
   scripts/gh_issues.py runsheet <engagement> --repo owner/private-evidence-repo
       open one tracking issue for an engagement: a task list of the phases with their timeboxes, to tick off as
       the hunt proceeds. It contains the programme's name, so it goes ONLY to a private repository you name.
@@ -196,6 +201,140 @@ def cmd_runsheet(repo, name):
     print(f"created {new['html_url']}")
 
 
+# ---------------------------------------------------------------- build visibility: chapters and the tracker
+
+COMPONENTS = [
+    ("Applicability engine and console", ["scripts/sane", "scripts/sanelib.py"], "scope, assets, facts, the planner, lanes, briefs, timeboxes, findings, the report gate"),
+    ("Fingerprinter", ["scripts/fingerprint.py"], "about twenty requests per host: tier, technology and versions, auto-facts, clustering"),
+    ("CVE lookup", ["scripts/cve.py"], "product version to ranked CVEs: NVD, CISA KEV, EPSS, HexBrain, nuclei templates"),
+    ("Scope guard and hooks", ["scripts/scope_guard.py", ".claude/hooks/pre-tool.sh", ".claude/settings.json"], "blocks out-of-scope requests, unthrottled scanners, forbidden modes, missing required headers"),
+    ("Fact and lane vocabularies", ["checklist/_facts.json", "checklist/_lanes.json"], "what a card may require; how the hunt is divided"),
+    ("Disclosed-report library", ["kb/data/index.jsonl", "kb/reports/README.md", "kb/programs.md"], "15,219 HackerOne reports by class and programme, linked"),
+    ("Playbooks PB-00 to PB-14", ["playbooks/README.md", "playbooks/PB-14-incidents.md"], "SOC-style procedures with timeboxes and call-off rules"),
+    ("Method and flow", ["CLAUDE.md", "START.md", "FLOW.md"], "standing orders, the method, the diagrams"),
+    ("Standards", ["docs/02-reportability.md", "docs/04-evidence-standard.md", "docs/05-reporting-style.md", "docs/06-severity.md", "docs/07-graveyard.md", "docs/10-operations.md", "docs/11-item-schema.md"], "reportability, evidence, reporting style, severity, graveyard, operations, card schema"),
+    ("Skills (17) and subagents (9)", [".claude/skills/hunt/SKILL.md", ".claude/agents/class-hunter.md", "scripts/build_claude.py"], "generated from src/ with the playbooks embedded"),
+    ("Saved workflows", [".claude/workflows/squad-hunt.js", ".claude/workflows/cve-sweep.js", ".claude/workflows/research-lenses.js", ".claude/workflows/verify-finding.js"], "fan out lanes, CVE sweeps, research lenses; three-lens verification"),
+    ("Report template and gate", ["templates/report.md"], "the submission skeleton; `scripts/sane gate` checks readiness"),
+    ("Tests", ["scripts/selftest.sh", "scripts/tests/test_scope_guard.py", "scripts/tests/test_workflows.js"], "end-to-end self-test, 54 guard cases, workflow logic under stubs"),
+]
+
+
+def chapter_state():
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    import sanelib as L
+    lanes = json.load(open(os.path.join(ROOT, "checklist", "_lanes.json")))["lanes"]
+    stats = json.load(open(os.path.join(ROOT, "kb", "data", "stats.json")))["classes"]
+    out = []
+    for c in L.classes():
+        if not c.get("chapter"):
+            continue
+        p = os.path.join(ROOT, "checklist", c["slug"] + ".md")
+        lane = next((n for n, d in lanes.items() if c["slug"] in d["chapters"]), "—")
+        row = {"slug": c["slug"], "prefix": c["prefix"], "name": c["name"], "lane": lane, "written": False, "items": [], "errors": None,
+               "gate": "", "stats": stats.get(c["slug"], {})}
+        if os.path.exists(p):
+            ch = L.parse_chapter(p)
+            err, _ = L.lint_chapter(ch)
+            row.update(written=not err and bool(ch["items"]), errors=len(err), gate=ch["meta"].get("Applies when", ""),
+                       items=[(it["id"], it["title"], it["meta"].get("Requires", ""), it["cost"]) for it in ch["items"]])
+        out.append(row)
+    return out
+
+
+def chapter_issue(row, reviewed):
+    st = row["stats"]
+    lib = (f"{st.get('reports', 0):,} disclosed reports in the library, {st.get('paid', 0):,} paid, median paid bounty "
+           f"${st.get('median_bounty', 0):,.0f}, top ${st.get('max_bounty', 0):,.0f} — [`kb/reports/{row['slug']}.md`](../blob/main/kb/reports/{row['slug']}.md)")
+    if row["written"]:
+        status = f"**Written** — {len(row['items'])} test cards, lints with 0 errors." + (" **Adversarial review: done.**" if reviewed else " Adversarial review: in the queue.")
+    elif row["errors"] is not None:
+        status = f"**Being written** — a draft is on disk and does not lint yet ({row['errors']} schema errors); the writer is still on it."
+    else:
+        status = "**Queued** — a writer agent will take it, then an adversarial reviewer checks technique accuracy, gate precision, safety and prior art."
+    b = [f"> {status}", "",
+         f"- File: [`checklist/{row['slug']}.md`](../blob/main/checklist/{row['slug']}.md)",
+         f"- Lane: `{row['lane']}` (see [`docs/10-operations.md`](../blob/main/docs/10-operations.md))",
+         f"- Chapter gate (`Applies when`): `{row['gate'] or 'set when written'}`",
+         f"- Prior art: {lib}", ""]
+    if row["items"]:
+        b += ["### Test cards", "", "Each is one falsifiable claim. The planner queues a card on an asset only when the asset's facts satisfy `Requires`.", "",
+              "| Card | Claim | Requires | Cost |", "|---|---|---|---|"]
+        for iid, title, req, cost in row["items"]:
+            b.append(f"| {iid} | {title} | `{req or '—'}` | {cost} |")
+    b += ["", "---", "Regenerated by `scripts/gh_issues.py chapters`. The card schema is [`docs/11-item-schema.md`](../blob/main/docs/11-item-schema.md)."]
+    return "\n".join(b)
+
+
+def milestone(repo, title, desc):
+    for m in api("GET", f"/repos/{repo}/milestones?state=all&per_page=100"):
+        if m["title"] == title:
+            return m["number"]
+    return api("POST", f"/repos/{repo}/milestones", {"title": title, "description": desc})["number"]
+
+
+def cmd_chapters(repo, reviewed_slugs):
+    for name, (color, desc) in {"chapter": ("5319e7", "One checklist chapter of test cards"), "build": ("0e8a16", "Build progress of this repository"),
+                                "lane:known": ("bfd4f2", ""), "lane:infra": ("bfd4f2", ""), "lane:authz": ("bfd4f2", ""),
+                                "lane:logic": ("bfd4f2", ""), "lane:injection": ("bfd4f2", ""), "lane:client": ("bfd4f2", "")}.items():
+        api("POST", f"/repos/{repo}/labels", {"name": name, "color": color, "description": desc})
+    ms = milestone(repo, "Checklist: 36 chapters", "Every vulnerability class as a chapter of applicability-gated test cards")
+    rows = chapter_state()
+    have = existing(repo, "chapter")
+    by_slug = {}
+    for t, i in have.items():
+        m = re.search(r"\(`([a-z-]+)`\)\s*$", t)
+        if m:
+            by_slug[m.group(1)] = i
+    numbers, changed = {}, 0
+    for row in rows:
+        title = f"Chapter {row['prefix']} · {row['name']} (`{row['slug']}`)"
+        reviewed = row["slug"] in reviewed_slugs
+        data = {"title": title, "body": chapter_issue(row, reviewed), "labels": ["chapter", f"lane:{row['lane']}"], "milestone": ms,
+                "state": "closed" if (row["written"] and reviewed) else "open"}
+        cur = by_slug.get(row["slug"])
+        if cur:
+            numbers[row["slug"]] = cur["number"]
+            if (cur.get("body") or "") != data["body"] or cur["state"] != data["state"]:
+                api("PATCH", f"/repos/{repo}/issues/{cur['number']}", data)
+                changed += 1
+        else:
+            st = data.pop("state")
+            new = api("POST", f"/repos/{repo}/issues", data)
+            numbers[row["slug"]] = new["number"]
+            if st == "closed":
+                api("PATCH", f"/repos/{repo}/issues/{new['number']}", {"state": "closed"})
+            changed += 1
+    # the tracker
+    written = [r for r in rows if r["written"]]
+    cards = sum(len(r["items"]) for r in written)
+    pbs = {t.split(" ")[0]: i["number"] for t, i in existing(repo, "playbook").items()}
+    b = ["What exists in this repository and what is still being written. Regenerated automatically; the commit history is the detail.", "",
+         "### Components", ""]
+    for name, paths, desc in COMPONENTS:
+        ok = all(os.path.exists(os.path.join(ROOT, p)) for p in paths)
+        b.append(f"- [{'x' if ok else ' '}] **{name}** — {desc} (" + ", ".join(f"[`{p}`](../blob/main/{p})" for p in paths[:3]) + ")")
+    b += ["", f"### Checklist chapters: {len(written)} of {len(rows)} written, {cards} test cards", "",
+          "| Chapter | Lane | State | Cards | Issue |", "|---|---|---|---|---|"]
+    for r in rows:
+        state = ("reviewed" if r["slug"] in reviewed_slugs else "written, review queued") if r["written"] else ("draft on disk" if r["errors"] is not None else "queued")
+        b.append(f"| {r['prefix']} · {r['name']} | `{r['lane']}` | {state} | {len(r['items']) or ''} | #{numbers[r['slug']]} |")
+    if pbs:
+        b += ["", "### Playbooks", "", " · ".join(f"{k} #{v}" for k, v in sorted(pbs.items()))]
+    b += ["", "---", "Regenerated by `scripts/gh_issues.py chapters`."]
+    title = "Build tracker: what exists and what is in progress"
+    tr = existing(repo, "build").get(title)
+    body = "\n".join(b)
+    if tr:
+        if (tr.get("body") or "") != body:
+            api("PATCH", f"/repos/{repo}/issues/{tr['number']}", {"body": body})
+        n = tr["number"]
+    else:
+        n = api("POST", f"/repos/{repo}/issues", {"title": title, "body": body, "labels": ["build"]})["number"]
+    print(f"chapters: {len(written)}/{len(rows)} written, {cards} cards, {len(reviewed_slugs)} reviewed; {changed} issue(s) updated; tracker #{n}")
+    print(f"https://github.com/{repo}/issues/{n}   https://github.com/{repo}/milestone/{ms}")
+
+
 def main():
     args = sys.argv[1:]
     if not args or args[0] in ("-h", "--help", "help"):
@@ -211,6 +350,15 @@ def main():
         cmd_sync(repo)
     elif args[0] == "list":
         cmd_list(repo)
+    elif args[0] == "chapters":
+        # scripts/gh_issues.py chapters [--reviewed slug,slug,...]   one issue per chapter, a milestone, and the build tracker
+        reviewed = set()
+        if "--reviewed" in args:
+            reviewed = {s for s in args[args.index("--reviewed") + 1].split(",") if s}
+        rf = os.path.join(ROOT, "checklist", "_reviewed.txt")
+        if os.path.exists(rf):
+            reviewed |= {l.strip() for l in open(rf, encoding="utf-8") if l.strip() and not l.startswith("#")}
+        cmd_chapters(repo, reviewed)
     elif args[0] == "runsheet" and len(args) > 1:
         if "--repo" not in sys.argv:
             sys.exit("runsheet needs an explicit --repo owner/private-evidence-repo")
