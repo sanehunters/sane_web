@@ -10,7 +10,7 @@
 |---|---|
 | **Class** | `network` |
 | **Applies when** | ip\|nonweb-ports |
-| **Pays** | 116 disclosed reports, 16 paid, median $425, top $6,909 (157 more in other classes touch it). Most are cleartext and man-in-the-middle reports (88 by weakness) and curl's protocol bugs; the exposed services that paid best are filed elsewhere: an open proxy into internal domains ($7,500), a Selenoid grid on a bare address ($6,000), a TURN relay to cloud metadata ($3,500), open Elasticsearch ($3,500), Memcached ($2,500), JMX ($2,000). |
+| **Pays** | 116 disclosed reports, 16 paid, median $425, top $6,909 (157 more in other classes touch it). Most are cleartext, missing-encryption and man-in-the-middle reports (88 by weakness) and curl's protocol bugs; the exposed services that paid best are filed elsewhere: an open proxy into internal domains ($7,500), a Selenoid grid on a bare address ($6,000), a TURN relay to cloud metadata ($3,500), open Elasticsearch ($3,500), Memcached ($2,500), JMX ($2,000). |
 | **Weaknesses** | Missing Authentication for Critical Function · CWE-306 · Improper Access Control - Generic · CWE-284 · CWE-441 · Server-Side Request Forgery (SSRF) · CWE-918 · Use of Default Credentials · CWE-1392 · Information Disclosure · CWE-200 · Misconfiguration · CWE-672 · Cleartext Transmission of Sensitive Information · CWE-319 |
 
 ## Why it pays
@@ -30,8 +30,8 @@ domains ($7,500, #2967634), an open Selenoid browser grid on a bare address that
 #512973), Slack's TURN server relaying to its internal network and the metadata service ($3,500, #333419).
 
 Most of what a port scan produces is not paid. Nine reports by title are about open SSH, Telnet or "numerous open
-ports"; one was paid, $25 (#257335). Four name an anonymous FTP, SMB or NFS share and none carries a bounty in the
-index. SNMP `public`, zone transfers and SMTP relays appear a handful of times and pay little or nothing. Ownership
+ports"; one was paid, $25 (#257335). Four name an FTP, SMB or NFS service open without authentication, and none
+carries a bounty in the index. SNMP `public`, zone transfers and SMTP relays appear a handful of times and pay little or nothing. Ownership
 is the other trap: Basecamp paid $100 for an unauthenticated JMX server (#1456063) because the stale DNS records
 pointed at an address that was no longer theirs, so the researcher had reached a stranger's machine. Pre-auth bugs
 in VPN and edge appliances on these ranges are the largest single payouts near this class (#591295, $20,160); they
@@ -104,7 +104,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
 - **How:**
   ```bash
   source "$E/env.sh"; D="$E/evidence/$H/NET-001"; mkdir -p "$D"
-  case "$H" in *[!0-9.]*) IPS=$(dig +short A "$H" | grep -E '^[0-9.]+$') ;; *) IPS=$H ;; esac
+  case "$H" in *:*) IPS=$H ;; *[!0-9.]*) IPS=$(dig +short A "$H" | grep -E '^[0-9.]+$') ;; *) IPS=$H ;; esac
   scripts/sane scope check "$H" | tee "$D/scope.txt"      # 'rule: ip ...' or 'rule: cidr ...' is the programme naming the address
   for ip in $IPS; do
     echo "== $ip"
@@ -174,7 +174,8 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   naabu -host "$H" -top-ports 1000 -rate 10 -silent | tee "$D/tcp-top1000.txt"
   #    or: nmap -Pn -n -T3 --max-rate "$PR" --top-ports 1000 --open -oG "$D/tcp-top1000.gnmap" "$H"
   # 2. service, version and safe default scripts on what answered
-  P=$( { cut -d: -f2 "$D/tcp-top1000.txt" 2>/dev/null; jq -r --arg h "$H" '.[$h].ports[]?' "$E/assets.json"; } | sort -un | paste -sd, -)
+  P=$( { cut -d: -f2 "$D/tcp-top1000.txt" 2>/dev/null; grep -ohE '[0-9]+/open/tcp' "$D/tcp-top1000.gnmap" 2>/dev/null | cut -d/ -f1
+         jq -r --arg h "$H" '.[$h].ports[]?' "$E/assets.json"; } | sort -un | paste -sd, -)
   [ -n "$P" ] && nmap -Pn -n -T3 --max-rate "$PR" -sV --version-intensity 5 --script 'default and safe' -p "$P" -oA "$D/services" "$H"
   # 3. UDP: services that answer one datagram (raw sockets: root). -sV sends each service's own probe
   sudo nmap -Pn -n -sU -sV --version-intensity 0 -T3 --max-rate "$PR" -p 53,111,123,137,161,500,623,1900,5353 -oG "$D/udp.gnmap" "$H"
@@ -186,8 +187,11 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   ```bash
   grep -ohE '[0-9]+/open/(tcp|udp)//[^/]*//[^/]*' "$D"/*.gnmap | sort -u | tee "$D/open.txt"
   scripts/sane asset add "$H" $(grep -ohE '[0-9]+/open/tcp' "$D"/*.gnmap | cut -d/ -f1 | sort -un | sed 's/^/--port /')
-  scripts/sane fact set "$H" nonweb-ports=1 --ev "NET-002: $(cut -d/ -f1,3,5 "$D/open.txt" | paste -sd' ' -)"
-  # any port that speaks HTTP (http, https, ssl/http, http-proxy): set http=1 with the port in --ev, then NET-003
+  # facts from what the services are, not from port numbers: JDWP on 8000 is non-web, Elasticsearch on 9200 speaks HTTP
+  NW=$(grep -vE '^[0-9]+/open/(tcp|udp)//([^/]*http[^/]*|tcpwrapped)//' "$D/open.txt" | cut -d/ -f1,3,5 | paste -sd' ' -)
+  HW=$(grep -E '^[0-9]+/open/tcp//[^/]*http[^/]*//' "$D/open.txt" | cut -d/ -f1,5 | paste -sd' ' -)
+  [ -n "$NW" ] && scripts/sane fact set "$H" nonweb-ports=1 --ev "NET-002 services: $NW"
+  [ -n "$HW" ] && scripts/sane fact set "$H" http=1 --ev "NET-002 web services: $HW"      # then NET-003
   ```
 - **Proof:** none standalone. The saved nmap and naabu output and the fact lines are the evidence later cards
   start from.
@@ -230,7 +234,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   for p in $(jq -r --arg h "$H" '.[$h].ports[]?' "$E/assets.json" | grep -vxE '80|443'); do
     c=000
     for s in https http; do c=$(probe "$p" "$s"); sleep "$W"; [ "$c" != 000 ] && break; done
-    [ "$c" != 000 ] && printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$p" "$s" "$c" "$(md5sum < "$D/$p-$s.body" | cut -c1-12)" \
+    [ "$c" != 000 ] && printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$p" "$s" "$c" "$(cat "$D/$p-$s.body" 2>/dev/null | md5sum | cut -c1-12)" \
       "$(grep -m1 -i '^server:' "$D/$p-$s.headers" | tr -d '\r')" "$(grep -oiE '<title>[^<]{0,80}' "$D/$p-$s.body" | head -1 | sed 's/<title>//I')"
   done | tee "$D/web-ports.tsv"
   curl -sSk "${HDR[@]}" -m 8 "https://$H/" | md5sum | cut -c1-12      # the main site's hash, to compare with column four
@@ -474,8 +478,18 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   source "$E/env.sh"; D="$E/evidence/$H/NET-007"; mkdir -p "$D"; PR=$(awk -v r="$RATE" 'BEGIN{n=int(r*10); print (n<1?1:n)}')
   # VNC: the security types each port offers; 'None' means no password
   nmap -Pn -n -T3 --max-rate "$PR" -p 5900-5910 --script vnc-info -oN "$D/vnc-info.txt" "$H"
-  # with None offered: the desktop name and size from ServerInit, then disconnect. Shared session, no framebuffer request, no input
-  python3 - "$H" 5900 <<'PY' | tee "$D/vnc-serverinit.txt"
+  # Telnet: what the service prints in eight seconds with nothing typed
+  timeout 12 sh -c 'sleep 8 | telnet "$1" 23' sh "$H" 2>&1 | tr -d '\000' | head -25 | tee "$D/telnet.txt"
+  # X11: can an unknown client open display :0 (port 6000)? The header only: no xwd, no xinput, no xdotool
+  timeout 10 xdpyinfo -display "$H:0" 2>&1 | head -8 | tee "$D/x11.txt"
+  # IPMI: authentication capabilities and cipher suite 0 (UDP, so root); no RAKP hash request, no session
+  sudo nmap -Pn -n -sU -T3 --max-rate "$PR" -p 623 --script ipmi-version,ipmi-cipher-zero -oN "$D/ipmi.txt" "$H"
+  ```
+  Where `vnc-info` lists `None`, read the desktop name and size from ServerInit and disconnect: one shared session
+  (anyone already connected stays connected), no framebuffer request, no input event.
+  ```bash
+  source "$E/env.sh"; D="$E/evidence/$H/NET-007"; VP=5900        # the port vnc-info showed with None
+  python3 - "$H" "$VP" <<'PY' | tee "$D/vnc-serverinit.txt"
   import socket, struct, sys
   s = socket.create_connection((sys.argv[1], int(sys.argv[2])), timeout=8)
   def rx(n):
@@ -502,19 +516,13 @@ NET-012 when the address also hosts a relay, because its names are what the rela
       s.sendall(b"\x01")
       if mine == b"RFB 003.008\n" and struct.unpack(">I", rx(4))[0] != 0:
           raise SystemExit("refused after None")
-  s.sendall(b"\x01")                     # ClientInit, shared: anyone already connected stays connected
+  s.sendall(b"\x01")                     # ClientInit with the shared flag set
   w, h = struct.unpack(">HH", rx(4)); rx(16)
   print("desktop %dx%d name %r" % (w, h, rx(struct.unpack(">I", rx(4))[0]).decode("latin-1")))
-  s.close()
   PY
-  # Telnet: what the service prints in eight seconds with nothing typed
-  timeout 12 sh -c 'sleep 8 | telnet "$1" 23' sh "$H" 2>&1 | tr -d '\000' | head -25 | tee "$D/telnet.txt"
-  # X11: can an unknown client open display :0 (port 6000)? The header only: no xwd, no xinput, no xdotool
-  timeout 10 xdpyinfo -display "$H:0" 2>&1 | head -8 | tee "$D/x11.txt"
-  # IPMI: authentication capabilities and cipher suite 0 (UDP, so root); no RAKP hash request, no session
-  sudo nmap -Pn -n -sU -T3 --max-rate "$PR" -p 623 --script ipmi-version,ipmi-cipher-zero -oN "$D/ipmi.txt" "$H"
   ```
-  Stop at the banner: no keystroke, no screenshot, no command, no login.
+  The script exits after ServerInit, which closes the connection. Stop at the banner: no keystroke, no screenshot,
+  no command, no login.
 - **Proof:** VNC: `vnc-info` listing `None` and the ServerInit desktop name and size. Telnet: a shell or CLI prompt
   (`#`, `$`, `Router>`, `BusyBox v1.x built-in shell`) printed with no login exchanged. X11: `xdpyinfo`'s `name of
   display` and `vendor string`. IPMI: `ipmi-version`'s capabilities and `ipmi-cipher-zero` reporting the cipher
@@ -711,9 +719,8 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   `/pods` counted. A configured deployment refuses each of them or never exposes the port.
 - **How:**
   ```bash
-  source "$E/env.sh"; D="$E/evidence/$H/NET-011"; mkdir -p "$D"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
-  PR=$(awk -v r="$RATE" 'BEGIN{n=int(r*10); print (n<1?1:n)}'); JP=5005; RP=1099; DP=2375      # or the ports NET-002 listed
-  # JDWP: the handshake, then VirtualMachine.Version (command set 1, command 1). Nothing else is sent
+  # JDWP: the handshake, then the Version command of the VirtualMachine command set (set 1, command 1). Nothing else is sent
+  source "$E/env.sh"; D="$E/evidence/$H/NET-011"; mkdir -p "$D"; JP=5005        # or the port NET-002 listed for jdwp
   python3 - "$H" "$JP" <<'PY' | tee "$D/jdwp.txt"
   import socket, struct, sys
   s = socket.create_connection((sys.argv[1], int(sys.argv[2])), timeout=8)
@@ -737,9 +744,11 @@ NET-012 when the address also hosts a relay, because its names are what the rela
       return b[o + 4:o + 4 + n].decode("utf-8", "replace"), o + 4 + n
   desc, o = jstr(body, 0); o += 8; ver, o = jstr(body, o); name, o = jstr(body, o)
   print("vm:", name, ver, "|", desc.splitlines()[0] if desc else "")
-  s.close()
   PY
-  sleep "$W"
+  ```
+  ```bash
+  source "$E/env.sh"; D="$E/evidence/$H/NET-011"; mkdir -p "$D"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
+  PR=$(awk -v r="$RATE" 'BEGIN{n=int(r*10); print (n<1?1:n)}'); RP=1099; DP=2375      # or the ports NET-002 listed
   # RMI registry: the bound names; 'jmxrmi' is a JMX connector
   nmap -Pn -n -T3 --max-rate "$PR" -p "$RP" --script rmi-dumpregistry -oN "$D/rmi-registry.txt" "$H"
   # JMX: one attribute read with no credentials (jmxterm release jar, non-interactive). No 'run', no MLet, no 'set'
