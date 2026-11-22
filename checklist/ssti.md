@@ -304,7 +304,7 @@ PDFs; the sign-up name report #1104349 had this shape) → TPL-004 (template edi
 
 | | |
 |---|---|
-| **Severity** | Medium standalone when the editor reaches context objects or configuration the documentation does not list; High when it reads another tenant's records; Critical when it reaches the runtime and returns the host name; none for the documented variables, filters and arithmetic |
+| **Severity** | Medium standalone when the editor returns configuration or data that the documentation does not expose; High when it reads another tenant's records; Critical when it reaches the runtime and returns the host name; none for the documented variables, filters and arithmetic |
 | **Requires** | template-input, account |
 | **Excluded by** | — |
 | **Unit** | deployment |

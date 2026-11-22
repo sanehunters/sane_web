@@ -290,7 +290,7 @@ the rarest back end).
   } | tee "$D/results.tsv"
   # a Meteor method behind a REST bridge (Rocket.Chat-style): the argument object travels inside an EJSON string
   M=getThreadsList
-  MSG=$(jq -cn --arg m "$M" --argjson t "$two" '{msg:"method",id:"1",method:$m,params:[{rid:{"$in":$t},count:10}]}|tojson')
+  MSG=$(jq -cnr --arg m "$M" --argjson t "$two" '{msg:"method",id:"1",method:$m,params:[{rid:{"$in":$t},count:10}]}|tojson')
   curl -sS "${HDR[@]}" $A -X POST "$T/api/v1/method.call/$M" -H "$CT" -d "$(jq -cn --arg s "$MSG" '{message:$s}')" \
     -o "$D/ddp.body" -w 'ddp %{http_code}  '; grep -o "$MB" "$D/ddp.body" | wc -l
   ```
