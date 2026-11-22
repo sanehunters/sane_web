@@ -127,6 +127,9 @@ scripts/sane brief <agent> <host>       scripts/sane playbook PB-NN       script
 | Task | Command |
 |---|---|
 | Check everything | `scripts/selftest.sh` |
+| See which chapters are written and reviewed | `scripts/chapters_todo.py`; [`checklist/README.md`](checklist/README.md); the build tracker issue |
+| Write or review what is left (resumable from any machine) | `/build-checklist` in Claude Code: runs the `write-chapters` workflow over `scripts/chapters_todo.py --json` |
+| Keep GitHub in step during a build | `GH_TOKEN=... scripts/publish_progress.sh --loop 300` (finished chapters to `main`, everything including drafts to `wip`) |
 | Lint the checklist | `scripts/sane lint` (schema: [`docs/11-item-schema.md`](docs/11-item-schema.md)) |
 | Rebuild skills and agents after editing a playbook or `src/` | `scripts/build_claude.py` |
 | Refresh the report library | `scripts/kb_build.py --refresh`, then `scripts/kb_enrich.py`, then `scripts/kb_build.py` |

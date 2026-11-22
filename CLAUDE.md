@@ -67,6 +67,7 @@ more.
 | Test | `/plan` · `/hunt` · `/cve-hunt` · `/research` · `/prior-art` |
 | Prove and ship | `/verify` · `/chain` · `/report` · `/triage-reply` |
 | Divide and run in parallel | `/squad` (hunt wave) · `/squad cve` · `/squad research <host>` · `/squad verify F-NNN` |
+| Maintain the checklist itself | `/build-checklist` (write and review chapters that are missing, in draft or unreviewed) |
 
 | Agent | Job | Writes |
 |---|---|---|

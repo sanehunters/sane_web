@@ -12,3 +12,4 @@ env.sh
 *.pcap
 .claude/settings.local.json
 .sane/
+scripts/.publish.stop
