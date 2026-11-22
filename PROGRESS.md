@@ -1,13 +1,13 @@
 # Build progress
 
-_Updated 2026-11-22 12:40 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
+_Updated 2026-11-22 12:45 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
 
 | | | |
 |---|---|---|
-| Chapters written | `███████████░░░░░░░░░` | **20 of 36** (268 test cards) |
+| Chapters written | `████████████░░░░░░░░` | **21 of 36** (280 test cards) |
 | Chapters reviewed | `░░░░░░░░░░░░░░░░░░░░` | **0 of 36** |
 | Drafts in progress | | 1 (on the `wip` branch until they lint) |
-| Not started | | 15 |
+| Not started | | 14 |
 
 ## Right now
 
@@ -36,6 +36,7 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [Cross-site scripting](checklist/xss.md) | `client` | written | 18 |  | 21 Nov 17:32 |  |
 | [Cloud, storage buckets & CI/CD exposure](checklist/cloud.md) | `infra` | written | 14 |  | 22 Nov 08:10 |  |
 | [Information disclosure, secrets & exposed files](checklist/disclosure.md) | `infra` | written | 17 |  | 22 Nov 07:12 |  |
+| [Network services on IP & CIDR assets](checklist/network.md) | `infra` | written | 12 | being written | 22 Nov 12:44 |  |
 | [Subdomain takeover & dangling DNS](checklist/takeover.md) | `infra` | written | 10 |  | 22 Nov 08:03 |  |
 | [CRLF & header injection](checklist/crlf.md) | `injection` | written | 8 |  | 22 Nov 12:30 |  |
 | [Insecure deserialization](checklist/deser.md) | `injection` | written | 11 |  | 21 Nov 12:53 |  |
@@ -46,7 +47,7 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [XML external entities & XML injection](checklist/xxe.md) | `injection` | written | 10 |  | 21 Nov 12:53 |  |
 | [Known CVEs, default installs & technology-specific bugs](checklist/cve.md) | `known` | written | 17 |  | 22 Nov 02:54 |  |
 | [Business logic, payments & abuse of functionality](checklist/logic.md) | `logic` | written | 15 |  | 22 Nov 07:12 |  |
-| OAuth, OIDC, SAML & SSO | `authz` | draft | 3 | being written | 22 Nov 08:22 |  |
+| OAuth, OIDC, SAML & SSO | `authz` | draft | 7 | being written | 22 Nov 12:45 |  |
 | WebSocket | `authz` | queued |  |  |  |  |
 | Clickjacking & UI redressing | `client` | queued |  | being written |  |  |
 | Client-side: postMessage, DOM, CSP, JS supply chain | `client` | queued |  |  |  |  |
@@ -54,7 +55,6 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | Prototype pollution | `client` | queued |  |  |  |  |
 | Web cache poisoning & cache deception | `infra` | queued |  | being written |  |  |
 | Host header attacks | `infra` | queued |  |  |  |  |
-| Network services on IP & CIDR assets | `infra` | queued |  | being written |  |  |
 | Recon & hidden surface (method chapter) | `infra` | queued |  |  |  |  |
 | HTTP request smuggling & desync | `infra` | queued |  | being written |  |  |
 | LLM & AI features | `injection` | queued |  |  |  |  |

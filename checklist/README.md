@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 20 are written (268 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 21 are written (280 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -37,7 +37,7 @@ Sessions: none, or account A read-only for a few items. Agent: `class-hunter`.
 | Host header attacks | `HHI` | queued |  | `—` | [11 reports, 2 paid, median $175](../kb/reports/host-header.md) |
 | [Cloud, storage buckets & CI/CD exposure](cloud.md) | `CLD` | written | 14 | `http\|ip\|cloud-storage` | [139 reports, 34 paid, median $750](../kb/reports/cloud.md) |
 | [Information disclosure, secrets & exposed files](disclosure.md) | `INF` | written | 17 | `http` | [1,780 reports, 351 paid, median $500](../kb/reports/disclosure.md) |
-| Network services on IP & CIDR assets | `NET` | queued |  | `—` | [116 reports, 16 paid, median $425](../kb/reports/network.md) |
+| [Network services on IP & CIDR assets](network.md) | `NET` | written | 12 | `ip\|nonweb-ports` | [116 reports, 16 paid, median $425](../kb/reports/network.md) |
 | Recon & hidden surface (method chapter) | `RCN` | queued |  | `—` | [0 reports, 0 paid, median $0](../kb/reports/recon.md) |
 
 ## Lane `authz` — Identity and authorisation
@@ -48,7 +48,7 @@ Sessions: A and B in different tenants; a low-privilege member and an admin in A
 
 | Chapter | Prefix | State | Cards | Applies when | In the report library |
 |---|---|---|---|---|---|
-| [OAuth, OIDC, SAML & SSO](oauth.md) | `OAU` | draft | 3 | `http, app\|api, oauth-login\|oauth-provider\|saml` | [87 reports, 18 paid, median $1,000](../kb/reports/oauth.md) |
+| [OAuth, OIDC, SAML & SSO](oauth.md) | `OAU` | draft | 7 | `http, app\|api, oauth-login\|oauth-provider\|saml` | [87 reports, 18 paid, median $1,000](../kb/reports/oauth.md) |
 | [JWT & signed-token flaws](jwt.md) | `JWT` | written | 11 | `http, jwt` | [13 reports, 6 paid, median $1,800](../kb/reports/jwt.md) |
 | [GraphQL](graphql.md) | `GQL` | written | 13 | `graphql` | [57 reports, 19 paid, median $2,500](../kb/reports/graphql.md) |
 | WebSocket | `WSS` | queued |  | `—` | [17 reports, 3 paid, median $800](../kb/reports/websocket.md) |
