@@ -246,7 +246,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 | | |
 |---|---|
 | **Severity** | Medium standalone; High when stored value is bought in a weak currency and credited in a strong one |
-| **Requires** | payments, account |
+| **Requires** | payments, multi-currency, account |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | low |
@@ -358,7 +358,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 |---|---|
 | **Severity** | Low standalone for a marginal extra discount; Medium when the broken rule takes an order to zero or well below the best single-code price |
 | **Requires** | payments, account |
-| **Excluded by** | — |
+| **Excluded by** | promo-abuse |
 | **Unit** | deployment |
 | **Cost** | medium |
 | **Weakness** | Business Logic Errors · CWE-840 |
@@ -420,7 +420,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 |---|---|
 | **Severity** | Medium standalone for one extra grant; High when the grant is money-equivalent (balance, fee waiver, licence) and nothing bounds the repetition |
 | **Requires** | limited-action, account |
-| **Excluded by** | — |
+| **Excluded by** | promo-abuse |
 | **Unit** | deployment |
 | **Cost** | medium |
 | **Weakness** | Business Logic Errors · CWE-840 |
@@ -538,7 +538,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 | | |
 |---|---|
 | **Severity** | Medium standalone; High when the request changes the stored plan so that every paid feature follows; Low for a cosmetic paid setting |
-| **Requires** | payments, account |
+| **Requires** | plans, account |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | medium |
@@ -671,7 +671,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 | | |
 |---|---|
 | **Severity** | Medium standalone for one refunded purchase whose entitlement stays; High when the entitlement is stored value or the refund exceeds the payment |
-| **Requires** | payments, account |
+| **Requires** | payments, refunds, account, purchase |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | high |
@@ -735,7 +735,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 | | |
 |---|---|
 | **Severity** | Low standalone for an unpriced soft limit; Medium when the quota is a priced unit (seats, storage, usage credits) |
-| **Requires** | payments\|limited-action, account |
+| **Requires** | quota, account |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | medium |
@@ -803,8 +803,8 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 | | |
 |---|---|
 | **Severity** | Low standalone for one extra trial period; Medium when the trial renews without bound or the client sets its end date |
-| **Requires** | limited-action, account |
-| **Excluded by** | — |
+| **Requires** | plans, account |
+| **Excluded by** | promo-abuse |
 | **Unit** | deployment |
 | **Cost** | medium |
 | **Weakness** | Business Logic Errors · CWE-840 |
@@ -921,7 +921,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 | | |
 |---|---|
 | **Severity** | Medium standalone; High when the approval gates money, publication to other users or privilege |
-| **Requires** | roles, priv-accounts |
+| **Requires** | roles, approval-flow, priv-accounts |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | medium |
@@ -983,7 +983,7 @@ BIZ-012 (trial) → BIZ-015 (verification state) → BIZ-013 (state machine) →
 | | |
 |---|---|
 | **Severity** | Medium standalone; High when the unproven address joins an organisation by its domain or displaces another account's address |
-| **Requires** | login, account |
+| **Requires** | login, verification, account |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | medium |

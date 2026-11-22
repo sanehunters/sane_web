@@ -793,7 +793,7 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
 | | |
 |---|---|
 | **Severity** | High standalone when our second account's file is fetched without a session from a URL built from guessable parts; Medium when the guessable part needs one more value the attacker can look up; Low when the only weakness is an unguessable link that never expires |
-| **Requires** | login, two-accounts |
+| **Requires** | export, two-accounts |
 | **Excluded by** | — |
 | **Unit** | deployment |
 | **Cost** | medium |
@@ -924,7 +924,7 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
 |---|---|
 | **Severity** | Low standalone when the position stored in an upload is readable by other users; Medium on a product where a user's location is sensitive and anyone can fetch the original; None for author and software fields in documents the organisation published itself |
 | **Requires** | upload, account |
-| **Excluded by** | — |
+| **Excluded by** | internal-info |
 | **Unit** | deployment |
 | **Cost** | low |
 | **Weakness** | Improper Removal of Sensitive Information Before Storage or Transfer · CWE-212 |
@@ -984,7 +984,7 @@ decided by hours) → with accounts: INF-010 → INF-012 → INF-011 → INF-013
 | | |
 |---|---|
 | **Severity** | High standalone when one identity call proves the credential live on a system of the organisation; Critical for a source-host, cloud or artifact-registry credential with write access or production reach; None for a dead, example or personal credential |
-| **Requires** | — |
+| **Requires** | code-host-token |
 | **Excluded by** | — |
 | **Unit** | programme |
 | **Cost** | high |

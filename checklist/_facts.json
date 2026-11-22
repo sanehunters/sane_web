@@ -70,6 +70,13 @@
     "email-out":     {"kind": "asset", "group": "input", "needs": "app", "desc": "The app e-mails links or content built from the request (reset, invite, verification, notifications)", "probe": "trigger a reset or invite to an inbox you control and read the raw message"},
     "payments":      {"kind": "asset", "group": "feature", "needs": "app|api", "desc": "Money or value moves: checkout, pricing plans, credits, coupons, gift cards, refunds, payouts", "probe": "a pricing page, a cart, billing settings"},
     "limited-action": {"kind": "asset", "group": "feature", "needs": "app|api", "desc": "Some action is meant to succeed a limited number of times: redeem a code, claim a bonus, vote, withdraw, use an invite, start a trial", "probe": "any feature whose rules say 'once', 'per user' or 'while balance lasts'"},
+    "plans":         {"kind": "asset", "group": "feature", "needs": "app|api", "desc": "Tiered subscription plans gate features (free, pro, enterprise; trials; add-ons)", "probe": "a pricing or upgrade page; plan or tier fields in the account API; 'upgrade to unlock' prompts"},
+    "quota":         {"kind": "asset", "group": "feature", "needs": "app|api", "desc": "Counted limits are enforced per account or plan: seats, projects, storage, API calls, messages", "probe": "usage meters in settings; 'limit reached' responses; counters in the account API"},
+    "refunds":       {"kind": "asset", "group": "feature", "needs": "payments", "desc": "Users can obtain money or credit back themselves: refund, cancellation with refund, downgrade credit, withdrawal", "probe": "order or billing pages with refund, cancel or withdraw actions"},
+    "multi-currency": {"kind": "asset", "group": "feature", "needs": "payments", "desc": "More than one currency or regional price list is offered", "probe": "a currency or country selector; a currency field in cart or checkout requests"},
+    "approval-flow": {"kind": "asset", "group": "feature", "needs": "roles", "desc": "Some action needs a second person's approval before it takes effect (maker-checker, review, moderation)", "probe": "'pending approval' states; approve and reject actions in the UI or API"},
+    "verification":  {"kind": "asset", "group": "feature", "needs": "login", "desc": "Features are gated on a verified e-mail address, phone number or identity", "probe": "'verify your e-mail to continue' prompts; a verified flag in the profile API"},
+    "export":        {"kind": "asset", "group": "feature", "needs": "app|api", "desc": "The application produces per-user downloadable files: data exports, reports, invoices, receipts, backups", "probe": "export, download or 'email me my data' features; links to generated files in responses or e-mails"},
     "ai-feature":    {"kind": "asset", "group": "feature", "auto": true, "needs": "app|api", "desc": "An LLM-backed feature takes user or third-party content: chatbot, assistant, summariser, agent with tools", "probe": "chat widgets, 'AI' labelled features, streaming completion endpoints"},
     "admin-panel":   {"kind": "asset", "group": "feature", "auto": true, "needs": "http", "desc": "An administrative or internal-tool interface is reachable", "probe": "content discovery; titles such as admin, dashboard, console, internal"},
 
@@ -78,6 +85,9 @@
     "priv-accounts": {"kind": "capability", "group": "capability", "needs": "account", "desc": "We hold accounts at two different privilege levels in the same tenant (for example admin and member)", "probe": "engagement.json accounts[]"},
     "oob":           {"kind": "capability", "group": "capability", "desc": "An out-of-band interaction server is available (interactsh-client or a host we control) for blind SSRF, XXE, RCE and XSS callbacks", "probe": "sane doctor"},
     "browser":       {"kind": "capability", "group": "capability", "desc": "A scriptable browser is available (Playwright, Chrome DevTools MCP) to prove client-side findings and capture screenshots", "probe": "sane doctor"},
+
+    "purchase":      {"kind": "capability", "group": "capability", "needs": "account", "desc": "We can complete a payment on this asset: sandbox or test card numbers the programme provides, or a real purchase the operator has approved", "probe": "the policy's testing notes; ask the operator; record in engagement.json"},
+    "code-host-token": {"kind": "capability", "group": "capability", "desc": "A GitHub or GitLab API token is available for authenticated code search across public repositories", "probe": "GH_TOKEN or GITLAB_TOKEN in the environment"},
 
     "takeover-ok":   {"kind": "programme", "group": "programme", "desc": "The programme accepts subdomain takeover reports", "probe": "the policy text"},
     "dos-ok":        {"kind": "programme", "group": "programme", "desc": "The programme allows availability testing", "probe": "the policy text (almost always no)"},
@@ -110,6 +120,8 @@
     "leaked-credentials": "Credentials found in third-party breaches or public dumps",
     "automated": "Reports from automated scanners without a manual proof",
     "session-expiry": "Session timeout and logout-related session handling",
-    "prompt-injection": "LLM prompt injection without a security impact beyond the attacker's own session"
+    "prompt-injection": "LLM prompt injection without a security impact beyond the attacker's own session",
+    "promo-abuse": "Abuse of trials, coupons, referral bonuses or promotions, including through multiple accounts",
+    "internal-info": "Disclosure of internal host names, private IP addresses, software paths or file metadata (EXIF) without further impact"
   }
 }
