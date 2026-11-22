@@ -1,0 +1,1 @@
+# Chapters that have passed the adversarial review. Written by the build; read by scripts/chapter_index.py and scripts/gh_issues.py.
