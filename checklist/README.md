@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 11 are written (155 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 13 are written (187 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -21,7 +21,7 @@ Sessions: none. Agent: `cve-exploiter`.
 
 | Chapter | Prefix | State | Cards | Applies when | In the report library |
 |---|---|---|---|---|---|
-| Known CVEs, default installs & technology-specific bugs | `CVE` | queued |  | `—` | [240 reports, 64 paid, median $1,000](../kb/reports/cve.md) |
+| [Known CVEs, default installs & technology-specific bugs](cve.md) | `CVE` | written | 17 | `http, known-product\|cms\|wordpress\|spring\|java\|php\|dotnet\|node\|python\|ruby` | [240 reports, 64 paid, median $1,000](../kb/reports/cve.md) |
 
 ## Lane `infra` — Infrastructure and exposure
 
@@ -48,13 +48,13 @@ Sessions: A and B in different tenants; a low-privilege member and an admin in A
 
 | Chapter | Prefix | State | Cards | Applies when | In the report library |
 |---|---|---|---|---|---|
-| OAuth, OIDC, SAML & SSO | `OAU` | queued |  | `—` | [87 reports, 18 paid, median $1,000](../kb/reports/oauth.md) |
+| [OAuth, OIDC, SAML & SSO](oauth.md) | `OAU` | draft | 3 | `http, app\|api, oauth-login\|oauth-provider\|saml` | [87 reports, 18 paid, median $1,000](../kb/reports/oauth.md) |
 | [JWT & signed-token flaws](jwt.md) | `JWT` | written | 11 | `http, jwt` | [13 reports, 6 paid, median $1,800](../kb/reports/jwt.md) |
 | [GraphQL](graphql.md) | `GQL` | written | 13 | `graphql` | [57 reports, 19 paid, median $2,500](../kb/reports/graphql.md) |
 | WebSocket | `WSS` | queued |  | `—` | [17 reports, 3 paid, median $800](../kb/reports/websocket.md) |
 | [Broken access control: IDOR, BOLA, BFLA, privilege escalation](access-control.md) | `BAC` | written | 18 | `http, app\|api` | [1,459 reports, 374 paid, median $500](../kb/reports/access-control.md) |
 | [Authentication, sessions, password reset & 2FA](authn.md) | `AUT` | written | 18 | `http, app\|api, login` | [1,339 reports, 218 paid, median $500](../kb/reports/authn.md) |
-| API flaws: mass assignment, excessive data exposure, versioning | `API` | queued |  | `—` | [71 reports, 16 paid, median $550](../kb/reports/api.md) |
+| [API flaws: mass assignment, excessive data exposure, versioning](api.md) | `API` | written | 15 | `http, api` | [71 reports, 16 paid, median $550](../kb/reports/api.md) |
 
 ## Lane `injection` — Server-side input handling
 
