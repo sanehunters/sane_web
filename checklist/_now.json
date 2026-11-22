@@ -1,9 +1,9 @@
 {
- "updated": "2026-11-22 12:56 UTC",
+ "updated": "2026-11-22 13:01 UTC",
  "running": [
   "write:cache",
   "write:cors",
-  "write:oauth",
+  "write:nosqli",
   "write:race",
   "write:ssti",
   "write:upload"

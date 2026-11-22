@@ -542,15 +542,16 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   For a public client, `code` also needs the PKCE parameters wherever the provider requires them; then step 2 is
   the whole test for that client.
 - **Proof:** the paired responses with tokens truncated: `second` (or more than one `race*.json`) holding an
-  `access_token`; `pkce-none` or `pkce-wrong` returning a token while `pkce-right` is the control; `ru-other`,
-  `ru-none` or `other-client` returning a token. Add one `userinfo` call with the token the wrong redemption
-  returned, naming A.
+  `access_token`; `pkce-none`, `pkce-wrong` or `pkce-downgrade` returning a token while `pkce-right` is the
+  control; `ru-other`, `ru-none` or `other-client` returning a token. Add one `userinfo` call with the token the
+  wrong redemption returned, naming A.
 - **Not a finding when:** every check returns `invalid_grant` or `invalid_client` and only the control succeeds.
   The second redemption is refused but the first token stays valid: RFC 6749 says the server SHOULD revoke it,
   and that alone is informative. A confidential client without PKCE: the secret authenticates the redemption, and
-  missing PKCE there is hardening. `plain` accepted: it matters only if the challenge can leak. A redemption without
-  `redirect_uri` succeeds when the authorize request had none either. A long code lifetime with single use is low
-  (#1784162 was paid $100).
+  missing PKCE there is hardening. A verifier accepted for a code issued without a challenge matters only for a
+  client that relies on PKCE instead of `state`. `plain` accepted: it matters only if the challenge can leak. A
+  redemption without `redirect_uri` succeeds when the authorize request had none either. A long code lifetime with
+  single use is low (#1784162 was paid $100).
 - **Escalate:** a code that reaches us after the client spent it (OAU-002, a Referer from the landing page)
   becomes a session when reuse works. With no client binding, our own client redeems any code leaked for a
   first-party client, without that client's secret (OAU-001, OAU-002). PKCE not enforced for a public client makes
@@ -572,10 +573,11 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
 - **Where:** every provider on the sign-in page, and for each one how the client treats a first sign-in by an
   identity it has not seen: a new account (safe), a merge into the account with the same e-mail (the risk), or a
   merge after a password prompt or a mailed confirmation (safe). The providers that can assert an address nobody
-  proved: Microsoft Entra ID for a multi-tenant app (the admin of any tenant, us in ours, sets a user's `mail` to
-  any value and the `email` claim follows it, the "nOAuth" pattern), GitHub, Discord, X and similar services that
-  keep unconfirmed addresses on an account, and any OIDC provider that sends `email_verified: false`. B is our
-  account on the target, with an address of ours; the attacker is a separate identity of ours at the provider.
+  proved: Microsoft Entra ID for a multi-tenant app, where the admin of any tenant (us, in ours) sets a user's
+  `mail` attribute to any address and an app that trusts the `email` claim believes it (the "nOAuth" pattern);
+  GitHub, Discord, X and similar services that keep unconfirmed addresses on an account; and any OIDC provider that
+  sends `email_verified: false`. B is our account on the target, with an address of ours; the attacker is a
+  separate identity of ours at the provider.
 - **Test:** OIDC Core §5.7: only `iss` with `sub` identifies a user; an `email` claim identifies nobody unless the
   provider vouches for it. Give the attacker identity B's address without proving it (set `mail` in our own Entra
   tenant, add the address to the provider account and leave it unconfirmed), then sign in to the target with that
@@ -686,7 +688,7 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
 
 | | |
 |---|---|
-| **Severity** | Critical standalone when the identity comes from a field beside the token, or an altered or unsigned token is accepted: any account opens; High when a token the provider issued to another client opens the user's account (the victim signed in once to an app we run); Low when an old token of this client is accepted again |
+| **Severity** | Critical standalone when the identity comes from a field beside the token, or an altered or unsigned token is accepted: any account opens; High when a token the provider issued to another client opens the user's account (the victim signed in once to an app we run), or when a user of our own tenant signs in to an application meant for the programme's tenant; Low when an old token of this client is accepted again |
 | **Requires** | oauth-login, two-accounts, browser |
 | **Excluded by** | — |
 | **Unit** | deployment |
@@ -706,7 +708,9 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   debug endpoint naming this app, `exp`, and the `nonce` it gave this browser) and take `sub` and `email` from the
   verified token only. Try, cheapest first: (1) A's valid token with B's identity in fields beside it; (2) A's
   token with `sub` and `email` changed to B's, signature kept, then with `alg` set to `none`; (3) B's token from
-  the same provider, issued to a client we registered there; (4) an expired token, or one from an earlier sign-in.
+  the same provider, issued to a client we registered there; (4) an expired token, or one from an earlier sign-in;
+  (5) a token from an issuer the backend should refuse: another tenant of the same multi-tenant provider on an app
+  meant for one tenant, or an issuer of ours whose keys we serve (JWT-007's key server).
 - **How:**
   ```bash
   D="$E/evidence/$H/OAU-009"; mkdir -p "$D"; CT='Content-Type: application/json'; ME="$T/api/me"
@@ -748,18 +752,37 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   try other-client "{\"$F\":\"$TB\"}"
   # 4. a token of A from an earlier sign-in, or one past its exp
   try old-token "{\"$F\":\"<an earlier token of A>\"}"
+  # 5. another issuer that the same keys sign for: on an app meant for one Entra ID tenant, sign in through the target's own
+  #    button with a user of OUR tenant (the /common or /organizations endpoint issues the token with our tid and iss)
+  [ -s "$E/tools/sso-login.py" ] || cat > "$E/tools/sso-login.py" <<'PY'
+  # sso-login.py <start url> <me url> <png> [the HDR arguments]: fresh profile; do the provider step in the window; prints the landing URL and the me response
+  import sys
+  from playwright.sync_api import sync_playwright
+  start, me, png, *h = sys.argv[1:]; host = start.split('/')[2]
+  hd = dict(map(str.strip, h[i + 1].split(':', 1)) for i in range(len(h) - 1) if h[i] == '-H'); ua = h[h.index('-A') + 1] if '-A' in h else None
+  with sync_playwright() as p:
+      b = p.chromium.launch(headless=False); pg = b.new_context(user_agent=ua, extra_http_headers=hd).new_page(); pg.goto(start)
+      pg.wait_for_url(lambda u: u.startswith('http') and u.split('/')[2] != host, timeout=60000)     # at the provider
+      pg.wait_for_url(lambda u: u.startswith('http') and u.split('/')[2] == host, timeout=300000)    # back after its step
+      pg.wait_for_timeout(4000); print(pg.url)
+      print(pg.evaluate('u => fetch(u, {credentials: "include"}).then(r => r.text()).catch(e => String(e))', me)[:400])
+      pg.screenshot(path=png); b.close()
+  PY
+  python3 "$E/tools/sso-login.py" "$T/<the target's Microsoft sign-in path>" "$ME" "$D/other-tenant.png" "${HDR[@]}" | tee "$D/other-tenant.txt"
   ```
   A backend that takes the provider's access token rather than an ID token (Facebook-style `access_token` logins)
   gets step 3 with `response_type=token`. The route in `own-client.py` answers our redirect inside the browser, so
   B's token never leaves our machine.
 - **Proof:** the `try` line that returns B's id for a token the endpoint should have refused, with the decoded
   header and claims of what was sent (B's e-mail beside A's token, `aud` equal to our client id, the changed claims
-  or `alg: none`), next to `control` returning A and B's own `/api/me`.
+  or `alg: none`), next to `control` returning A and B's own `/api/me`. For (5): `other-tenant.txt` showing a
+  session for our tenant's user, with the `iss` and `tid` of the token naming our tenant.
 - **Not a finding when:** every variant is refused or returns A: the extra fields are ignored and the token is
   checked. The target registered several client ids of its own (web, iOS, Android) and accepts all of them as
   audiences: the design, and ours cannot be among them. The ID token never passes through the browser. An old token
   accepted within its own `exp` by a client that sends no `nonce`: low, report it only with a way to obtain the
-  token.
+  token. The application is open to every Microsoft or Google account by design (a customer sign-in, not a staff
+  one): a user of our tenant signing in is the feature, and what it may see is the BAC chapter's question.
 - **Escalate:** JWT-003 (HS256 with the provider's public key), JWT-006 (embedded `jwk`) and JWT-007 (`jku`)
   aimed at this endpoint. A backend that fetches keys from the token's own `iss` accepts our issuer and our keys:
   Critical. A token that is honest but carries an e-mail nobody proved: OAU-007. A token leak (OAU-003) that this
@@ -1099,11 +1122,11 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
 | **Prior art** | #2579939, #3827674, #356284, #888930 |
 
 - **Where:** the ACS from OAU-013 and a signed response for our account A from a normal sign-in: the browser's POST
-  of `SAMLResponse` to the ACS, captured before it is sent so that it stays unspent. B is our second identity at the
-  same identity provider. For the comment split, A's identifier must begin with B's: user names `oau014` and
-  `oau014x`, or B `oau014@<our domain>` and A `oau014@<our domain>.<a second domain of ours>`. For the audience
-  check, another SP of the same identity provider that we can sign in to (another application of the programme
-  behind the same IdP, or an SP of ours registered there).
+  of `SAMLResponse` to the ACS, captured before it is sent so that it stays unspent. B is our second account on the
+  SP, with its own identity at the same identity provider. For the comment split, A's identifier must begin with
+  B's: user names `oau014` and `oau014x`, or B `oau014@<our domain>` and A `oau014@<our domain>.<a second domain
+  of ours>`. For the audience check, another SP of the same identity provider that we can sign in to (another
+  application of the programme behind the same IdP, or an SP of ours registered there).
 - **Test:** the signature covers one element; the SP must read the identity, the audience, the recipient and the
   validity window from that same element, and use each response once. Keep the identity provider's signature
   intact and change what the SP reads: (1) signature wrapping, an unsigned copy naming B placed where a naive SP
@@ -1272,8 +1295,9 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   for the field they would match on.
 - **Proof:** the decoded ID token or `userinfo.json` for the account showing `email: Y` with
   `email_verified: true`, or with no verification flag where the provider documents its `email` as verified, next
-  to the provider's own account API showing Y unconfirmed; no mail to Y was opened. For Critical, a first-party
-  relying party that signs Y's owner (our account B, with address Y) in from that assertion: OAU-007 run against it.
+  to the provider's own account API showing Y unconfirmed; no mail to Y was opened. For Critical: on a first-party
+  relying party where our account B already uses Y, signing in with the provider account that asserts Y opens B's
+  account (OAU-007 run against that client).
 - **Not a finding when:** the claim says `email_verified: false`: correct, and a relying party that ignores it is
   that party's OAU-007. The provider omits `email` until it is confirmed. The address is vouched for another way
   the provider documents (an organisation's proved domain). The provider documents that its e-mail field is
