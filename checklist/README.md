@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 9 are written (124 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 10 are written (141 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -36,7 +36,7 @@ Sessions: none, or account A read-only for a few items. Agent: `class-hunter`.
 | Web cache poisoning & cache deception | `CCH` | queued |  | `—` | [48 reports, 11 paid, median $550](../kb/reports/cache.md) |
 | Host header attacks | `HHI` | queued |  | `—` | [11 reports, 2 paid, median $175](../kb/reports/host-header.md) |
 | Cloud, storage buckets & CI/CD exposure | `CLD` | queued |  | `—` | [139 reports, 34 paid, median $750](../kb/reports/cloud.md) |
-| [Information disclosure, secrets & exposed files](disclosure.md) | `INF` | draft | 12 | `http` | [1,780 reports, 351 paid, median $500](../kb/reports/disclosure.md) |
+| [Information disclosure, secrets & exposed files](disclosure.md) | `INF` | written | 17 | `http` | [1,780 reports, 351 paid, median $500](../kb/reports/disclosure.md) |
 | Network services on IP & CIDR assets | `NET` | queued |  | `—` | [116 reports, 16 paid, median $425](../kb/reports/network.md) |
 | Recon & hidden surface (method chapter) | `RCN` | queued |  | `—` | [0 reports, 0 paid, median $0](../kb/reports/recon.md) |
 
