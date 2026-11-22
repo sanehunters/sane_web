@@ -31,11 +31,11 @@ domains ($7,500, #2967634), an open Selenoid browser grid on a bare address that
 
 Most of what a port scan produces is not paid. Nine reports by title are about open SSH, Telnet or "numerous open
 ports"; one was paid, $25 (#257335). Four name an FTP, SMB or NFS service open without authentication, and none
-carries a bounty in the index. SNMP `public`, zone transfers and SMTP relays appear a handful of times and pay little or nothing. Ownership
-is the other trap: Basecamp paid $100 for an unauthenticated JMX server (#1456063) because the stale DNS records
-pointed at an address that was no longer theirs, so the researcher had reached a stranger's machine. Pre-auth bugs
-in VPN and edge appliances on these ranges are the largest single payouts near this class (#591295, $20,160); they
-are CVE-012's.
+carries a bounty in the index. SNMP `public`, zone transfers and SMTP relays appear a handful of times and pay
+little or nothing. Ownership is the other trap: Basecamp rated an unauthenticated JMX server low and paid $100
+(#1456063), because its stale DNS records pointed at an address that was no longer Basecamp's and the researcher had
+reached a stranger's machine. Pre-auth bugs in VPN and edge appliances on these ranges are the largest single
+payouts near this class (#591295, $20,160); they are CVE-012's.
 
 ## The crux question
 
@@ -120,11 +120,16 @@ NET-012 when the address also hosts a relay, because its names are what the rela
     for ip in $IPS; do dig +short A "$n" | grep -qxF "$ip" && echo "$n -> $ip"; done; sleep 0.2
   done | tee "$D/names-here.txt"
   ```
-  An SMTP or FTP greeting that names an in-scope host (NET-002 reads it) counts as one more tie. Then record the
-  outcome; the claim in the title is false when the address is the programme's:
+  Stop at the banner, which here is the certificate: nothing else goes to the address until this card is marked. An
+  SMTP or FTP greeting that names an in-scope host (NET-002 reads it) counts as one more tie. Then record the one
+  outcome that applies; the claim in the title is false when the address is the programme's:
   ```bash
+  source "$E/env.sh"; D="$E/evidence/$H/NET-001"
+  # the programme's (the other NET cards may run):
   scripts/sane mark "$H" NET-001 negative --note "the programme's: cidr rule 203.0.113.0/24; PTR mx1.example.com; cert SAN *.example.com" --ev "$D"
-  scripts/sane mark "$H" NET-001 parked --note "not the programme's: cert and page name another company; in-scope name points here (STO-007)" --ev "$D"
+  # someone else's, reached through an in-scope name (STO-007 reports it; no NET card runs):
+  scripts/sane mark "$H" NET-001 parked --note "not the programme's: cert and page name another company; app.example.com points here (STO-007)" --ev "$D"
+  # someone else's, though the programme's own range lists it (a scope question for the programme; no NET card runs):
   scripts/sane set blockers+="NET-001 $H: listed in the programme's range but serves another organisation; ask the programme"
   ```
 - **Proof:** the decision and its evidence in `$D/owner.txt`: an `ip` or `cidr` scope rule, or a registry record
@@ -179,12 +184,19 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   [ -n "$P" ] && nmap -Pn -n -T3 --max-rate "$PR" -sV --version-intensity 5 --script 'default and safe' -p "$P" -oA "$D/services" "$H"
   # 3. UDP: services that answer one datagram (raw sockets: root). -sV sends each service's own probe
   sudo nmap -Pn -n -sU -sV --version-intensity 0 -T3 --max-rate "$PR" -p 53,111,123,137,161,500,623,1900,5353 -oG "$D/udp.gnmap" "$H"
-  # 4. the full TCP range, only with a reason in the note (a server role, not a CDN edge): 65,535 probes, 22 minutes at 50 per second
+  ```
+  The full TCP range runs only when the policy allows it and the note says why: the address is a server of the
+  programme (NET-001), not a CDN edge or load balancer, and the top 1000 found at least one service. It is 65,535
+  probes: 22 minutes at 50 per second.
+  ```bash
+  source "$E/env.sh"; D="$E/evidence/$H/NET-002"; PR=$(awk -v r="$RATE" 'BEGIN{n=int(r*10); print (n<1?1:n)}')
   nmap -Pn -n -T3 --max-rate "$PR" -p- --open -oG "$D/tcp-all.gnmap" "$H"
+  # then step 2 again on the ports this adds
   ```
   Stop at the banner: version detection and the safe scripts are the whole interaction here; every login, listing
   and command belongs to the card for that service. Then record what answered:
   ```bash
+  source "$E/env.sh"; D="$E/evidence/$H/NET-002"
   grep -ohE '[0-9]+/open/(tcp|udp)//[^/]*//[^/]*' "$D"/*.gnmap | sort -u | tee "$D/open.txt"
   scripts/sane asset add "$H" $(grep -ohE '[0-9]+/open/tcp' "$D"/*.gnmap | cut -d/ -f1 | sort -un | sed 's/^/--port /')
   # facts from what the services are, not from port numbers: JDWP on 8000 is non-web, Elasticsearch on 9200 speaks HTTP
@@ -239,9 +251,9 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   done | tee "$D/web-ports.tsv"
   curl -sSk "${HDR[@]}" -m 8 "https://$H/" | md5sum | cut -c1-12      # the main site's hash, to compare with column four
   ```
-  One GET per port and scheme, `$W` seconds apart. Stop at the first page: no crawl and no content discovery here;
-  the web chapters do that with `T` set to the port. Record each distinct interface with its port in the evidence,
-  so whoever runs a web card on this asset knows what `$T` is:
+  One GET per port and scheme, `$W` seconds apart. Stop at the banner, which for a web port is its first page: no
+  crawl and no content discovery here; the web chapters do that with `T` set to the port. Record each distinct
+  interface with its port in the evidence, so whoever runs a web card on this asset knows what `$T` is:
   ```bash
   scripts/sane fact set "$H" http=1 known-product=1 admin-panel=1 --ev "T=http://$H:8080 Jenkins 2.426 (X-Jenkins header), login page"
   scripts/sane fact set "$H" app=1 --ev "T=https://$H:8443 customer portal with a login form, not served on 443"
@@ -366,7 +378,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   OU=$(grep -m1 -iE '^dn: (ou|cn)=(people|users)' "$D/ldap-one-level.txt" | cut -d' ' -f2-)
   [ -n "$OU" ] && ldapsearch -x -H "ldap://$H:$LP" -o nettimeout=10 -LLL -z 1 -A -s one -b "$OU" 2>&1 | sed -E 's/^(dn: [A-Za-z]+=)[^,]+/\1<cut>/' | tee "$D/ldap-attrs.txt"
   ```
-  Stop at the catalogue. No `find`, `_search`, `_all_docs`, `SELECT` or attribute values.
+  Stop at the banner and the catalogue: no `find`, `_search`, `_all_docs`, `SELECT` or attribute values.
 - **Proof:** the request and the catalogue it returned without credentials: MongoDB database names and sizes, and one
   database's collection names with estimated counts; Elasticsearch index names with document counts, and
   `_security/_authenticate` naming an anonymous user (`_es_anonymous_user` by default) or failing because security
@@ -405,7 +417,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
 
 - **Where:** ports NET-002 named ftp (21, 2121), microsoft-ds and netbios-ssn (445, 139), nfs and rpcbind (2049,
   111) and rsync (873). Backup servers, NAS boxes, camera recorders (#417360 was CCTV footage backups over SMB) and
-  game or build servers (#287837 exported server configuration over NFS).
+  application servers (#287837 exposed server configuration files over NFS).
 - **Test:** connect as nobody (FTP user `anonymous`, an SMB null session, NFS from a client the export does not
   list, rsync without a user) and list the root, two levels deep at most. File names, sizes and dates are the
   proof; no file is downloaded.
@@ -417,6 +429,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   nmap -Pn -n -T3 --max-rate "$PR" -p 21 --script ftp-anon,ftp-syst -oN "$D/ftp-anon.txt" "$H"
   curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' "ftp://$H/" | head -60 | tee "$D/ftp-root.txt"; sleep "$W"
   # SMB: the share list over a null session, then the root of each share except the administrative ones
+  # (an SMB1-only server needs --option='client min protocol=NT1' on both smbclient lines)
   smbclient -N -L "//$H" 2>&1 | tee "$D/smb-shares.txt"; sleep "$W"
   for s in $(awk '$2 == "Disk" {print $1}' "$D/smb-shares.txt" | grep -vE '^([A-Z]|ADMIN|IPC|print)\$$'); do
     smbclient -N "//$H/$s" -c 'ls' 2>&1 | head -40 > "$D/smb-$s.txt"; echo "$s: $(head -1 "$D/smb-$s.txt")"; sleep "$W"
@@ -430,19 +443,21 @@ NET-012 when the address also hosts a relay, because its names are what the rela
     rsync --list-only --contimeout=10 "rsync://$H/$m/" 2>&1 | head -30 > "$D/rsync-$m.txt"; sleep "$W"
   done
   ```
-  Stop at the listing. A write is tested only where the policy allows write tests and `ftp-anon` flagged a
-  writeable directory: one empty file, listed, deleted, listed again. A marker that cannot be deleted goes into
-  `cleanup.md` and to the operator.
+  Stop at the banner and the listing. A write is tested only where the policy allows write tests and `ftp-anon`
+  flagged a writeable directory: one empty file, listed, deleted, listed again. A marker that cannot be deleted goes
+  into `cleanup.md` and to the operator.
   ```bash
+  source "$E/env.sh"; D="$E/evidence/$H/NET-006"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
   WD=incoming                          # the directory ftp-anon flagged writeable
   F="net006-$(date +%s).txt"; : > "$D/$F"
-  curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' -T "$D/$F" "ftp://$H/$WD/" -w '%{response_code} stored\n'
-  curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' "ftp://$H/$WD/" | grep -F "$F"
-  curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' -Q "DELE $WD/$F" -o /dev/null -w '%{response_code} deleted\n' "ftp://$H/"
+  curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' -T "$D/$F" "ftp://$H/$WD/" -w '%{response_code} stored\n'; sleep "$W"
+  curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' "ftp://$H/$WD/" | grep -F "$F"; sleep "$W"
+  curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' -Q "DELE $WD/$F" -o /dev/null -w '%{response_code} deleted\n' "ftp://$H/"; sleep "$W"
+  curl -sS "${HDR[@]}" -m 20 --user 'anonymous:anonymous' "ftp://$H/$WD/" | grep -cF "$F"      # 0: the marker is gone
   ```
-- **Proof:** the anonymous access itself (`230` after `USER anonymous`, the null-session share list, an export to `*`
-  or `(everyone)`, the module list) and the listing of the root with names, sizes and dates; for a write, the upload
-  and delete replies with the marker's name. No file contents.
+- **Proof:** the anonymous access itself (`230` for the `anonymous` login, the null-session share list, an export to
+  `*` or `(everyone)`, the module list) and the listing of the root with names, sizes and dates; for a write, the
+  upload and delete replies with the marker's name. No file contents.
 - **Not a finding when:** the server is a public download mirror (open-source releases, firmware or drivers the
   website links to). FTP takes `anonymous` and shows an empty or chrooted directory. SMB lists shares over a null
   session but every share answers `NT_STATUS_ACCESS_DENIED` (share names alone are `internal-info`); `IPC$` with a
@@ -478,9 +493,9 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   source "$E/env.sh"; D="$E/evidence/$H/NET-007"; mkdir -p "$D"; PR=$(awk -v r="$RATE" 'BEGIN{n=int(r*10); print (n<1?1:n)}')
   # VNC: the security types each port offers; 'None' means no password
   nmap -Pn -n -T3 --max-rate "$PR" -p 5900-5910 --script vnc-info -oN "$D/vnc-info.txt" "$H"
-  # Telnet: what the service prints in eight seconds with nothing typed
-  timeout 12 sh -c 'sleep 8 | telnet "$1" 23' sh "$H" 2>&1 | tr -d '\000' | head -25 | tee "$D/telnet.txt"
-  # X11: can an unknown client open display :0 (port 6000)? The header only: no xwd, no xinput, no xdotool
+  # Telnet: what the service prints in eight seconds with nothing typed (TN: 23, 2323 or a router CLI port)
+  TN=23; timeout 12 sh -c 'sleep 8 | telnet "$1" "$2"' sh "$H" "$TN" 2>&1 | tr -d '\000' | head -25 | tee "$D/telnet.txt"
+  # X11: can an unknown client open display :0 (port 6000; :1 is 6001)? The header only: no xwd, no xinput, no xdotool
   timeout 10 xdpyinfo -display "$H:0" 2>&1 | head -8 | tee "$D/x11.txt"
   # IPMI: authentication capabilities and cipher suite 0 (UDP, so root); no RAKP hash request, no session
   sudo nmap -Pn -n -sU -T3 --max-rate "$PR" -p 623 --script ipmi-version,ipmi-cipher-zero -oN "$D/ipmi.txt" "$H"
@@ -544,7 +559,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
 
 | | |
 |---|---|
-| **Severity** | Medium standalone when `public` reads more than the system group: interfaces, the neighbour table, routes, running processes or local accounts; High when the read-write default `private` also answers; Low for the system description alone (`version-disclosure`) |
+| **Severity** | Medium standalone when `public` reads more than the system group: interfaces, the neighbour table, routes, running processes or local accounts; High when `private` also answers on a vendor whose documented default makes it read-write (stated from the documentation, never tested with a SET); Low for the system description alone (`version-disclosure`) |
 | **Requires** | nonweb-ports |
 | **Excluded by** | — |
 | **Unit** | host |
@@ -577,7 +592,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   # the read-write default, asked with a GET only. Never snmpset, not even to the value it already holds
   snmpget -v2c -c private -t 3 -r 1 -On "$H" 1.3.6.1.2.1.1.5.0 2>&1 | tee "$D/private.txt"
   ```
-  Stop at the system group and the row counts.
+  Stop at the banner, the system group and the row counts.
 - **Proof:** the GET with `public` and its answer (`sysDescr`, `sysName`, `sysLocation`, `sysContact`), the control
   refused, the table counts (for example `neighbours 25`, `processes 25`), and for `private` the GET and its
   answer. A row count of 25 means at least 25: one GETBULK reads no further.
@@ -618,12 +633,13 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   # 1. RCPT only, no message: does it take an outside recipient from an outside sender? (again with --port 587, and --port 465 --tlsc)
   swaks --server "$H" --port 25 --ehlo "$OOB" --from "net009@$OOB" --to "net009@$OOB" --quit-after RCPT --timeout 20 2>&1 | tee "$D/rcpt-25.txt"; sleep "$W"
   # 2. refused? the old relay-check bypass address forms, still RCPT only
-  for r in "net009%$OOB@$DOM" "\"net009@$OOB\"@$DOM" "@$DOM:net009@$OOB" "$OOB!net009@$DOM"; do
+  for r in "net009%$OOB@$DOM" "\"net009@$OOB\"@$DOM" "@$DOM:net009@$OOB" "$(printf '%s!net009@%s' "$OOB" "$DOM")"; do
     echo "== $r"; swaks --server "$H" --port 25 --ehlo "$OOB" --from "net009@$OOB" --to "$r" --quit-after RCPT --timeout 20 2>&1 | tail -3; sleep "$W"
   done | tee "$D/rcpt-forms.txt"
   ```
   ```bash
   # 3. one message, only after a 250 to RCPT above, to our callback domain; then the interactsh log shows an SMTP interaction from the relay
+  source "$E/env.sh"; D="$E/evidence/$H/NET-009"
   swaks --server "$H" --port 25 --ehlo "$OOB" --from "net009@$OOB" --to "net009@$OOB" \
     --header "Subject: NET-009 relay test via $H" --body "Bug bounty test of an open relay at $H, sent to the tester's own domain. No action needed." \
     --timeout 30 2>&1 | tee "$D/data-25.txt"
@@ -632,7 +648,8 @@ NET-012 when the address also hosts a relay, because its names are what the rela
     printf '%s: %s\n' "$d" "$(dig +short TXT "$d" | grep -i 'v=spf1' | tr -d '"')"; sleep 0.2
   done | tee "$D/spf.txt"
   ```
-  Stop after the one message: no second message, no other recipient, no volume.
+  Stop at the banner and the `RCPT` reply unless the policy allows the one message; after it, stop: no other
+  recipient and no volume. The only second message is Escalate's, to the operator's own mailbox.
 - **Proof:** the `RCPT` transcript with `250` for an outside recipient from an outside sender, the one message's
   transcript, and the interactsh record of that message arriving from the relay's address with the subject above.
   For High, the SPF record that authorises the relay.
@@ -683,9 +700,10 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   awk '!/^;/ && NF {print tolower($1)}' "$D"/axfr-*.txt 2>/dev/null | sed 's/\.$//' | sort -u > "$D/axfr-names.txt"
   jq -r 'keys[]' "$E/assets.json" | sort -u > "$D/known.txt"
   comm -23 "$D/axfr-names.txt" "$D/known.txt" > "$D/new-names.txt"; wc -l < "$D/new-names.txt"
+  # the in-scope ones become assets; the rest are recorded and never touched
+  scripts/sane asset add $(scripts/sane scope filter < "$D/new-names.txt")
   ```
-  One AXFR per zone, and stop there: the transfer is the banner. The new names are recon; the in-scope ones become
-  assets: `scripts/sane asset add $(scripts/sane scope filter < "$D/new-names.txt")`.
+  One AXFR per zone, and stop there: the transfer is the banner.
 - **Proof:** the SOA answer with the `aa` flag, the AXFR command and its first lines (the SOA serial and the record
   count), saved raw, and the names only the transfer revealed (`new-names.txt`, compared with what recon and
   certificate transparency already had). TXT values are cut in the report: verification tokens and notes sit there.
@@ -842,8 +860,9 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   done | tee "$D/grid.txt"
   curl -sS "${HDR[@]}" -m 30 -X DELETE "$G/session/$SID" -o /dev/null -w '%{http_code} session deleted\n'
   ```
-  Grid 4 answers without the `/wd/hub` prefix: set `G="http://$H:$GP"`. Stop at the first internal answer: its status,
-  size and title, or the metadata role name; never the credential document under it (SSR-003's rule).
+  Grid 4 answers without the `/wd/hub` prefix: set `G="http://$H:$GP"`. Stop at the banner of the first internal
+  answer: its status, size and title, or the metadata role name; never the credential document under it (SSR-003's
+  rule).
 - **Proof:** the relayed request and the internal answer next to the control's, with status and size: a loopback
   page title, the metadata role name, an internal host's title. For TURN, the `range-scan` lines that allowed a
   loopback, private or metadata peer. For a grid, the callback from the grid's browser, `/etc/hostname` in the page
@@ -882,7 +901,7 @@ NET-012 when the address also hosts a relay, because its names are what the rela
 - **Metadata that is public by design.** The LDAP root DSE, MongoDB `buildInfo`, the CouchDB welcome banner,
   Elasticsearch `/` on a cluster that refuses everything else, an SNMPv3 engine id, ZooKeeper `srvr` alone:
   `version-disclosure`.
-- **SNMP `public` with the system group only:** `version-disclosure`; with interfaces and neighbours, Low and often
+- **SNMP `public` with the system group only.** `version-disclosure`; with interfaces and neighbours, Low and often
   `internal-info` (#455726 carries no bounty).
 - **Zone transfers of public names.** An AXFR that lists only names already in certificate transparency:
   `internal-info` (#137093 carries no bounty).
@@ -893,7 +912,8 @@ NET-012 when the address also hosts a relay, because its names are what the rela
 - **IKE aggressive mode.** A VPN gateway that hands out a pre-shared-key hash to `ike-scan -A`: cracking it is out of
   bounds, and the bare observation is rated low.
 - **Somebody else's address.** A service on a reissued cloud address, a shared hosting box or a CDN edge
-  (`third-party`): #1456063 paid $100 because the JMX it reached was no longer Basecamp's. NET-001 first, every time.
+  (`third-party`): #1456063 was rated low and paid $100, and the JMX it reached was no longer Basecamp's. NET-001
+  first, every time.
 - **Honeypots.** An address with twenty "open" databases, odd versions, or every port open: nothing to report.
 - **Duplicates.** Internet-wide scanners index open Elasticsearch, MongoDB and Redis within days. On a programme
   with a published range, assume the services on common ports were reported, and mark `dup-risk` unless finding the
@@ -932,6 +952,6 @@ NET-012 when the address also hosts a relay, because its names are what the rela
   access; CouchDB 3.0 (admin-only defaults); Cassandra authenticators; Docker "Protect the Docker daemon socket";
   Kubernetes kubelet authentication and authorisation; the JPDA/JDWP specification; JMX remote monitoring
   (`com.sun.management.jmxremote.authenticate`).
-- RFC 4512 (the LDAP root DSE), RFC 5321 (SMTP relaying), RFC 5936 (DNS zone transfer), RFC 8656 (TURN and peer
-  address restrictions), RFC 6143 (the RFB protocol).
-- Enable Security's TURN research and its `stunner` tool.
+- RFC 4512 (the LDAP root DSE), RFC 5321 (SMTP relaying), RFC 5936 (DNS zone transfer), RFC 8656 (TURN), RFC 6143
+  (the RFB protocol).
+- `stunner` (github.com/firefart/stunner) for TURN; `jmxterm` (github.com/jiaqi/jmxterm) for JMX.

@@ -1,6 +1,6 @@
 # Build progress
 
-_Updated 2026-11-22 12:51 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
+_Updated 2026-11-22 12:56 UTC by `scripts/publish_progress.sh`. Refreshes every few minutes while a build is running._
 
 | | | |
 |---|---|---|
@@ -14,10 +14,10 @@ _Updated 2026-11-22 12:51 UTC by `scripts/publish_progress.sh`. Refreshes every 
 6 agent(s) working:
 
 - `write:cache`
-- `write:clickjacking`
-- `write:network`
+- `write:cors`
 - `write:oauth`
 - `write:race`
+- `write:ssti`
 - `write:upload`
 
 Order of work: every chapter is written first (most-paid classes first), then every chapter gets an adversarial review. "Reviewed" therefore stays at zero until the writers are done.
@@ -31,13 +31,13 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [Authentication, sessions, password reset & 2FA](checklist/authn.md) | `authz` | written | 18 |  | 21 Nov 17:34 |  |
 | [GraphQL](checklist/graphql.md) | `authz` | written | 13 |  | 21 Nov 12:53 |  |
 | [JWT & signed-token flaws](checklist/jwt.md) | `authz` | written | 11 |  | 21 Nov 12:53 |  |
-| [OAuth, OIDC, SAML & SSO](checklist/oauth.md) | `authz` | written | 15 | being written | 22 Nov 12:50 |  |
+| [OAuth, OIDC, SAML & SSO](checklist/oauth.md) | `authz` | written | 15 | being written | 22 Nov 12:56 |  |
 | [Cross-site request forgery](checklist/csrf.md) | `client` | written | 12 |  | 22 Nov 08:08 |  |
 | [Open redirect](checklist/redirect.md) | `client` | written | 10 |  | 22 Nov 08:01 |  |
 | [Cross-site scripting](checklist/xss.md) | `client` | written | 18 |  | 21 Nov 17:32 |  |
 | [Cloud, storage buckets & CI/CD exposure](checklist/cloud.md) | `infra` | written | 14 |  | 22 Nov 08:10 |  |
 | [Information disclosure, secrets & exposed files](checklist/disclosure.md) | `infra` | written | 17 |  | 22 Nov 07:12 |  |
-| [Network services on IP & CIDR assets](checklist/network.md) | `infra` | written | 12 | being written | 22 Nov 12:50 |  |
+| [Network services on IP & CIDR assets](checklist/network.md) | `infra` | written | 12 |  | 22 Nov 12:54 |  |
 | [Subdomain takeover & dangling DNS](checklist/takeover.md) | `infra` | written | 10 |  | 22 Nov 08:03 |  |
 | [CRLF & header injection](checklist/crlf.md) | `injection` | written | 8 |  | 22 Nov 12:30 |  |
 | [Insecure deserialization](checklist/deser.md) | `injection` | written | 11 |  | 21 Nov 12:53 |  |
@@ -49,9 +49,9 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | [Known CVEs, default installs & technology-specific bugs](checklist/cve.md) | `known` | written | 17 |  | 22 Nov 02:54 |  |
 | [Business logic, payments & abuse of functionality](checklist/logic.md) | `logic` | written | 15 |  | 22 Nov 07:12 |  |
 | WebSocket | `authz` | queued |  |  |  |  |
-| Clickjacking & UI redressing | `client` | queued |  | being written |  |  |
+| Clickjacking & UI redressing | `client` | queued |  |  |  |  |
 | Client-side: postMessage, DOM, CSP, JS supply chain | `client` | queued |  |  |  |  |
-| CORS misconfiguration | `client` | queued |  |  |  |  |
+| CORS misconfiguration | `client` | queued |  | being written |  |  |
 | Prototype pollution | `client` | queued |  |  |  |  |
 | Web cache poisoning & cache deception | `infra` | queued |  | being written |  |  |
 | Host header attacks | `infra` | queued |  |  |  |  |
@@ -59,7 +59,7 @@ Order of work: every chapter is written first (most-paid classes first), then ev
 | HTTP request smuggling & desync | `infra` | queued |  |  |  |  |
 | LLM & AI features | `injection` | queued |  |  |  |  |
 | NoSQL, LDAP & other query injection | `injection` | queued |  |  |  |  |
-| Server-side template injection | `injection` | queued |  |  |  |  |
+| Server-side template injection | `injection` | queued |  | being written |  |  |
 | File upload | `injection` | queued |  | being written |  |  |
 | Race conditions | `logic` | queued |  | being written |  |  |
 

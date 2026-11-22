@@ -1,11 +1,11 @@
 {
- "updated": "2026-11-22 12:51 UTC",
+ "updated": "2026-11-22 12:56 UTC",
  "running": [
   "write:cache",
-  "write:clickjacking",
-  "write:network",
+  "write:cors",
   "write:oauth",
   "write:race",
+  "write:ssti",
   "write:upload"
  ],
  "paused": false
